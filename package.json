@@ -10,11 +10,11 @@
   "scripts": {
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "dev": "node esbuild.config.mjs",
-    "test": "npm run build && node --test",
-    "prepare": "husky prepare",
+    "test": "npm run build && mocha",
     "format": "biome format --write .",
     "lint": "biome lint --write .",
-    "check": "tsc -noEmit -skipLibCheck"
+    "check": "tsc -noEmit -skipLibCheck",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -27,11 +27,17 @@
     "url": "https://github.com/yourusername/commitional/issues"
   },
   "homepage": "https://github.com/yourusername/commitional#readme",
+  "dependencies": {
+    "commander": "^11.1.0"
+  },
   "devDependencies": {
     "@biomejs/biome": "~1.9.4",
+    "@types/mocha": "~10.0.10",
     "@types/node": "~22.15.21",
     "esbuild": "~0.25.4",
     "husky": "~9.1.7",
+    "mocha": "~11.5.0",
+    "tsx": "~4.19.4",
     "typescript": "~5.8.3"
   }
 }

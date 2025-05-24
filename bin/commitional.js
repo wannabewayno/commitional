@@ -6,10 +6,68 @@ if you want to view the source, please visit the github repository of this plugi
 
 
 // src/index.ts
-async function main() {
-  console.log("Welcome to commitional!");
-}
+import { Command } from "commander";
 
+// package.json
+var package_default = {
+  name: "commitional",
+  version: "1.0.0",
+  description: "CLI tool for crafting commit messages - compatible with commitlint",
+  main: "bin/index.js",
+  bin: {
+    commitional: "./bin/commitional.js"
+  },
+  type: "module",
+  scripts: {
+    build: "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    dev: "node esbuild.config.mjs",
+    test: "npm run build && mocha",
+    format: "biome format --write .",
+    lint: "biome lint --write .",
+    check: "tsc -noEmit -skipLibCheck",
+    prepare: "husky"
+  },
+  repository: {
+    type: "git",
+    url: "git+https://github.com/yourusername/commitional.git"
+  },
+  keywords: ["commit", "git", "cli", "lint", "commitlint", "commitizen"],
+  author: "",
+  license: "MIT",
+  bugs: {
+    url: "https://github.com/yourusername/commitional/issues"
+  },
+  homepage: "https://github.com/yourusername/commitional#readme",
+  dependencies: {
+    commander: "^11.1.0"
+  },
+  devDependencies: {
+    "@biomejs/biome": "~1.9.4",
+    "@types/mocha": "~10.0.10",
+    "@types/node": "~22.15.21",
+    esbuild: "~0.25.4",
+    husky: "~9.1.7",
+    mocha: "~11.5.0",
+    tsx: "~4.19.4",
+    typescript: "~5.8.3"
+  }
+};
+
+// src/index.ts
+async function main() {
+  const program = new Command();
+  program.name("commitional").description("CLI tool for crafting commit messages - compatible with commitlint").version(package_default.version, "-v, --version", "Output the current version").addHelpCommand("help [command]", "Display help for command");
+  program.action(async () => {
+    console.log("Commit message creation functionality coming soon!");
+    process.exit(0);
+  });
+  try {
+    await program.parseAsync(process.argv);
+  } catch (error) {
+    console.error("Error:", error);
+    process.exit(1);
+  }
+}
 main().catch((error) => {
   console.error("Error:", error);
   process.exit(1);

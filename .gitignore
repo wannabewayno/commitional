@@ -12,6 +12,7 @@ yarn-error.log*
 # Build output
 dist/
 build/
+bin/
 
 # IDE and editor files
 .idea/
