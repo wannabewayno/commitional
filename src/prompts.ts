@@ -1,4 +1,4 @@
-import inquirer from "inquirer";
+import { input, confirm, select } from "@inquirer/prompts";
 
 const COMMIT_TYPES = [
   { name: "feat: A new feature", value: "feat" },
@@ -21,17 +21,13 @@ export interface CommitMessage {
 }
 
 export async function promptCommitMessage(): Promise<CommitMessage> {
-  const answers = await inquirer.prompt([
-    {
-      type: "list",
-      name: "type",
+  return {
+    type: await select({
       message: "Select the type of change you're committing:",
       choices: COMMIT_TYPES,
       pageSize: 10,
-    },
-    {
-      type: "input",
-      name: "subject",
+    }),
+    subject: await input({
       message: "Write a short description of the change:",
       validate: (input: string) => {
         if (input.length === 0) return "Subject is required";
@@ -40,35 +36,20 @@ export async function promptCommitMessage(): Promise<CommitMessage> {
         if (input.endsWith(".")) return "Subject should not end with a period";
         return true;
       },
-    },
-    {
-      type: "confirm",
-      name: "hasBody",
+    }),
+    body: await confirm({
       message: "Would you like to add a longer description?",
       default: false,
-    },
-    {
-      type: "editor",
-      name: "body",
-      message: "Enter a longer description of the changes (optional):",
-      when: (answers) => answers.hasBody,
-      validate: (input: string) => {
-        if (input.split("\n").some((line) => line.length > 100)) return "Body lines must wrap at 100 characters";
-        return true;
-      },
-    },
-    {
-      type: "confirm",
-      name: "breaking",
-      message: "Are there any breaking changes?",
-      default: false,
-    },
-  ]);
-
-  return {
-    type: answers.type,
-    subject: answers.subject,
-    body: answers.body || "",
-    breaking: answers.breaking,
+    }).then(v => {
+      if (!v) return "";
+      return input({
+        message: "Enter a longer description of the changes (optional):",
+        validate: (input: string) => {
+          if (input.split("\n").some(line => line.length > 100)) return "Body lines must wrap at 100 characters";
+          return true;
+        },
+      });
+    }),
+    breaking: await confirm({ message: "Are there any breaking changes?", default: false }),
   };
 }

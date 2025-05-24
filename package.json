@@ -19,7 +19,14 @@
     "type": "git",
     "url": "git+https://github.com/yourusername/commitional.git"
   },
-  "keywords": ["commit", "git", "cli", "lint", "commitlint", "commitizen"],
+  "keywords": [
+    "commit",
+    "git",
+    "cli",
+    "lint",
+    "commitlint",
+    "commitizen"
+  ],
   "author": "",
   "license": "MIT",
   "bugs": {
@@ -27,8 +34,9 @@
   },
   "homepage": "https://github.com/yourusername/commitional#readme",
   "dependencies": {
+    "@inquirer/prompts": "~7.5.2",
     "commander": "^11.1.0",
-    "inquirer": "^12.6.2"
+    "simple-git": "~3.27.0"
   },
   "devDependencies": {
     "@biomejs/biome": "~1.9.4",

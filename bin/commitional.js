@@ -30,7 +30,14 @@ var package_default = {
     type: "git",
     url: "git+https://github.com/yourusername/commitional.git"
   },
-  keywords: ["commit", "git", "cli", "lint", "commitlint", "commitizen"],
+  keywords: [
+    "commit",
+    "git",
+    "cli",
+    "lint",
+    "commitlint",
+    "commitizen"
+  ],
   author: "",
   license: "MIT",
   bugs: {
@@ -38,8 +45,9 @@ var package_default = {
   },
   homepage: "https://github.com/yourusername/commitional#readme",
   dependencies: {
+    "@inquirer/prompts": "~7.5.2",
     commander: "^11.1.0",
-    inquirer: "^12.6.2"
+    "simple-git": "~3.27.0"
   },
   devDependencies: {
     "@biomejs/biome": "~1.9.4",
@@ -54,7 +62,7 @@ var package_default = {
 };
 
 // src/prompts.ts
-import inquirer from "inquirer";
+import { input, confirm, select } from "@inquirer/prompts";
 var COMMIT_TYPES = [
   { name: "feat: A new feature", value: "feat" },
   { name: "fix: A bug fix", value: "fix" },
@@ -68,54 +76,36 @@ var COMMIT_TYPES = [
   { name: "chore: Other changes that don't modify src or test files", value: "chore" }
 ];
 async function promptCommitMessage() {
-  const answers = await inquirer.prompt([
-    {
-      type: "list",
-      name: "type",
+  return {
+    type: await select({
       message: "Select the type of change you're committing:",
       choices: COMMIT_TYPES,
       pageSize: 10
-    },
-    {
-      type: "input",
-      name: "subject",
+    }),
+    subject: await input({
       message: "Write a short description of the change:",
-      validate: (input) => {
-        if (input.length === 0) return "Subject is required";
-        if (input.length > 100) return "Subject must be 100 characters or less";
-        if (input[0].toUpperCase() !== input[0]) return "Subject must start with a capital letter";
-        if (input.endsWith(".")) return "Subject should not end with a period";
+      validate: (input2) => {
+        if (input2.length === 0) return "Subject is required";
+        if (input2.length > 100) return "Subject must be 100 characters or less";
+        if (input2[0].toUpperCase() !== input2[0]) return "Subject must start with a capital letter";
+        if (input2.endsWith(".")) return "Subject should not end with a period";
         return true;
       }
-    },
-    {
-      type: "confirm",
-      name: "hasBody",
+    }),
+    body: await confirm({
       message: "Would you like to add a longer description?",
       default: false
-    },
-    {
-      type: "editor",
-      name: "body",
-      message: "Enter a longer description of the changes (optional):",
-      when: (answers2) => answers2.hasBody,
-      validate: (input) => {
-        if (input.split("\n").some((line) => line.length > 100)) return "Body lines must wrap at 100 characters";
-        return true;
-      }
-    },
-    {
-      type: "confirm",
-      name: "breaking",
-      message: "Are there any breaking changes?",
-      default: false
-    }
-  ]);
-  return {
-    type: answers.type,
-    subject: answers.subject,
-    body: answers.body || "",
-    breaking: answers.breaking
+    }).then((v) => {
+      if (!v) return "";
+      return input({
+        message: "Enter a longer description of the changes (optional):",
+        validate: (input2) => {
+          if (input2.split("\n").some((line) => line.length > 100)) return "Body lines must wrap at 100 characters";
+          return true;
+        }
+      });
+    }),
+    breaking: await confirm({ message: "Are there any breaking changes?", default: false })
   };
 }
 
@@ -131,12 +121,60 @@ function formatCommitMessage(commit) {
 ${commit.body}`;
 }
 
+// src/lib/gitUtils.ts
+import { simpleGit } from "simple-git";
+var git = simpleGit();
+async function isGitRepository() {
+  try {
+    const result = await git.checkIsRepo();
+    return result;
+  } catch (error) {
+    return false;
+  }
+}
+async function getStagedFiles() {
+  try {
+    const status = await git.status();
+    return status.staged;
+  } catch (error) {
+    console.error("Error getting staged files:", error);
+    return [];
+  }
+}
+async function getStagedDiff() {
+  try {
+    const diff = await git.diff(["--cached"]);
+    return diff;
+  } catch (error) {
+    console.error("Error getting staged diff:", error);
+    return "";
+  }
+}
+
 // src/index.ts
 async function main() {
   const program = new Command();
   program.name("commitional").description("CLI tool for crafting commit messages - compatible with commitlint").version(package_default.version, "-v, --version", "Output the current version").addHelpCommand("help [command]", "Display help for command");
   program.action(async () => {
     try {
+      const isRepo = await isGitRepository();
+      if (!isRepo) {
+        console.error("Error: Not in a Git repository");
+        process.exit(1);
+      }
+      if (isRepo) {
+        const stagedFiles = await getStagedFiles();
+        console.log("\nStaged Files:");
+        console.log("-------------");
+        if (stagedFiles.length > 0) stagedFiles.forEach((file) => console.log(file));
+        else console.log("No files staged");
+        const diff = await getStagedDiff();
+        if (diff) {
+          console.log("\nStaged Changes:");
+          console.log("--------------");
+          console.log(diff);
+        }
+      }
       const commitMessage = await promptCommitMessage();
       const formattedMessage = formatCommitMessage(commitMessage);
       console.log("\nGenerated commit message:");

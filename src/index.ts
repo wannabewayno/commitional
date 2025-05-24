@@ -4,6 +4,11 @@ import { Command } from "commander";
 import packageJSON from "../package.json" with { type: "json" };
 import { promptCommitMessage } from "./prompts.js";
 import { formatCommitMessage } from "./lib/formatCommitMessage.js";
+import {
+  isGitRepository,
+  getStagedFiles,
+  getStagedDiff,
+} from "./lib/gitUtils.js";
 
 async function main(): Promise<void> {
   const program = new Command();
@@ -17,6 +22,28 @@ async function main(): Promise<void> {
   // Set up the default action when no command is provided
   program.action(async () => {
     try {
+      // Check if we're in a git repository first
+      const isRepo = await isGitRepository();
+      if (!isRepo) {
+        console.error("Error: Not in a Git repository");
+        process.exit(1);
+      }
+
+      if (isRepo) {
+        const stagedFiles = await getStagedFiles();
+        console.log("\nStaged Files:");
+        console.log("-------------");
+        if (stagedFiles.length > 0) stagedFiles.forEach(file => console.log(file));
+        else console.log("No files staged");
+
+        const diff = await getStagedDiff();
+        if (diff) {
+          console.log("\nStaged Changes:");
+          console.log("--------------");
+          console.log(diff);
+        }
+      }
+
       const commitMessage = await promptCommitMessage();
       const formattedMessage = formatCommitMessage(commitMessage);
       console.log("\nGenerated commit message:");
