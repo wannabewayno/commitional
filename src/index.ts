@@ -2,6 +2,8 @@
 
 import { Command } from "commander";
 import packageJSON from "../package.json" with { type: "json" };
+import { promptCommitMessage } from "./prompts.js";
+import { formatCommitMessage } from "./lib/formatCommitMessage.js";
 
 async function main(): Promise<void> {
   const program = new Command();
@@ -14,8 +16,20 @@ async function main(): Promise<void> {
 
   // Set up the default action when no command is provided
   program.action(async () => {
-    console.log("Commit message creation functionality coming soon!");
-    process.exit(0);
+    try {
+      const commitMessage = await promptCommitMessage();
+      const formattedMessage = formatCommitMessage(commitMessage);
+      console.log("\nGenerated commit message:");
+      console.log("------------------------");
+      console.log(formattedMessage);
+      console.log("------------------------");
+      // In a real implementation, we might want to write this to a file
+      // or pipe it to git commit, but for now we'll just display it
+      process.exit(0);
+    } catch (error) {
+      console.error("Error creating commit message:", error);
+      process.exit(1);
+    }
   });
 
   try {

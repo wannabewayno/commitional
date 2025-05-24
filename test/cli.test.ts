@@ -13,9 +13,4 @@ describe("CLI Tests", () => {
     assert.ok(output.includes("CLI tool for crafting commit messages"));
     assert.ok(output.includes("Options:"));
   });
-
-  it("should run without command", () => {
-    const output = execSync("node ./bin/commitional.js").toString();
-    assert.ok(output.includes("Commit message creation functionality coming soon!"));
-  });
 });

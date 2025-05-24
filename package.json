@@ -13,8 +13,7 @@
     "test": "npm run build && mocha",
     "format": "biome format --write .",
     "lint": "biome lint --write .",
-    "check": "tsc -noEmit -skipLibCheck",
-    "prepare": "husky"
+    "check": "tsc -noEmit -skipLibCheck"
   },
   "repository": {
     "type": "git",
@@ -28,7 +27,8 @@
   },
   "homepage": "https://github.com/yourusername/commitional#readme",
   "dependencies": {
-    "commander": "^11.1.0"
+    "commander": "^11.1.0",
+    "inquirer": "^12.6.2"
   },
   "devDependencies": {
     "@biomejs/biome": "~1.9.4",
