@@ -9,7 +9,7 @@ describe("Git Utilities", () => {
   let git: Git;
 
   before(() => {
-    git = new Git()
+    git = new Git();
   });
 
   describe("isGitRepository", () => {
@@ -36,32 +36,32 @@ describe("Git Utilities", () => {
 });
 
 describe("Git Commit Tests", () => {
-  let git: Git;
-  let _git: SimpleGit;
+  let gitService: Git;
+  let git: SimpleGit;
   const testDir = path.join(process.cwd(), "test-repo");
-
-  before(() => git = new Git())
 
   beforeEach(async () => {
     // Create test directory and initialize git
     fs.mkdirSync(testDir, { recursive: true });
     process.chdir(testDir);
 
-    _git = simpleGit();
-    await _git.init();
+    gitService = new Git();
+
+    git = simpleGit();
+    await git.init();
 
     // Configure git for tests
-    await _git.addConfig("user.name", "Test User", false, "local");
-    await _git.addConfig("user.email", "test@example.com", false, "local");
+    await git.addConfig("user.name", "Test User", false, "local");
+    await git.addConfig("user.email", "test@example.com", false, "local");
 
     // Create initial commit to establish HEAD
     fs.writeFileSync(path.join(testDir, "init.txt"), "initial commit");
-    await _git.add("init.txt");
-    await _git.commit("initial commit");
+    await git.add("init.txt");
+    await git.commit("initial commit");
   });
 
   it("should fail to commit when there are no staged changes", async () => {
-    const result = await git.commit("test: empty commit");
+    const result = await gitService.commit("test: empty commit");
     assert.strictEqual(result.success, false);
     assert.ok(result.error?.message.includes("No staged changes to commit"));
   });
@@ -69,14 +69,14 @@ describe("Git Commit Tests", () => {
   it("should successfully create a commit with staged changes", async () => {
     // Create and stage a test file
     fs.writeFileSync(path.join(testDir, "test.txt"), "test content");
-    await _git.add("test.txt");
+    await git.add("test.txt");
 
-    const result = await git.commit("test: add test file");
+    const result = await gitService.commit("test: add test file");
     assert.strictEqual(result.success, true);
     assert.ok(result.commitHash);
 
     // Verify the commit exists
-    const log = await _git.log({ maxCount: 1 });
+    const log = await git.log({ maxCount: 1 });
     assert.strictEqual(log.latest?.message, "test: add test file");
   });
 
