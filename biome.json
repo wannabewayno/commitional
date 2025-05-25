@@ -4,7 +4,7 @@
   "organizeImports": { "enabled": true },
   "linter": {
     "enabled": true,
-    "ignore": ["bin/**", "node_modules/**" ],
+    "ignore": ["bin/**", "node_modules/**"],
     "rules": {
       "recommended": true,
       "complexity": {

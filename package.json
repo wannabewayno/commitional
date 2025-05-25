@@ -19,14 +19,7 @@
     "type": "git",
     "url": "git+https://github.com/yourusername/commitional.git"
   },
-  "keywords": [
-    "commit",
-    "git",
-    "cli",
-    "lint",
-    "commitlint",
-    "commitizen"
-  ],
+  "keywords": ["commit", "git", "cli", "lint", "commitlint", "commitizen"],
   "author": "",
   "license": "MIT",
   "bugs": {
