@@ -50,13 +50,15 @@ program.action(async () => {
 
   const commitMessage = await promptCommitMessage();
   const formattedMessage = formatCommitMessage(commitMessage);
-  console.log('\nGenerated commit message:');
+  console.log('\nCommit message:');
   console.log('------------------------');
-  console.log(formattedMessage);
+  console.log(formattedMessage.join('\n\n'));
+  await git.commit(...formattedMessage);
   console.log('------------------------');
+
   // In a real implementation, we might want to write this to a file
   // or pipe it to git commit, but for now we'll just display it
-  // process.exit(0);
+  process.exit(0);
 });
 
 await program.parseAsync(process.argv);

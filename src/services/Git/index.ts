@@ -26,7 +26,7 @@ export default class Git {
    * @param message The commit message
    * @returns Promise<GitCommitResult> Object containing success status and optional commit hash or error
    */
-  async commit(message: string): Promise<GitCommitResult> {
+  async commit(subject: string, body?: string): Promise<GitCommitResult> {
     try {
       // Check if there are staged changes
       const status = await this.git.status();
@@ -38,7 +38,8 @@ export default class Git {
       }
 
       // Perform the commit
-      await this.git.commit(message);
+      if (subject && body) await this.git.commit([subject, body]);
+      else await this.git.commit(subject);
 
       // Get the commit hash from the latest commit
       const log = await this.git.log({ maxCount: 1 });
