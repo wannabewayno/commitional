@@ -4,7 +4,7 @@ import { Command } from "commander";
 import packageJSON from "../package.json" with { type: "json" };
 import { promptCommitMessage } from "./prompts.js";
 import { formatCommitMessage } from "./lib/formatCommitMessage.js";
-import { isGitRepository, getStagedFiles, getStagedDiff } from "./lib/gitUtils.js";
+import Git from "./services/Git/index.js";
 
 async function main(): Promise<void> {
   const program = new Command();
@@ -18,21 +18,22 @@ async function main(): Promise<void> {
   // Set up the default action when no command is provided
   program.action(async () => {
     try {
+      const git = new Git();
       // Check if we're in a git repository first
-      const isRepo = await isGitRepository();
+      const isRepo = await git.isRepository();
       if (!isRepo) {
         console.error("Error: Not in a Git repository");
         process.exit(1);
       }
 
       if (isRepo) {
-        const stagedFiles = await getStagedFiles();
+        const stagedFiles = await git.stagedFiles();
         console.log("\nStaged Files:");
         console.log("-------------");
         if (stagedFiles.length > 0) stagedFiles.forEach(file => console.log(file));
         else console.log("No files staged");
 
-        const diff = await getStagedDiff();
+        const diff = await git.stagedDiff();
         if (diff) {
           console.log("\nStaged Changes:");
           console.log("--------------");
