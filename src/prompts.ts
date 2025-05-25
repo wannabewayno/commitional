@@ -15,7 +15,8 @@ const COMMIT_TYPES = [
 
 export interface CommitMessage {
   type: string;
-  subject: string;
+  title: string;
+  scope?: string;
   body: string;
   breaking: boolean;
 }
@@ -27,7 +28,7 @@ export async function promptCommitMessage(): Promise<CommitMessage> {
       choices: COMMIT_TYPES,
       pageSize: 10,
     }),
-    subject: await input({
+    title: await input({
       message: 'Write a short description of the change:',
       validate: (input: string) => {
         if (input.length === 0) return 'Subject is required';
