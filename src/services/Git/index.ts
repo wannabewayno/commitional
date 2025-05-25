@@ -1,4 +1,4 @@
-import { simpleGit, type SimpleGit } from "simple-git";
+import { simpleGit, type SimpleGit } from 'simple-git';
 
 /**
  * Interface for git commit result
@@ -33,7 +33,7 @@ export default class Git {
       if (status.staged.length === 0) {
         return {
           success: false,
-          error: new Error("No staged changes to commit"),
+          error: new Error('No staged changes to commit'),
         };
       }
 
@@ -44,7 +44,7 @@ export default class Git {
       const log = await this.git.log({ maxCount: 1 });
       const commitHash = log.latest?.hash;
 
-      if (!commitHash) throw new Error("Failed to get commit hash after commit");
+      if (!commitHash) throw new Error('Failed to get commit hash after commit');
 
       return {
         success: true,
@@ -53,7 +53,7 @@ export default class Git {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error : new Error("Unknown error during commit"),
+        error: error instanceof Error ? error : new Error('Unknown error during commit'),
       };
     }
   }
@@ -78,7 +78,7 @@ export default class Git {
       const status = await this.git.status();
       return status.staged;
     } catch (error) {
-      console.error("Error getting staged files:", error);
+      console.error('Error getting staged files:', error);
       return [];
     }
   }
@@ -88,11 +88,11 @@ export default class Git {
    */
   async stagedDiff(): Promise<string> {
     try {
-      const diff = await this.git.diff(["--cached"]);
+      const diff = await this.git.diff(['--cached']);
       return diff;
     } catch (error) {
-      console.error("Error getting staged diff:", error);
-      return "";
+      console.error('Error getting staged diff:', error);
+      return '';
     }
   }
 }
