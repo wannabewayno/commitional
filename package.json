@@ -11,15 +11,28 @@
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "dev": "node esbuild.config.mjs",
     "test": "npm run build && mocha",
-    "format": "biome format --write .",
-    "lint": "biome lint --write .",
+    "format": "biome format --write",
+    "lint": "biome lint --write",
     "check": "tsc -noEmit -skipLibCheck"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yourusername/commitional.git"
   },
-  "keywords": ["commit", "git", "cli", "lint", "commitlint", "commitizen"],
+  "keywords": [
+    "commit",
+    "git",
+    "cli",
+    "lint",
+    "commitlint",
+    "commitizen"
+  ],
+  "lint-staged": {
+    "**/*.{ts,tsx}": [
+      "npm run format --",
+      "npm run lint --"
+    ]
+  },
   "author": "",
   "license": "MIT",
   "bugs": {
@@ -37,6 +50,7 @@
     "@types/node": "~22.15.21",
     "esbuild": "~0.25.4",
     "husky": "~9.1.7",
+    "lint-staged": "^16.0.0",
     "mocha": "~11.5.0",
     "tsx": "~4.19.4",
     "typescript": "~5.8.3"
