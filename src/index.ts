@@ -4,11 +4,7 @@ import { Command } from "commander";
 import packageJSON from "../package.json" with { type: "json" };
 import { promptCommitMessage } from "./prompts.js";
 import { formatCommitMessage } from "./lib/formatCommitMessage.js";
-import {
-  isGitRepository,
-  getStagedFiles,
-  getStagedDiff,
-} from "./lib/gitUtils.js";
+import { isGitRepository, getStagedFiles, getStagedDiff } from "./lib/gitUtils.js";
 
 async function main(): Promise<void> {
   const program = new Command();
