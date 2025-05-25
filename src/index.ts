@@ -1,6 +1,5 @@
-#!/usr/bin/env node
-
 import { Command } from 'commander';
+import load from '@commitlint/load';
 import packageJSON from '../package.json' with { type: 'json' };
 import { promptCommitMessage } from './prompts.js';
 import { formatCommitMessage } from './lib/formatCommitMessage.js';
@@ -25,7 +24,16 @@ program
 
 // Set up the default action when no command is provided
 program.action(async () => {
+  /*
+    If the user has configured commitlint in the current working directory, attempt to load commitlint's config.
+    We'll guide the user increating a commit message that adhere's to the commitlint config.
+    Otherwise we'll use our default.
+  */
+  const config = await load().catch(() => null);
+
+  // Create a new *git* instance scoped to the cwd
   const git = new Git();
+
   // Check if we're in a git repository first
   const isRepo = await git.isRepository();
   if (!isRepo) {

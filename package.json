@@ -40,12 +40,14 @@
   },
   "homepage": "https://github.com/yourusername/commitional#readme",
   "dependencies": {
+    "@commitlint/load": "^19.8.1",
     "@inquirer/prompts": "~7.5.2",
     "commander": "^11.1.0",
     "simple-git": "~3.27.0"
   },
   "devDependencies": {
     "@biomejs/biome": "~1.9.4",
+    "@commitlint/config-conventional": "^19.8.1",
     "@types/mocha": "~10.0.10",
     "@types/node": "~22.15.21",
     "esbuild": "~0.25.4",
