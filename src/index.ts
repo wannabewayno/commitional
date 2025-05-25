@@ -36,10 +36,7 @@ program.action(async () => {
 
   // Check if we're in a git repository first
   const isRepo = await git.isRepository();
-  if (!isRepo) {
-    console.error('Error: Not in a Git repository');
-    process.exit(1);
-  }
+  if (!isRepo) throw new Error('Not a git repository');
 
   if (isRepo) {
     const stagedFiles = await git.stagedFiles();
