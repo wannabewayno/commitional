@@ -40,6 +40,8 @@ describe('Git Commit Tests', () => {
   let git: SimpleGit;
   const testDir = path.join(process.cwd(), 'test-repo');
 
+  let cleanup: () => void;
+
   beforeEach(async () => {
     // Create test directory and initialize git
     fs.mkdirSync(testDir, { recursive: true });
@@ -58,6 +60,11 @@ describe('Git Commit Tests', () => {
     fs.writeFileSync(path.join(testDir, 'init.txt'), 'initial commit');
     await git.add('init.txt');
     await git.commit('initial commit');
+
+    cleanup = () => {
+      process.chdir(process.cwd());
+      fs.rmSync(testDir, { recursive: true, force: true });
+    };
   });
 
   it('should fail to commit when there are no staged changes', async () => {
@@ -80,9 +87,5 @@ describe('Git Commit Tests', () => {
     assert.strictEqual(log.latest?.message, 'test: add test file');
   });
 
-  afterEach(async () => {
-    // Clean up test directory
-    process.chdir(process.cwd());
-    fs.rmSync(testDir, { recursive: true, force: true });
-  });
+  afterEach(() => cleanup());
 });
