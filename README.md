@@ -1,19 +1,8 @@
 # commitional
 
-CLI tool for crafting commit messages - compatible with commitlint
-
-## Description
-
-Commitional is a command-line interface tool designed to help developers create consistent and standardized commit messages that comply with commitlint conventions. It provides an interactive interface to craft well-formatted commit messages easily.
-
-## Installation
-
-```bash
-npm install -g commitional
-```
+CLI tool for crafting commit messages
 
 ## Usage
-
 ```bash
 commitional
 ```
@@ -22,7 +11,7 @@ commitional
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js (v18 or higher) or Bun
 - npm or yarn
 
 ### Setup
@@ -35,7 +24,11 @@ cd commitional
 
 2. Install dependencies
 ```bash
+# Bun
 npm install
+
+# Node
+bun install
 ```
 
 3. Run development mode
@@ -43,13 +36,22 @@ npm install
 npm run dev
 ```
 
-### Scripts
+4. Installing the current local version globally
+**Convenience script**
+```bash
+./install.sh
+```
+**Manually**
+```bash
+npm run build && npm install -g .
+```
 
+### Scripts
 - `npm run format` - Format code using Biome
 - `npm run lint` - Lint code using Biome
 - `npm run check` - Check code with tsc
 - `npm run build` - Bundles code with esbuild to bin/commitional.js
-- `npm test` - Run unit tests
+- `npm test` - Run tests
 
 ## Contributing
 
