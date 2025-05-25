@@ -4,6 +4,7 @@ import packageJSON from '../package.json' with { type: 'json' };
 import { promptCommitMessage } from './prompts.js';
 import { formatCommitMessage } from './lib/formatCommitMessage.js';
 import Git from './services/Git/index.js';
+import defaultConfig from './config/index.js';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
@@ -29,7 +30,8 @@ program.action(async () => {
     We'll guide the user increating a commit message that adhere's to the commitlint config.
     Otherwise we'll use our default.
   */
-  const config = await load().catch(() => null);
+  // by default pick some reasonable defaults
+  const config = await load().catch(() => defaultConfig);
 
   // Create a new *git* instance scoped to the cwd
   const git = new Git();
