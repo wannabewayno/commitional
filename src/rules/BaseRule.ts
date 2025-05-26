@@ -59,7 +59,7 @@ export abstract class BaseRule<T = unknown> {
     // Attempt to fix the input if invalid.
     const fixedInput = this.fix(input);
 
-    if (fixedInput) return fixedInput;
+    if (fixedInput !== null) return fixedInput;
 
     const errorMsg = new Error(this.errorMessage());
 
