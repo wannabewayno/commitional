@@ -5,6 +5,8 @@ import { promptCommitMessage } from './prompts.js';
 import { formatCommitMessage } from './lib/formatCommitMessage.js';
 import Git from './services/Git/index.js';
 import defaultConfig from './config/index.js';
+import RuleEngine from './rules/index.js';
+import { select, input } from '@inquirer/prompts';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
@@ -21,8 +23,9 @@ program
   .name('commitional')
   .description('CLI tool for crafting commit messages - compatible with commitlint')
   .version(packageJSON.version, '-v, --version', 'Output the current version')
+  .option('-t, --type <type>', 'Commit type; feat, fix, test ...')
   .addHelpCommand('help [command]', 'Display help for command')
-  .action(async () => {
+  .action(async (opts: { type?: string }) => {
     /*
     If the user has configured commitlint in the current working directory, attempt to load commitlint's config.
     We'll guide the user increating a commit message that adhere's to the commitlint config.
@@ -50,6 +53,35 @@ program
       console.log('--------------');
       console.log(diff);
     }
+
+    // load enum rules
+    const typeRules = new RuleEngine('type', config.rules);
+    if (opts.type) {
+      // validate it
+      typeRules.validate(opts.type);
+
+      // If it's valid let it be
+      console.log({ type: opts.type });
+
+      // otherwise we need to prompt the user for it.
+    } else {
+      const enumRule = config.rules['type-enum'];
+      const result = enumRule
+        ? await select({ message: 'Select the type of change that you\'re committing:', choices: enumRule[2] ?? [] })
+        : await input({
+            message: 'Type of change that you\'re committing:',
+            validate: (value) => typeRules.validate(value).valid,
+            transformer: (value) => typeRules.parse(value),
+          });
+      console.log({ result });
+    }
+
+    // If we already have an input for the commit type - check it
+
+    // If we don't then we need to prompt the user
+    //  if we have an enum rule show a list of enums
+    //  otherwise load all enum rules and vet it.
+
 
     const commitMessage = await promptCommitMessage();
     const formattedMessage = formatCommitMessage(commitMessage);

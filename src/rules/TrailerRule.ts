@@ -1,6 +1,6 @@
-import { BaseRule } from './BaseRule.js';
+import { BaseRuleWithValue } from './BaseRule.js';
 
-export class TrailerRule extends BaseRule<string> {
+export class TrailerRule extends BaseRuleWithValue<string> {
   validate(input: string): boolean {
     return input.includes(this.value);
   }

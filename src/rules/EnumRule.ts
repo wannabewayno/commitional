@@ -1,6 +1,6 @@
-import { BaseRule } from './BaseRule.js';
+import { BaseRule, BaseRuleWithValue } from './BaseRule.js';
 
-export class EnumRule extends BaseRule<string[]> {
+export class EnumRule extends BaseRuleWithValue<string[]> {
   validate(input: string): boolean {
     return this.value.includes(input);
   }

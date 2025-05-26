@@ -1,6 +1,6 @@
-import { BaseRule } from './BaseRule.js';
+import { BaseRuleWithValue } from './BaseRule.js';
 
-export class MaxLineLengthRule extends BaseRule<number> {
+export class MaxLineLengthRule extends BaseRuleWithValue<number> {
   validate(input: string): boolean {
     const lines = input.split('\n');
     return !lines.some(line => line.length > this.value);

@@ -1,6 +1,6 @@
-import { BaseRule } from './BaseRule.js';
+import { BaseRuleWithValue } from './BaseRule.js';
 
-export class FullStopRule extends BaseRule<string> {
+export class FullStopRule extends BaseRuleWithValue<string> {
   validate(input: string): boolean {
     return input.endsWith(this.value);
   }
