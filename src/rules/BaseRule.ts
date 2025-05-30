@@ -1,4 +1,5 @@
 import { RuleConfigSeverity, RuleConfigCondition, RuleConfigTuple } from '@commitlint/types';
+import { CommitPart } from './index.js';
 export  { RuleConfigSeverity };
 export type { RuleConfigCondition, RuleConfigTuple };
 
@@ -6,7 +7,7 @@ export abstract class BaseRule {
   protected readonly applicable: RuleConfigCondition = 'always';
   protected readonly level: RuleConfigSeverity;
 
-  constructor(level: RuleConfigSeverity, applicable: RuleConfigCondition) {
+  constructor(level: RuleConfigSeverity, applicable?: RuleConfigCondition) {
     if (applicable) this.applicable = applicable;
     this.level = level;
   }
@@ -33,9 +34,9 @@ export abstract class BaseRule {
   abstract errorMessage(): string;
 
   /**
-   * Check if the input passes the rule and handle the result based on rule level
+   * Check if the input passes the rule
    * @param input The input to check against the rule
-   * @returns the original or fixed string if applicable. return an error if an ERROR.
+   * @returns true if VALID or OFF, string message if WARNING, error if ERROR
    */
   check(input: string): string | Error {
     if (this.level === RuleConfigSeverity.Disabled) return input;
@@ -63,7 +64,7 @@ export abstract class BaseRule {
 }
 
 export abstract class BaseRuleWithValue<T = unknown> extends BaseRule {
-  constructor(level: RuleConfigSeverity, applicable: RuleConfigCondition, protected readonly value: T) {
+  constructor(level: RuleConfigSeverity, applicable: RuleConfigCondition, public readonly value: T) {
     super(level, applicable);
   }
 }

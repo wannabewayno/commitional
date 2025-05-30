@@ -5,7 +5,7 @@ import { promptCommitMessage } from './prompts.js';
 import { formatCommitMessage } from './lib/formatCommitMessage.js';
 import Git from './services/Git/index.js';
 import defaultConfig from './config/index.js';
-import RuleEngine from './rules/index.js';
+import RuleEngine, { CommitPart } from './rules/index.js';
 import { select, input } from '@inquirer/prompts';
 
 process.on('uncaughtException', error => {
@@ -18,6 +18,28 @@ process.on('uncaughtException', error => {
 });
 
 const program = new Command();
+
+async function validateOrPromptCommitPart(type: CommitPart, rules: RuleEngine, value?: string): string {
+
+  // Narrow rules to their applicable commit part.
+  const typeRules = rules.narrow(type);
+
+  if (!typeRules.validate(value)) {
+    const enumRule = typeRules.getRulesOfType('enum');
+
+    const result = enumRule
+      ? await select({ message: 'Select the type of change that you\'re committing:', choices: enumRule.value })
+      : await input({
+          message: 'Type of change that you\'re committing:',
+          validate: (value) => typeRules.validate(value),
+          transformer: (value) => typeRules.parse(value),
+        });
+    console.log({ result });
+  }
+  // In either case post validate it
+  // typeRules.parse(answer);
+  return typeRules.parse(answer);
+}
 
 program
   .name('commitional')

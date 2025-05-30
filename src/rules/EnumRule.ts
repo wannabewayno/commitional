@@ -1,4 +1,4 @@
-import { BaseRule, BaseRuleWithValue } from './BaseRule.js';
+import { BaseRuleWithValue } from './BaseRule.js';
 
 export class EnumRule extends BaseRuleWithValue<string[]> {
   validate(input: string): boolean {

@@ -1,6 +1,10 @@
 import { BaseRule } from './BaseRule.js';
 
 export class LeadingBlankRule extends BaseRule {
+  get value() {
+    return null;
+  }
+  
   validate(input: string): boolean {
     const lines = input.split('\n');
     return lines.length > 0 && lines[0].trim() === '';

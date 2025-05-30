@@ -1,6 +1,10 @@
 import { BaseRule } from './BaseRule.js';
 
 export class TrimRule extends BaseRule {
+  get value() {
+    return null;
+  }
+  
   validate(input: string): boolean {
     return input === input.trim();
   }
