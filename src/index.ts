@@ -1,12 +1,11 @@
 import { Command } from 'commander';
 import load from '@commitlint/load';
 import packageJSON from '../package.json' with { type: 'json' };
-import { promptCommitMessage } from './prompts.js';
+import type { CommitMessage } from './prompts.js';
 import { formatCommitMessage } from './lib/formatCommitMessage.js';
 import Git from './services/Git/index.js';
 import defaultConfig from './config/index.js';
-import RuleEngine, { CommitPart } from './rules/index.js';
-import { select, input } from '@inquirer/prompts';
+import RulesEngine from './rules/index.js';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
@@ -19,28 +18,6 @@ process.on('uncaughtException', error => {
 
 const program = new Command();
 
-async function validateOrPromptCommitPart(type: CommitPart, rules: RuleEngine, value?: string): string {
-
-  // Narrow rules to their applicable commit part.
-  const typeRules = rules.narrow(type);
-
-  if (!typeRules.validate(value)) {
-    const enumRule = typeRules.getRulesOfType('enum');
-
-    const result = enumRule
-      ? await select({ message: 'Select the type of change that you\'re committing:', choices: enumRule.value })
-      : await input({
-          message: 'Type of change that you\'re committing:',
-          validate: (value) => typeRules.validate(value),
-          transformer: (value) => typeRules.parse(value),
-        });
-    console.log({ result });
-  }
-  // In either case post validate it
-  // typeRules.parse(answer);
-  return typeRules.parse(answer);
-}
-
 program
   .name('commitional')
   .description('CLI tool for crafting commit messages - compatible with commitlint')
@@ -49,10 +26,10 @@ program
   .addHelpCommand('help [command]', 'Display help for command')
   .action(async (opts: { type?: string }) => {
     /*
-    If the user has configured commitlint in the current working directory, attempt to load commitlint's config.
-    We'll guide the user increating a commit message that adhere's to the commitlint config.
-    Otherwise we'll use our default.
-  */
+      If the user has configured commitlint in the current working directory, attempt to load commitlint's config.
+      We'll guide the user increating a commit message that adhere's to the commitlint config.
+      Otherwise we'll use our default.
+    */
     // by default pick some reasonable defaults
     const config = await load().catch(() => defaultConfig);
 
@@ -76,42 +53,25 @@ program
       console.log(diff);
     }
 
-    // load enum rules
-    const typeRules = new RuleEngine('type', config.rules);
-    if (opts.type) {
-      // validate it
-      typeRules.validate(opts.type);
+    const rulesEngine = RulesEngine.fromConfig(config.rules);
 
-      // If it's valid let it be
-      console.log({ type: opts.type });
+    const commit: CommitMessage = {
+      type: await rulesEngine.narrow('type').prompt(opts.type),
+      title: '<title>',
+      scope: '<scope>',
+      body: '<body>',
+      breaking: false,
+    };
 
-      // otherwise we need to prompt the user for it.
-    } else {
-      const enumRule = config.rules['type-enum'];
-      const result = enumRule
-        ? await select({ message: 'Select the type of change that you\'re committing:', choices: enumRule[2] ?? [] })
-        : await input({
-            message: 'Type of change that you\'re committing:',
-            validate: (value) => typeRules.validate(value).valid,
-            transformer: (value) => typeRules.parse(value),
-          });
-      console.log({ result });
-    }
-
-    // If we already have an input for the commit type - check it
-
-    // If we don't then we need to prompt the user
-    //  if we have an enum rule show a list of enums
-    //  otherwise load all enum rules and vet it.
-
-
-    const commitMessage = await promptCommitMessage();
-    const formattedMessage = formatCommitMessage(commitMessage);
+    // const commitMessage = await promptCommitMessage();
+    const formattedMessage = formatCommitMessage(commit);
     console.log('\nCommit message:');
     console.log('------------------------');
     console.log(formattedMessage.join('\n\n'));
-    await git.commit(...formattedMessage);
     console.log('------------------------');
+
+    // Then commit with this message.
+    await git.commit(...formattedMessage);
 
     // In a real implementation, we might want to write this to a file
     // or pipe it to git commit, but for now we'll just display it

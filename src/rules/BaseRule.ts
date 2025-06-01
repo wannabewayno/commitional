@@ -1,6 +1,6 @@
-import { RuleConfigSeverity, RuleConfigCondition, RuleConfigTuple } from '@commitlint/types';
+import { RuleConfigSeverity, type RuleConfigCondition, type RuleConfigTuple } from '@commitlint/types';
 import { CommitPart } from './index.js';
-export  { RuleConfigSeverity };
+export { RuleConfigSeverity };
 export type { RuleConfigCondition, RuleConfigTuple };
 
 export abstract class BaseRule {
@@ -64,7 +64,11 @@ export abstract class BaseRule {
 }
 
 export abstract class BaseRuleWithValue<T = unknown> extends BaseRule {
-  constructor(level: RuleConfigSeverity, applicable: RuleConfigCondition, public readonly value: T) {
+  constructor(
+    level: RuleConfigSeverity,
+    applicable: RuleConfigCondition,
+    public readonly value: T,
+  ) {
     super(level, applicable);
   }
 }
