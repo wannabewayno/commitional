@@ -42,7 +42,7 @@ describe('EmptyRule', () => {
   describe('errorMessage', () => {
     it('should return correct error message', () => {
       const rule = new EmptyRule(RuleConfigSeverity.Error, 'always');
-      assert.strictEqual(rule.errorMessage(), 'be empty');
+      assert.strictEqual(rule.errorMessage(), 'Must always be empty');
     });
   });
 
@@ -72,11 +72,11 @@ describe('EmptyRule', () => {
       const result = rule.check('');
 
       assert.ok(result instanceof Error);
-      assert.strictEqual(result.message, 'be empty');
+      assert.strictEqual(result.message, 'Must never be empty');
     });
 
     it('should throw error when level is ERROR and cannot fix', () => {
-      const rule = new EmptyRule(RuleConfigSeverity.Error,'never');
+      const rule = new EmptyRule(RuleConfigSeverity.Error, 'never');
 
       assert.throws(() => {
         rule.check('');

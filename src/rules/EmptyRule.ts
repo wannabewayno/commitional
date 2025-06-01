@@ -4,7 +4,7 @@ export class EmptyRule extends BaseRule {
   get value() {
     return null;
   }
-  
+
   validate(input: string): boolean {
     return input.trim() === '';
   }
@@ -19,6 +19,6 @@ export class EmptyRule extends BaseRule {
   }
 
   errorMessage(): string {
-    return 'be empty';
+    return `Must ${this.applicable} be empty`;
   }
 }
