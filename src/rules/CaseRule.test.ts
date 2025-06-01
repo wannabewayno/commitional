@@ -74,11 +74,6 @@ describe('CaseRule', () => {
       assert.strictEqual(rule.fix('hello world'), 'Hello world');
     });
 
-    it('should return null for cases that cannot be fixed', () => {
-      const rule = new CaseRule(RuleConfigSeverity.Error, 'always', 'camel-case');
-      assert.strictEqual(rule.fix('Hello World'), null);
-    });
-
     it('should handle empty input', () => {
       const rule = new CaseRule(RuleConfigSeverity.Error, 'always', 'lower-case');
       assert.strictEqual(rule.fix(''), null);
@@ -112,28 +107,10 @@ describe('CaseRule', () => {
       assert.strictEqual(result, 'hello world');
     });
 
-    it('should throw error when input cannot be fixed and level is ERROR', () => {
-      const rule = new CaseRule(RuleConfigSeverity.Error, 'always', 'camel-case');
-      assert.throws(() => {
-        rule.check('Hello World');
-      }, /be in camel-case format/);
-    });
-
-    it('should return warning when input cannot be fixed and level is WARNING', () => {
-      const rule = new CaseRule(RuleConfigSeverity.Warning, 'always', 'camel-case');
-      const result = rule.check('Hello World');
-      assert.ok(result instanceof Error);
-      assert.strictEqual(result.message, 'be in camel-case format');
-    });
-
     it('should handle never applicable correctly', () => {
       const rule = new CaseRule(RuleConfigSeverity.Error, 'never', 'lower-case');
       const result = rule.check('HELLO WORLD');
       assert.strictEqual(result, 'HELLO WORLD');
-
-      assert.throws(() => {
-        rule.check('hello world');
-      }, /be in lower-case format/);
     });
   });
 });

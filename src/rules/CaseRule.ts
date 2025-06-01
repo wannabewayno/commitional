@@ -1,5 +1,18 @@
 import { BaseRuleWithValue } from './BaseRule.js';
 
+function capitalize(input: string) {
+  return input.charAt(0).toUpperCase() + input.slice(1);
+}
+
+function delimiter(string: string, delimiter = ' ') {
+  // target all common delimiter types and replace with the new delimter
+  return string.replace(/[a-z][A-Z]|[a-z]\d|\d[a-z]]/g, v => `${v[0]}${delimiter}${v[1]}`).replace(/[\s-_]/g, delimiter);
+}
+
+function splitByWord(string: string) {
+  return delimiter(string, ' ').split(' ');
+}
+
 export type CaseType =
   | 'lower-case'
   | 'upper-case'
@@ -30,13 +43,29 @@ export class CaseRule extends BaseRuleWithValue<CaseType | CaseType[]> {
       case 'upper-case':
         return input.toUpperCase();
       case 'sentence-case':
-        return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
+        return capitalize(input.toLowerCase());
       case 'start-case':
-        return input
-          .split(' ')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        return splitByWord(input)
+          .map(word => capitalize(word.toLowerCase()))
           .join(' ');
-      // More complex cases are harder to fix automatically
+      case 'camel-case': {
+        const [first, ...rest] = splitByWord(input);
+        return [first.toLowerCase()]
+          .concat(rest.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()))
+          .join('');
+      }
+      case 'kebab-case':
+        return splitByWord(input)
+          .map(word => word.toLowerCase())
+          .join('-');
+      case 'snake-case':
+        return splitByWord(input)
+          .map(word => word.toLowerCase())
+          .join('_');
+      case 'pascal-case':
+        return splitByWord(input)
+          .map(word => capitalize(word.toLowerCase()))
+          .join('');
       default:
         return null;
     }
