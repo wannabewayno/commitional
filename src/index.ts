@@ -55,16 +55,20 @@ program
 
     const rulesEngine = RulesEngine.fromConfig(config.rules);
 
-    const commit: CommitMessage = {
-      type: await rulesEngine.narrow('type').prompt(opts.type),
-      title: '<title>',
-      scope: '<scope>',
-      body: '<body>',
-      breaking: false,
-    };
+    const type = await rulesEngine.narrow('type').prompt(opts.type);
+    const title = '<title>';
+    const body = '<body>';
+    const breaking = false;
+    const scope = '<scope>';
 
     // const commitMessage = await promptCommitMessage();
-    const formattedMessage = formatCommitMessage(commit);
+    const formattedMessage = formatCommitMessage({
+      type,
+      title,
+      body,
+      breaking,
+      scope,
+    });
     console.log('\nCommit message:');
     console.log('------------------------');
     console.log(formattedMessage.join('\n\n'));
