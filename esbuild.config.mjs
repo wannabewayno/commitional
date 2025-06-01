@@ -1,6 +1,6 @@
 import process from 'node:process';
 import esbuild from 'esbuild';
-import info from './package.json' assert { type: 'json' };
+import info from './package.json' with { type: 'json' };
 
 const banner = '#!/usr/bin/env node';
 
