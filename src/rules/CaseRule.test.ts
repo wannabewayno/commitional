@@ -84,12 +84,12 @@ describe('CaseRule', () => {
   describe('errorMessage', () => {
     it('should return correct error message for single case type', () => {
       const rule = new CaseRule(RuleConfigSeverity.Error, 'always', 'lower-case');
-      assert.strictEqual(rule.errorMessage(), 'be in lower-case format');
+      assert.strictEqual(rule.errorMessage(), 'Must be in lower-case');
     });
 
     it('should return correct error message for multiple case types', () => {
       const rule = new CaseRule(RuleConfigSeverity.Error, 'always', ['sentence-case', 'pascal-case']);
-      assert.strictEqual(rule.errorMessage(), 'be in one of [sentence-case, pascal-case] format');
+      assert.strictEqual(rule.errorMessage(), 'Must be in either PascalCase or Sentence case');
     });
   });
 

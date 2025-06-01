@@ -1,4 +1,4 @@
-import { BaseRuleWithValue } from './BaseRule.js';
+import { BaseRuleWithValue, type RuleConfigCondition, type RuleConfigSeverity } from './BaseRule.js';
 
 function capitalize(input: string) {
   return input.charAt(0).toUpperCase() + input.slice(1);
@@ -23,19 +23,27 @@ export type CaseType =
   | 'snake-case'
   | 'start-case';
 
-export class CaseRule extends BaseRuleWithValue<CaseType | CaseType[]> {
+export class CaseRule extends BaseRuleWithValue<CaseType[]> {
+  constructor(level: RuleConfigSeverity, applicable: RuleConfigCondition, value: CaseType | CaseType[]) {
+    value = !Array.isArray(value) ? [value] : value;
+    super(level, applicable, value);
+  }
+
   validate(input: string): boolean {
     if (!input) return true;
 
-    const caseTypes = Array.isArray(this.value) ? this.value : [this.value];
-    return caseTypes.some(caseType => this.matchesCase(input, caseType));
+    return this.value.some(caseType => this.matchesCase(input, caseType));
   }
 
   fix(input: string): string | null {
-    if (!input || this.applicable === 'never') return null;
-
     // Use the first case type if multiple are provided
-    const caseType = Array.isArray(this.value) ? this.value[0] : this.value;
+    const [caseType] = this.value;
+
+    return this._fix(input, caseType);
+  }
+
+  private _fix(input: string, caseType: CaseType) {
+    if (!input || this.applicable === 'never') return null;
 
     switch (caseType) {
       case 'lower-case':
@@ -43,7 +51,7 @@ export class CaseRule extends BaseRuleWithValue<CaseType | CaseType[]> {
       case 'upper-case':
         return input.toUpperCase();
       case 'sentence-case':
-        return capitalize(input.toLowerCase());
+        return capitalize(splitByWord(input).join(' ').toLowerCase());
       case 'start-case':
         return splitByWord(input)
           .map(word => capitalize(word.toLowerCase()))
@@ -72,9 +80,14 @@ export class CaseRule extends BaseRuleWithValue<CaseType | CaseType[]> {
   }
 
   errorMessage(): string {
-    const caseDescription = Array.isArray(this.value) ? `one of [${this.value.join(', ')}]` : this.value;
+    if (this.value.length === 1) return `Must be in ${this.value[0]}`;
+    const [last, ...rest] = this.value;
 
-    return `be in ${caseDescription} format`;
+    // convert cases to their own representations for readability.
+    const restStr = rest.map(v => this._fix(v, v)).join(', ');
+    const lastStr = this._fix(last, last);
+
+    return `Must be in either ${restStr} or ${lastStr}`;
   }
 
   private matchesCase(input: string, caseType: CaseType): boolean {
