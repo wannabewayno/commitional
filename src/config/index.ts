@@ -1,6 +1,8 @@
 import type load from '@commitlint/load';
 
-type QualifiedConfig = Awaited<ReturnType<typeof load>>;
+export type QualifiedConfig = Awaited<ReturnType<typeof load>>;
+export type RuleConfig = QualifiedConfig['rules'] 
+
 
 const conventionalCommitTypes = ['feat', 'fix', 'docs', 'style', 'refactor', 'perf', 'test', 'build', 'ci', 'chore'];
 

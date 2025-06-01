@@ -1,4 +1,4 @@
-import { BaseRule } from './BaseRule.js';
+import { BaseRuleWithValue } from './BaseRule.js';
 
 export type CaseType =
   | 'lower-case'
@@ -10,7 +10,7 @@ export type CaseType =
   | 'snake-case'
   | 'start-case';
 
-export class CaseRule extends BaseRule<CaseType | CaseType[]> {
+export class CaseRule extends BaseRuleWithValue<CaseType | CaseType[]> {
   validate(input: string): boolean {
     if (!input) return true;
 

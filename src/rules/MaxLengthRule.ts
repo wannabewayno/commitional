@@ -1,6 +1,6 @@
-import { BaseRule } from './BaseRule.js';
+import { BaseRuleWithValue } from './BaseRule.js';
 
-export class MaxLengthRule extends BaseRule<number> {
+export class MaxLengthRule extends BaseRuleWithValue<number> {
   validate(input: string): boolean {
     return input.length <= this.value;
   }

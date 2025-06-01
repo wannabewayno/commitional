@@ -1,22 +1,14 @@
-export enum RuleLevel {
-  OFF = 0,
-  WARNING = 1,
-  ERROR = 2,
-}
+import { RuleConfigSeverity, type RuleConfigCondition, type RuleConfigTuple } from '@commitlint/types';
+import { CommitPart } from './index.js';
+export { RuleConfigSeverity };
+export type { RuleConfigCondition, RuleConfigTuple };
 
-export type RuleApplicable = 'always' | 'never';
+export abstract class BaseRule {
+  protected readonly applicable: RuleConfigCondition = 'always';
+  protected readonly level: RuleConfigSeverity;
 
-export type RuleArgs<T> = [level: RuleLevel, applicable: RuleApplicable, value: T];
-
-export abstract class BaseRule<T = unknown> {
-  protected value: T;
-  protected applicable: RuleApplicable;
-  protected level: RuleLevel;
-
-  constructor([level, applicable, value]: RuleArgs<T>) {
-    // [value: T, applicable: RuleApplicable = 'always', level: RuleLevel = RuleLevel.ERROR]
-    this.value = value;
-    this.applicable = applicable;
+  constructor(level: RuleConfigSeverity, applicable?: RuleConfigCondition) {
+    if (applicable) this.applicable = applicable;
     this.level = level;
   }
 
@@ -42,12 +34,12 @@ export abstract class BaseRule<T = unknown> {
   abstract errorMessage(): string;
 
   /**
-   * Check if the input passes the rule and handle the result based on rule level
+   * Check if the input passes the rule
    * @param input The input to check against the rule
-   * @returns the original or fixed string if applicable. return an error if an ERROR.
+   * @returns true if VALID or OFF, string message if WARNING, error if ERROR
    */
   check(input: string): string | Error {
-    if (this.level === RuleLevel.OFF) return input;
+    if (this.level === RuleConfigSeverity.Disabled) return input;
 
     const result = this.validate(input);
 
@@ -64,9 +56,19 @@ export abstract class BaseRule<T = unknown> {
     const errorMsg = new Error(this.errorMessage());
 
     // We couldn't fix it. If it's a Warning, return an error
-    if (this.level === RuleLevel.WARNING) return errorMsg;
+    if (this.level === RuleConfigSeverity.Warning) return errorMsg;
 
     // Not a warning, throw the error.
     throw errorMsg;
+  }
+}
+
+export abstract class BaseRuleWithValue<T = unknown> extends BaseRule {
+  constructor(
+    level: RuleConfigSeverity,
+    applicable: RuleConfigCondition,
+    public readonly value: T,
+  ) {
+    super(level, applicable);
   }
 }
