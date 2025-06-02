@@ -5,7 +5,7 @@ import Git from './services/Git/index.js';
 import RulesEngine from './rules/index.js';
 import { ScopeDeducer } from './services/ScopeDeducer/index.js';
 import loadConfig from './config/index.js';
-import { TypePrompt, ScopePrompt, SubjectPrompt } from './prompts/index.js';
+import { TypePrompt, ScopePrompt, SubjectPrompt, BodyPrompt } from './prompts/index.js';
 import { confirm } from '@inquirer/prompts';
 
 process.on('uncaughtException', error => {
@@ -70,7 +70,9 @@ program
     const type = await new TypePrompt(rulesEngine).prompt(opts.type);
 
     const title = await new SubjectPrompt(rulesEngine).prompt(opts.subject);
-    const body = '<body>';
+
+    const body = await new BodyPrompt(rulesEngine).prompt(opts.body);
+
     const breaking =
       opts.breaking !== undefined
         ? opts.breaking

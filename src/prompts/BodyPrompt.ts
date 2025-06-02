@@ -1,0 +1,135 @@
+import { confirm, editor, select, input } from '@inquirer/prompts';
+import type RulesEngine from '../rules/index.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+
+const CUSTOM = 'custom';
+
+export default class BodyPrompt {
+  private rules: RulesEngine;
+
+  constructor(rules: RulesEngine) {
+    this.rules = rules.narrow('body');
+  }
+
+  private async checkEditor(): Promise<Error | null> {
+    // Check for existing editor in environment variables
+    let editorCmd = process.env.EDITOR || process.env.VISUAL;
+
+    if (editorCmd) return null;
+
+    // Common editor commands
+    const editorOptions = [
+      { name: 'VS Code', value: 'code --wait --new-window' },
+      { name: 'Vim', value: 'vim' },
+      { name: 'Nano', value: 'nano' },
+      { name: 'Emacs', value: 'emacs' },
+      { name: 'Other', value: CUSTOM },
+    ];
+
+    const selectedEditor = await select({
+      message: 'No editor found. Please select your preferred editor:',
+      choices: editorOptions,
+    });
+
+    if (selectedEditor === CUSTOM) {
+      editorCmd = await input({
+        message: 'Enter the command to open your editor:',
+      });
+    } else {
+      editorCmd = selectedEditor;
+    }
+
+    // Ask if they want to save this choice
+    const saveChoice = await confirm({
+      message: 'Would you like to set this as your default editor for future sessions?',
+    });
+
+    if (saveChoice) {
+      try {
+        const shellConfigPath = path.join(os.homedir(), '.bashrc');
+        const editorExport = `\n# Added by commitional\nexport EDITOR="${editorCmd}"\n`;
+
+        fs.appendFileSync(shellConfigPath, editorExport);
+        console.log(`Editor preference saved to ${shellConfigPath}`);
+      } catch (error) {
+        return error as Error;
+      }
+    }
+
+    // Set for current session
+    process.env.EDITOR = editorCmd;
+
+    return null;
+  }
+
+  async prompt(initialValue?: string): Promise<string> {
+    let answer: string;
+
+    // Body is optional unless required by some rules.
+
+    // If it's valid
+    if (this.rules.validate(initialValue)) {
+      answer = initialValue ?? '';
+      // if it's valid and empty, ask the user if they want to add one.
+      if (answer === '') {
+        const openEditor = await confirm({ message: 'Would you like to add a Commit body?' });
+
+        // Default show the user an example. or the Good Commit guide.
+        if (openEditor) {
+          // Ensure we have an editor command
+          await this.checkEditor();
+
+          answer = await editor({
+            waitForUseInput: false,
+            message: '',
+            default: this.defaultMessage(),
+          });
+        }
+      }
+    } else {
+      answer = initialValue ?? '';
+      // Ensure we have an editor command
+      await this.checkEditor();
+
+      // Make the default message be the Errors
+      const errors = this.rules.check(answer);
+
+      const defaultMessage = this.defaultMessage();
+
+      const errorMessage = this.comment(
+        'The following errors were found with the commit body',
+        ...errors.map(v => `- ${v}`),
+      );
+
+      // Gather all the errors currently with the body and display them in the editor as a comment.
+      answer = await editor({
+        message: '',
+        default: `${defaultMessage}\n${errorMessage}\n${answer}`,
+        waitForUseInput: false,
+        validate: value => {
+          const valid = this.rules.validate(value);
+          if (!valid) return this.rules.check(value).join('\n');
+          return true;
+        },
+      });
+    }
+
+    // Remove any comments from the commit body
+    answer = answer.replace(/^#.+$/gm, '').trim();
+
+    return this.rules.parse(answer);
+  }
+
+  private defaultMessage() {
+    return this.comment(
+      'Type your message below and close the editor to continue',
+      "Lines starting with '#' will be ignored",
+    );
+  }
+
+  private comment(...lines: string[]) {
+    return `# ${lines.join('\n# ')}`;
+  }
+}
