@@ -9,13 +9,21 @@ import { LeadingBlankRule } from './LeadingBlankRule.js';
 import { MaxLineLengthRule } from './MaxLineLengthRule.js';
 import { TrimRule } from './TrimRule.js';
 import { ExclamationMarkRule } from './ExclamationMarkRule.js';
+import { AllowMultipleRule } from './AllowMultipleRule.js';
 import { type RuleConfigCondition, RuleConfigSeverity, type RulesConfig } from '@commitlint/types';
 import RulePrompt from '../prompts/index.js';
 
 export type CommitPart = 'body' | 'footer' | 'header' | 'scope' | 'type' | 'subject' | 'trailer';
 
 export type RuleTypeWithoutValue = 'leading-blank' | 'empty' | 'trim' | 'exclamation-mark';
-export type RuleTypeWithValue = 'full-stop' | 'max-length' | 'min-length' | 'max-line-length' | 'case' | 'enum';
+export type RuleTypeWithValue =
+  | 'full-stop'
+  | 'max-length'
+  | 'min-length'
+  | 'max-line-length'
+  | 'case'
+  | 'enum'
+  | 'allow-multiple';
 
 export type RuleType = RuleTypeWithValue | RuleTypeWithoutValue;
 export type RuleString = `${CommitPart}-${RuleType}`;
@@ -32,6 +40,7 @@ type RuleMapping = {
   'max-line-length': MaxLineLengthRule;
   case: CaseRule;
   enum: EnumRule;
+  'allow-multiple': AllowMultipleRule;
 };
 
 // Map from rule strings to rule instances
@@ -225,6 +234,9 @@ export default class RulesEngine<Config extends Rules = Rules> {
         return new TrimRule(level, condition) as RuleMapping[T];
       case 'exclamation-mark':
         return new ExclamationMarkRule(level, condition) as RuleMapping[T];
+      case 'allow-multiple':
+        if (typeof value !== 'string') break;
+        return new AllowMultipleRule(level, condition, value ? value : ',') as RuleMapping[T];
     }
     return;
   }

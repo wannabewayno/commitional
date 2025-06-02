@@ -4,9 +4,10 @@ export class TrimRule extends BaseRule {
   get value() {
     return null;
   }
-  
+
   validate(input: string): boolean {
-    return input === input.trim();
+    const isTrimmed = input === input.trim();
+    return this.applicable === 'always' ? isTrimmed : !isTrimmed;
   }
 
   fix(input: string): string | null {

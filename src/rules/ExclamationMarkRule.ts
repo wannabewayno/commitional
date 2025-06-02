@@ -4,9 +4,10 @@ export class ExclamationMarkRule extends BaseRule {
   get value() {
     return null;
   }
-  
+
   validate(input: string): boolean {
-    return input.includes('!:');
+    const hasExclamationMarkBeforeTheColon = input.includes('!:');
+    return this.applicable === 'always' ? hasExclamationMarkBeforeTheColon : !hasExclamationMarkBeforeTheColon;
   }
 
   fix(input: string): string | null {

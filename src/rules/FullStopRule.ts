@@ -2,7 +2,8 @@ import { BaseRuleWithValue } from './BaseRule.js';
 
 export class FullStopRule extends BaseRuleWithValue<string> {
   validate(input: string): boolean {
-    return input.endsWith(this.value);
+    const endsWithFullStop = input.endsWith(this.value);
+    return this.applicable === 'always' ? endsWithFullStop : !endsWithFullStop;
   }
 
   fix(input: string): string | null {

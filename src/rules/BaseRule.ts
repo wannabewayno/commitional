@@ -43,10 +43,7 @@ export abstract class BaseRule {
 
     const result = this.validate(input);
 
-    // Invert rule if 'never'
-    const finalResult = this.applicable === 'never' ? !result : result;
-
-    if (finalResult) return input;
+    if (result) return input;
 
     // Attempt to fix the input if invalid.
     const fixedInput = this.fix(input);

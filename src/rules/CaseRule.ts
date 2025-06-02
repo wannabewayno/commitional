@@ -32,7 +32,8 @@ export class CaseRule extends BaseRuleWithValue<CaseType[]> {
   validate(input: string): boolean {
     if (!input) return true;
 
-    return this.value.some(caseType => this.matchesCase(input, caseType));
+    const hasCase = this.value.some(caseType => this.matchesCase(input, caseType));
+    return this.applicable === 'always' ? hasCase : !hasCase;
   }
 
   fix(input: string): string | null {
