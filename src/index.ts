@@ -1,11 +1,10 @@
 import { Command } from 'commander';
-import load from '@commitlint/load';
 import packageJSON from '../package.json' with { type: 'json' };
 import { formatCommitMessage } from './lib/formatCommitMessage.js';
 import Git from './services/Git/index.js';
-import defaultConfig from './config/index.js';
 import RulesEngine from './rules/index.js';
 import { ScopeDeducer } from './services/ScopeDeducer/index.js';
+import loadConfig from './config/index.js';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
@@ -32,7 +31,7 @@ program
       Otherwise we'll use our default.
     */
     // by default pick some reasonable defaults
-    const config = await load().catch(() => defaultConfig);
+    const config = await loadConfig();
 
     // Create a new *git* instance scoped to the cwd
     const git = new Git();

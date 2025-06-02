@@ -10,9 +10,11 @@ import { MaxLineLengthRule } from './MaxLineLengthRule.js';
 import { TrimRule } from './TrimRule.js';
 import { ExclamationMarkRule } from './ExclamationMarkRule.js';
 import { AllowMultipleRule } from './AllowMultipleRule.js';
-import { type RuleConfigCondition, RuleConfigSeverity, type RulesConfig } from '@commitlint/types';
+import { type RuleConfigCondition, RuleConfigSeverity } from '@commitlint/types';
+import type { CommitlintConfig } from '../config/index.js';
 import RulePrompt from '../prompts/index.js';
 
+export type RulesConfig = CommitlintConfig['rules'];
 export type CommitPart = 'body' | 'footer' | 'header' | 'scope' | 'type' | 'subject' | 'trailer';
 
 export type RuleTypeWithoutValue = 'leading-blank' | 'empty' | 'trim' | 'exclamation-mark';
