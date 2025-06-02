@@ -12,7 +12,6 @@ import { ExclamationMarkRule } from './ExclamationMarkRule.js';
 import { AllowMultipleRule } from './AllowMultipleRule.js';
 import { type RuleConfigCondition, RuleConfigSeverity } from '@commitlint/types';
 import type { CommitlintConfig } from '../config/index.js';
-import RulePrompt from '../prompts/index.js';
 
 export type RulesConfig = CommitlintConfig['rules'];
 export type CommitPart = 'body' | 'footer' | 'header' | 'scope' | 'type' | 'subject' | 'trailer';
@@ -128,7 +127,7 @@ export default class RulesEngine<Config extends Rules = Rules> {
     return rules;
   }
 
-  narrow(part: CommitPart): RulePrompt {
+  narrow(part: CommitPart): RulesEngine {
     const narrowedRules: Record<string, BaseRule> = {};
 
     for (const ruleName in this.rules) {
@@ -138,9 +137,7 @@ export default class RulesEngine<Config extends Rules = Rules> {
     }
 
     // Return a new instance of RulesEngine filtered to the part of the commit message we're interested in.
-    const narrowed = new RulesEngine(narrowedRules as Rules);
-
-    return new RulePrompt(narrowed);
+    return new RulesEngine(narrowedRules as Rules);
   }
 
   /**

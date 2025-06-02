@@ -5,6 +5,7 @@ import Git from './services/Git/index.js';
 import RulesEngine from './rules/index.js';
 import { ScopeDeducer } from './services/ScopeDeducer/index.js';
 import loadConfig from './config/index.js';
+import TypePrompt from './prompts/TypePrompt.js';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
@@ -59,9 +60,10 @@ program
 
     // Deduce scope from staged files
     const deducedScope = scopeDeducer.deduceScope(stagedFiles) ?? (opts.scope ? opts.scope.split(',') : []);
-    const scope = await rulesEngine.narrow('scope').prompt(deducedScope[0]);
+    const scope = await new TypePrompt(rulesEngine).prompt(deducedScope[0]);
 
-    const type = await rulesEngine.narrow('type').prompt(opts.type);
+    // I should keep it simple and do the AI stuff here and just pass it in to the validator.
+    const type = await new TypePrompt(rulesEngine).prompt(opts.type);
     const title = '<title>';
     const body = '<body>';
     const breaking = false;
