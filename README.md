@@ -3,8 +3,14 @@
 CLI tool for crafting commit messages
 
 ## Usage
+**Install globally**
 ```bash
 commitional
+```
+
+**Installed in workspace**
+```bash
+npx commitional
 ```
 
 ## Development
