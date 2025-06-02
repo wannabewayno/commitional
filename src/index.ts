@@ -24,8 +24,9 @@ program
   .version(packageJSON.version, '-v, --version', 'Output the current version')
   .option('-t, --type <type>', 'Commit type; feat, fix, test ...')
   .option('-s, --scope <scope>', 'Commit scope (if any)')
+  .option('-S, --subject <subject>', 'Commit subject')
   .addHelpCommand('help [command]', 'Display help for command')
-  .action(async (opts: { type?: string; scope?: string }) => {
+  .action(async (opts: { type?: string; scope?: string; subject?: string }) => {
     /*
       If the user has configured commitlint in the current working directory, attempt to load commitlint's config.
       We'll guide the user increating a commit message that adhere's to the commitlint config.
