@@ -26,9 +26,9 @@ program
   .option('-s, --scope <scope>', 'Commit scope (if any)')
   .option('-S, --subject <subject>', 'Commit subject')
   .option('-b, --body <body>', 'Commit body')
-  .option('-B, --breaking', 'Is this a Breaking change?', false)
+  .option('-B, --breaking', 'Is this a Breaking change?')
   .addHelpCommand('help [command]', 'Display help for command')
-  .action(async (opts: { type?: string; scope?: string; subject?: string; breaking: boolean; body?: string }) => {
+  .action(async (opts: { type?: string; scope?: string; subject?: string; breaking?: boolean; body?: string }) => {
     /*
       If the user has configured commitlint in the current working directory, attempt to load commitlint's config.
       We'll guide the user increating a commit message that adhere's to the commitlint config.
@@ -70,7 +70,8 @@ program
 
     const title = await new SubjectPrompt(rulesEngine).prompt(opts.subject);
     const body = '<body>';
-    const breaking = false;
+    const breaking =
+      opts.breaking !== undefined ? opts.breaking : await confirm('Does this change introduce any breaking changes?');
 
     // const commitMessage = await promptCommitMessage();
     const formattedMessage = formatCommitMessage({
