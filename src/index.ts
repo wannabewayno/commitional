@@ -5,7 +5,7 @@ import Git from './services/Git/index.js';
 import RulesEngine from './rules/index.js';
 import { ScopeDeducer } from './services/ScopeDeducer/index.js';
 import loadConfig from './config/index.js';
-import { TypePrompt, ScopePrompt } from './prompts/index.js';
+import { TypePrompt, ScopePrompt, SubjectPrompt } from './prompts/index.js';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
@@ -67,7 +67,8 @@ program
 
     // I should keep it simple and do the AI stuff here and just pass it in to the validator.
     const type = await new TypePrompt(rulesEngine).prompt(opts.type);
-    const title = '<title>';
+
+    const title = await new SubjectPrompt(rulesEngine).prompt(opts.subject);
     const body = '<body>';
     const breaking = false;
 
