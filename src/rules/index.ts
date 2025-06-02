@@ -76,8 +76,7 @@ export default class RulesEngine<Config extends Rules = Rules> {
    * @param input
    * @returns {Object} - An object that tells you if the input is valid, with any warnings, or invalid, with errors and warnings.
    */
-  validate(input?: string): boolean {
-    if (!input) return false;
+  validate(input = ''): boolean {
     for (const rule of this.listRules()) {
       try {
         const result = rule.check(input);
