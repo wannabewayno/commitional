@@ -7,6 +7,18 @@ export type CommitlintConfig = QualifiedConfig & {
 };
 
 const conventionalCommitTypes = ['feat', 'fix', 'docs', 'style', 'refactor', 'perf', 'test', 'build', 'ci', 'chore'];
+// const COMMIT_TYPES = [
+//   { name: 'feat: A new feature', value: 'feat' },
+//   { name: 'fix: A bug fix', value: 'fix' },
+//   { name: 'docs: Documentation only changes', value: 'docs' },
+//   { name: 'style: Changes that do not affect the meaning of the code', value: 'style' },
+//   { name: 'refactor: A code change that neither fixes a bug nor adds a feature', value: 'refactor' },
+//   { name: 'perf: A code change that improves performance', value: 'perf' },
+//   { name: 'test: Adding missing tests or correcting existing tests', value: 'test' },
+//   { name: 'build: Changes that affect the build system or external dependencies', value: 'build' },
+//   { name: 'ci: Changes to our CI configuration files and scripts', value: 'ci' },
+//   { name: "chore: Other changes that don't modify src or test files", value: 'chore' },
+// ];
 
 const defaultConfig: CommitlintConfig = {
   extends: [],
