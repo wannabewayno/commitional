@@ -25,6 +25,7 @@ program
   .option('-t, --type <type>', 'Commit type; feat, fix, test ...')
   .option('-s, --scope <scope>', 'Commit scope (if any)')
   .option('-S, --subject <subject>', 'Commit subject')
+  .option('-b, --body <body>', 'Commit body')
   .addHelpCommand('help [command]', 'Display help for command')
   .action(async (opts: { type?: string; scope?: string; subject?: string }) => {
     /*
