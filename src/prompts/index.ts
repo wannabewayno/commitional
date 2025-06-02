@@ -1,5 +1,6 @@
 import { input, select } from '@inquirer/prompts';
 import type RulesEngine from '../rules/index.js';
+import type { RuleType } from '../rules/index.js';
 
 export default class RulePrompt {
   constructor(
@@ -37,5 +38,9 @@ export default class RulePrompt {
     }
 
     return this.rules.parse(answer);
+  }
+
+  getRulesOfType<T extends RuleType>(type: T) {
+    return this.rules.getRulesOfType(type);
   }
 }
