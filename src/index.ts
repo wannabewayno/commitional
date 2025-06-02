@@ -28,7 +28,7 @@ program
   .option('-b, --body <body>', 'Commit body')
   .option('-B, --breaking', 'Is this a Breaking change?', false)
   .addHelpCommand('help [command]', 'Display help for command')
-  .action(async (opts: { type?: string; scope?: string; subject?: string; breaking: boolean }) => {
+  .action(async (opts: { type?: string; scope?: string; subject?: string; breaking: boolean; body?: string }) => {
     /*
       If the user has configured commitlint in the current working directory, attempt to load commitlint's config.
       We'll guide the user increating a commit message that adhere's to the commitlint config.
