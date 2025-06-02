@@ -11,7 +11,7 @@ export default class SubjectPrompt {
   async prompt(initialValue?: string): Promise<string> {
     let answer: string;
 
-    if (this.rules.validate(initialValue)) answer = initialValue as string;
+    if (this.rules.validate(initialValue)) answer = initialValue ?? '';
     else {
       const [enumRule] = this.rules.getRulesOfType('enum');
 
