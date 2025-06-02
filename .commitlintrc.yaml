@@ -6,7 +6,7 @@ rules:
     scope-case: [2, always, lower-case]
     type-case: [2, always, kebab-case]
     type-empty: [2, never]
-    scope-empty: [2, never]
+    subject-empty: [2, never]
     subject-case: [2, always, sentence-case]
 prompt:
   messages:
