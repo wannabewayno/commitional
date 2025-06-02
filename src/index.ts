@@ -1,11 +1,11 @@
 import { Command } from 'commander';
 import load from '@commitlint/load';
 import packageJSON from '../package.json' with { type: 'json' };
-import type { CommitMessage } from './prompts.js';
 import { formatCommitMessage } from './lib/formatCommitMessage.js';
 import Git from './services/Git/index.js';
 import defaultConfig from './config/index.js';
 import RulesEngine from './rules/index.js';
+import { ScopeDeducer } from './services/ScopeDeducer/index.js';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
@@ -56,11 +56,15 @@ program
 
     const rulesEngine = RulesEngine.fromConfig(config.rules);
 
+    const scopeDeducer = ScopeDeducer.fromRulesEngine(rulesEngine);
+
+    // Deduce scope from staged files
+    const scope = scopeDeducer.deduceScope(stagedFiles) ?? undefined;
+
     const type = await rulesEngine.narrow('type').prompt(opts.type);
     const title = '<title>';
     const body = '<body>';
     const breaking = false;
-    const scope = opts.scope ?? '<scope>';
 
     // const commitMessage = await promptCommitMessage();
     const formattedMessage = formatCommitMessage({

@@ -16,7 +16,7 @@ const COMMIT_TYPES = [
 export interface CommitMessage {
   type: string;
   title: string;
-  scope?: string;
+  scope?: string[] | string;
   body: string;
   breaking: boolean;
 }
