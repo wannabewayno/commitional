@@ -96,8 +96,6 @@ program
       // Then commit with this message.
       await git.commit(...formattedMessage);
 
-      // In a real implementation, we might want to write this to a file
-      // or pipe it to git commit, but for now we'll just display it
       process.exit(0);
     },
   );
