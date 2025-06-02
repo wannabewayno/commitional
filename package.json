@@ -43,7 +43,8 @@
     "@commitlint/load": "^19.8.1",
     "@inquirer/prompts": "~7.5.2",
     "commander": "^11.1.0",
-    "simple-git": "~3.27.0"
+    "simple-git": "~3.27.0",
+    "yoctocolors": "^2.1.1"
   },
   "devDependencies": {
     "@biomejs/biome": "~1.9.4",
