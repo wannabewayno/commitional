@@ -58,7 +58,8 @@ program
     const scopeDeducer = ScopeDeducer.fromRulesEngine(rulesEngine);
 
     // Deduce scope from staged files
-    const scope = scopeDeducer.deduceScope(stagedFiles) ?? undefined;
+    const deducedScope = scopeDeducer.deduceScope(stagedFiles) ?? (opts.scope ? opts.scope.split(',') : []);
+    const scope = await rulesEngine.narrow('scope').prompt(deducedScope[0]);
 
     const type = await rulesEngine.narrow('type').prompt(opts.type);
     const title = '<title>';

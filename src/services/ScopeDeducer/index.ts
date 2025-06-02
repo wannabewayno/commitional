@@ -64,6 +64,6 @@ export class ScopeDeducer {
   static fromRulesEngine(rulesEngine: RulesEngine) {
     const [scopeEnums] = rulesEngine.narrow('scope').getRulesOfType('enum');
 
-    return new ScopeDeducer(scopeEnums.value);
+    return new ScopeDeducer(scopeEnums?.value);
   }
 }
