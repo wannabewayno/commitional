@@ -23,8 +23,9 @@ program
   .description('CLI tool for crafting commit messages - compatible with commitlint')
   .version(packageJSON.version, '-v, --version', 'Output the current version')
   .option('-t, --type <type>', 'Commit type; feat, fix, test ...')
+  .option('-s, --scope <scope>', 'Commit scope (if any)')
   .addHelpCommand('help [command]', 'Display help for command')
-  .action(async (opts: { type?: string }) => {
+  .action(async (opts: { type?: string; scope?: string }) => {
     /*
       If the user has configured commitlint in the current working directory, attempt to load commitlint's config.
       We'll guide the user increating a commit message that adhere's to the commitlint config.
@@ -59,7 +60,7 @@ program
     const title = '<title>';
     const body = '<body>';
     const breaking = false;
-    const scope = '<scope>';
+    const scope = opts.scope ?? '<scope>';
 
     // const commitMessage = await promptCommitMessage();
     const formattedMessage = formatCommitMessage({
