@@ -6,6 +6,7 @@ import RulesEngine from './rules/index.js';
 import { ScopeDeducer } from './services/ScopeDeducer/index.js';
 import loadConfig from './config/index.js';
 import { TypePrompt, ScopePrompt, SubjectPrompt } from './prompts/index.js';
+import { confirm } from '@inquirer/prompts';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
@@ -71,7 +72,9 @@ program
     const title = await new SubjectPrompt(rulesEngine).prompt(opts.subject);
     const body = '<body>';
     const breaking =
-      opts.breaking !== undefined ? opts.breaking : await confirm('Does this change introduce any breaking changes?');
+      opts.breaking !== undefined
+        ? opts.breaking
+        : await confirm({ message: 'Does this change introduce any breaking changes?' });
 
     // const commitMessage = await promptCommitMessage();
     const formattedMessage = formatCommitMessage({
