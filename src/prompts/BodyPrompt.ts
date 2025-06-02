@@ -33,20 +33,17 @@ export default class BodyPrompt {
       choices: editorOptions,
     });
 
-    if (selectedEditor === CUSTOM) {
-      editorCmd = await input({
-        message: 'Enter the command to open your editor:',
-      });
-    } else {
-      editorCmd = selectedEditor;
-    }
+    // Ask the user to input a custom command or use the selected one.
+    if (selectedEditor === CUSTOM) editorCmd = await input({ message: 'Enter the command to open your editor:' });
+    else editorCmd = selectedEditor;
 
-    // Ask if they want to save this choice
+    // Ask if they want to save this choice for the future by permanently adding it to their system.
     const saveChoice = await confirm({
       message: 'Would you like to set this as your default editor for future sessions?',
     });
 
     if (saveChoice) {
+      // Save to their .bashrc
       try {
         const shellConfigPath = path.join(os.homedir(), '.bashrc');
         const editorExport = `\n# Added by commitional\nexport EDITOR="${editorCmd}"\n`;
