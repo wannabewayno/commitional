@@ -1,13 +1,22 @@
+import axios, { type AxiosInstance } from 'axios';
 /**
  * Abstract base class for handling AI completions from an Agentic API
  */
-
 export default abstract class Completion {
+  protected readonly http: AxiosInstance;
   /**
    * Creates a new Completion instance
    * @param apiKey The API key used for authentication
    */
-  constructor(private readonly apiKey: string) {}
+  constructor(baseURL: string, apiKey: string) {
+    this.http = axios.create({
+      baseURL: baseURL,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
+  }
 
   /**
    * Sets the system message for the completion

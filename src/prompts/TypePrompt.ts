@@ -8,6 +8,22 @@ export default class TypePrompt {
     this.rules = rules.narrow('type');
   }
 
+  async generate(scope: string, diff: string) {
+    // TODO: Need some kind of AIService that picks the best available service for the ones we have.
+    // Register them based on availability to apikeys and preferences.
+    // TODO:
+    // Receive the scope and git diff to create a type for.
+    // const { type } = await AIService.completion.system(
+    // Reference the good commit guide
+    // Tell the agent what it's role and purpose is
+    // ).prompt(
+    // Prompt it for it's task.
+    // Give it rules to follow (print the current rules)
+    // ).json(schema)
+    // If it fails try again, up to max attempts.
+    // Potentially use git service that has these configured with the right context?
+  }
+
   async prompt(initialValue?: string): Promise<string> {
     let answer: string;
 
