@@ -1,9 +1,5 @@
-import Completion from "./index.js";
-
-const chatFamily = createModelFamily('chat', 'tokens')
-  .powerful('8cac310c-065b-4866-827d-cdac270f7fb7', { input: 0, output: 0 })
-  .capable('4cb81269-bd7e-4071-92ff-3113fe8199ef', { input: 0, output: 0 })
-  .effective('b3231e8c-62b0-427b-9530-1e678f1a9196', { input: 0, output: 0 });
+import { ArkErrors, type, type Type } from "arktype";
+import type { Completion } from "./index.js";
 
 interface SystemMessage extends BaseMessage {
   role: 'system';
@@ -58,6 +54,7 @@ interface ErrorResponse {
 
 type CompletionResponse = AssistantResponse | ErrorResponse;
 
+// biome-ignore lint/suspicious/noExplicitAny: Type assertion is legal here.
 const isErrorResponse = (p: any): p is ErrorResponse => !!p.error;
 
 interface CompletionRequest {
@@ -66,39 +63,86 @@ interface CompletionRequest {
   temperature?: number;
 }
 
-export default class AmplifyCompletion extends Completion {
-  private _system?: SystemMessage;
-  private _prompt?: UserMessage;
+const GPT4o = '8cac310c-065b-4866-827d-cdac270f7fb7'; // GPT-4o
 
-  system(message: string): this {
-    this._system = { role: 'system', content: message };
-    return this;
+export default function Provider(Completion: Completion) {
+  class AmplifyCompletion extends Completion {
+    private _system?: SystemMessage;
+    private _prompt?: UserMessage;
+
+    system(message: string): this {
+      this._system = { role: 'system', content: message };
+      return this;
+    }
+
+    prompt(message: string): this {
+      this._prompt = { role: 'user', content: [{ type: 'text', text: message }] };
+      return this;
+    }
+
+    private buildMessages(): CompletionRequest['messages'] {
+      const messages: CompletionRequest['messages'] = [];
+      if (this._system) messages.push(this._system);
+      if (this._prompt) messages.push(this._prompt);
+
+      return messages;
+    }
+
+    // So we actually don't care 
+    async text(): Promise<string | Error> {
+      const messages = this.buildMessages();
+
+      const res = await this.http.post<CompletionResponse>('/external/api/completion', {
+        model_id: GPT4o,
+        messages
+      }).catch((v: Error) => ({ data: { error: v.message } }));
+
+      return isErrorResponse(res.data) ? new Error(res.data.error) : res.data.assistant_resp;
+    }
+
+    async json<const SchemaDefinition extends object>(schemaDef: type.validate<SchemaDefinition>): Promise<type.instantiate<SchemaDefinition>['infer'] | Error> {
+      // Ensure a system message exists
+      if (!this._system) this._system = { role: 'system', content: '' };
+
+      const schema = type(schemaDef);
+
+      // Appened an important rule that tells the agent to always use JSON.
+      this._system.content += [
+        '**IMPORTANT**',
+        'You **always** provide responses as valid json according to the following json schema',
+        '```',
+        schema.toJsonSchema(),
+        '```'
+      ].join('\n')
+
+      // Build our messages (including any user provided stuff)
+      const messages = this.buildMessages();
+
+      // Make the request
+      const res = await this.http.post<CompletionResponse>('/external/api/completion', {
+        model_id: GPT4o,
+        messages
+      }).catch((v: Error) => ({ data: { error: v.message } }));
+
+      // An error occured, return a new error
+      if (isErrorResponse(res.data)) return new Error(res.data.error);
+
+      const json = this.parseJSON(res.data.assistant_resp);
+      if (json instanceof Error) return json;
+      
+      // Successsful response, check if the format is valid.
+      const data = schema(json);
+
+      // Successful response but invaid format, collect errors into a single error.
+      if (data instanceof ArkErrors) return new Error([''].concat(data.map((v, index) => `  ${index + 1}.) ${v.toString()}`)).join('\n'));
+
+      // Hooray it's valid.
+      return data
+    }
   }
 
-  prompt(message: string): this {
-    this._prompt = { role: 'user', content: [{ type: 'text', text: message }] };
-    return this;
-  }
-
-  private buildMessages(): CompletionRequest['messages'] {
-    const messages: CompletionRequest['messages'] = [];
-    if (this._system) messages.push(this._system);
-    if (this._prompt) messages.push(this._prompt);
-
-    return messages;
-  }
-
-  async text(): Promise<string> {
-    const messages = this.buildMessages();
-    this.http.post('/external/api/completion', {
-      model_id: '8cac310c-065b-4866-827d-cdac270f7fb7' // GPT-4o
-      messages
-    });
-  }
-
-  async json<S>(schema: S): Promise<S> {
-
-    
-  }
-
+  return AmplifyCompletion;
 }
+
+export type AmplifyCompletion = ReturnType<typeof Provider>;
+export type IAmplifyCompletion = InstanceType<AmplifyCompletion>;

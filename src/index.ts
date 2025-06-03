@@ -68,8 +68,9 @@ program
       const deducedScope = scopeDeducer.deduceScope(stagedFiles) ?? (opts.scope ? opts.scope.split(',') : []);
       const scope = await new ScopePrompt(rulesEngine).prompt(deducedScope.join(','));
 
-      // I should keep it simple and do the AI stuff here and just pass it in to the validator.
-      const type = await new TypePrompt(rulesEngine).prompt(opts.type);
+      const typePrompt = new TypePrompt(rulesEngine);
+      if (opts.ai) opts.type = await typePrompt.generate(scope, diff);
+      const type = await typePrompt.prompt(opts.type);
 
       const title = await new SubjectPrompt(rulesEngine).prompt(opts.subject);
 
