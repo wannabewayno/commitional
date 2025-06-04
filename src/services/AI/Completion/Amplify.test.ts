@@ -104,7 +104,6 @@ describe('AmplifyCompletion Integration Tests', () => {
       
       // Assert
       expect(result).to.be.instanceOf(Error);
-      console.log(result);
     });
 
     it('should return error when API returns error', async () => {

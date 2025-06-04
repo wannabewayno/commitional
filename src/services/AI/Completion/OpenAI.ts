@@ -1,92 +1,90 @@
-import { ArkErrors, type, type Type } from 'arktype';
+import { ArkErrors, type } from 'arktype';
 import type { Completion } from './index.js';
 
-export enum FinishReason {
-  Stop = 'stop', // stopped naturally (success, implementation methods)
-  ToolCall = 'tool_calls', // tools will be in the attachments
-  Length = 'length', // Err
-  Flagged = 'content_filter', // Err
-  Error = 'error', // Err
+function formatArkErrors(error: ArkErrors) {
+  return new Error([''].concat(error.map((v, index) => `  ${index + 1}.) ${v.toString()}`)).join('\n'));
 }
 
-interface BaseMessage {
-  role: string;
-  name?: string;
-  content: string;
-}
-
-interface DeveloperMessage extends BaseMessage {
-  role: 'developer';
-}
-
-interface SystemMessage extends BaseMessage {
-  role: 'system';
-}
-
-interface UserMessage extends BaseMessage {
-  role: 'user';
-}
-
-interface ToolMessage extends BaseMessage {
-  role: 'tool';
-  tool_call_id: string;
-}
-
-// Assistant message with content
-interface AssistantMessage extends BaseMessage {
-  role: 'assistant';
-  refusal?: string | null;
-  content: string;
-}
-
-// Union type for all possible message types
-type OpenAIMessage = DeveloperMessage | SystemMessage | UserMessage | AssistantMessage | ToolMessage;
-
-interface Usage {
-  prompt_tokens: number;
-  completion_tokens: number;
-  total_tokens: number;
-  completion_tokens_details: {
-    reasoning_tokens: number;
-    accepted_prediction_tokens: number;
-    rejected_prediction_tokens: number;
-  };
-}
-
-interface CompletionRequest {
-  model: string;
-  messages: OpenAIMessage[];
-  tool_choice?: 'none' | 'auto' | 'required' | { type: 'function'; function: { name: string } };
-  stop?: string;
-  // tool_choice?: 'none' | 'auto' | 'required' | { type: 'function', function: { name: string } },
-  temperature?: number; // between 0 <= x <= 2
-  top_p?: number; // 0 <= x <= 1
-  frequency_penalty?: number; // -2 <= x <= 2
-  presence_penalty?: number; // -2 <= x <= 2
-  response_format?: { type: 'json_schema'; json_schema: object } | { type: 'json_object' } | { type: 'text' };
-  max_completion_tokens?: number;
-  n?: number;
-  // prediction: Prediction
-}
-
-interface CompletionResponse {
-  id: string;
-  object: 'chat.completion';
-  created: number;
-  model: string;
-  system_fingerprint: string;
+const scope = type.module({
+  content: 'string',
+  base_message: {
+    role: '"developer" | "system" | "user"',
+    name: 'string?',
+    content: 'content',
+  },
+  tool_message: {
+    role: '"tool"',
+    tool_call_id: 'string',
+  },
+  // Assistant message with content
+  assistant_message: {
+    role: '"assistant"',
+    name: 'string?',
+    refusal: '(string | null)?',
+    content: 'content',
+  },
+  finish_reason: 'error_reason | success_reason',
+  error_reason: '"length" | "flagged" | "error"',
+  success_reason: '"stop" | "tool_call"',
+  // Union type for all possible message types,
+  ai_message: 'base_message | assistant_message | tool_message',
+  usage: {
+    prompt_tokens: 'number',
+    completion_tokens: 'number',
+    total_tokens: 'number',
+    completion_tokens_details: {
+      reasoning_tokens: 'number',
+      accepted_prediction_tokens: 'number',
+      rejected_prediction_tokens: 'number',
+    },
+  },
+  between_0_and_1: '0 <= number <= 1',
+  plus_or_minus_2: '-2 <= number <= 2',
+  less_than_2: 'number <= 2',
+  format_schema: { type: '"json_schema"', json_schema: 'object' },
+  format_json: { type: '"json_object"' },
+  format_text: { type: '"text"' },
   choices: {
-    index: number;
-    message: AssistantMessage;
-    finish_reason: FinishReason;
-  }[];
-  usage: Usage;
-}
+    index: 'number',
+    message: 'assistant_message',
+    finish_reason: 'finish_reason',
+  },
+  // Request
+  completion_request: {
+    model: 'string',
+    messages: 'ai_message[]',
+    stop: 'string?',
+    // tool_choice?: 'none' | 'auto' | 'required' | { type: 'function', function: { name: string } },
+    temperature: 'less_than_2?', // between 0 <= x <= 2
+    top_p: 'between_0_and_1?',
+    frequency_penalty: 'plus_or_minus_2?',
+    presence_penalty: 'plus_or_minus_2?',
+    response_format: 'format_json | format_schema | format_text',
+    max_completion_tokens: 'number?',
+    n: 'number?',
+    // prediction: Prediction
+  },
+  // Response
+  completion_response: {
+    // Commented out entries exist, but aren't being hard asserted against as we're not using them
+    // id: 'string',
+    // object: '"chat.completion"',
+    // created: 'number',
+    // model: 'string',
+    // system_fingerprint: 'string',
+    choices: 'choices[]',
+    // usage: 'usage',
+  },
+});
+
+type CompletionRequest = typeof scope.completion_request.infer;
+type CompletionResponse = typeof scope.completion_response.infer;
+type BaseMessage = typeof scope.base_message.infer;
 
 export default function Provider(Completion: Completion) {
   class OpenAICompletion extends Completion {
-    private _system?: DeveloperMessage;
-    private _prompt?: UserMessage;
+    private _system?: BaseMessage;
+    private _prompt?: BaseMessage;
 
     system(message: string): this {
       this._system = {
@@ -119,57 +117,60 @@ export default function Provider(Completion: Completion) {
 
       // Call the OpenAPI with a very basic completion request.
       // further paramters subject to fine-tuning and testing.
-      const res = await this.http.post<CompletionResponse>('/chat/completions', {
-        model: 'gpt-4.1-mini',
-        messages,
-      } as CompletionRequest).catch((v: Error) => ({
-          data: {
-            choices: [{ message: { content: new Error(v.message) } }]
-          }
-        }
-      ));
+      const res = await this.http
+        .post<CompletionResponse>('/chat/completions', {
+          model: 'gpt-4.1-mini',
+          messages,
+        } as CompletionRequest)
+        .catch((v: Error) => v);
+
+      if (res instanceof Error) return res;
+      const payload = scope.completion_response(res.data);
+
+      if (payload instanceof ArkErrors) return formatArkErrors(payload);
+      const message = payload.choices[0].message.content;
 
       // Extract the response
-      return res.data.choices[0].message.content;
+      return message;
     }
 
-    async json<const SchemaDefinition extends object>(schemaDef: type.validate<SchemaDefinition>): Promise<type.instantiate<SchemaDefinition>['infer'] | Error> {
+    async json<const SchemaDefinition extends object>(
+      schemaDef: type.validate<SchemaDefinition>,
+    ): Promise<type.instantiate<SchemaDefinition>['infer'] | Error> {
       const messages = this.buildMessages();
 
       const schema = type(schemaDef);
 
       // Exactly the same as text, except prime the model return a JSON schema
-      const res = await this.http.post<CompletionResponse>('/chat/completions', {
-        model: 'gpt-4.1-mini',
-        messages,
-        response_format: {
-          type: 'json_schema',
-          json_schema: schema.toJsonSchema(),
-        },
-      } as CompletionRequest).catch((v: Error) => ({
-          data: {
-            choices: [{ message: { content: new Error(v.message) } }]
-          }
-        }
-      ));
+      const res = await this.http
+        .post('/chat/completions', {
+          model: 'gpt-4.1-mini',
+          messages,
+          response_format: {
+            type: 'json_schema',
+            json_schema: schema.toJsonSchema(),
+          },
+        } as CompletionRequest).catch((v: Error) => v);
 
-      // Mate define these as Ark Schemas... and validate these suckers.
-      const message = res.data.choices[0].message.content;
-      
-      // An error occured, return a new error
-      if (message instanceof Error) return message;
+        if (res instanceof Error) return res;
+        const payload = scope.completion_response(res.data);
 
-      const json = this.parseJSON(message);
-      if (json instanceof Error) return json;
-      
-      // Successsful response, check if the format is valid.
-      const data = schema(json);
+        // Success, however payload differs from expected payload.
+        if (payload instanceof ArkErrors) return formatArkErrors(payload);
+        const message = payload.choices[0].message.content;
+        
+        // Check to see if it's valid JSON
+        const json = this.parseJSON(message);
+        if (json instanceof Error) return json;
 
-      // Successful response but invaid format, collect errors into a single error.
-      if (data instanceof ArkErrors) return new Error([''].concat(data.map((v, index) => `  ${index + 1}.) ${v.toString()}`)).join('\n'));
+        // Check if the JSON matches our schema.
+        const data = schema(json);
 
-      // Hooray it's valid.
-      return data;
+        // Successful response but invaid format, collect errors into a single error.
+        if (data instanceof ArkErrors) return formatArkErrors(data);
+
+        // Hooray it's valid.
+        return data;
     }
   }
 

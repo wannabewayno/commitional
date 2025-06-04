@@ -35,10 +35,10 @@ export default function Provider() {
     }
 
     /**
-     * Creates an AIService using OpenAI as the underlying agent
+     * Creates an AI Service using OpenAI as the underlying agent
      * @returns
      */
-    static OpenAI() {
+    static openai() {
       const apikey = process.env.COMMITIONAL_OPENAI_KEY;
       const baseURL = process.env.COMMITIONAL_OPENAI_URL;
       if (!apikey) throw new Error('OpenAI API key is missing');
@@ -48,16 +48,25 @@ export default function Provider() {
     }
 
     /**
-     * Creates an AIService using Amplify as the underlying agent
+     * Creates an AI Service using Amplify as the underlying agent
      * @returns
      */
-    static Amplify() {
+    static amplify() {
       const apikey = process.env.COMMITIONAL_AMPLIFY_KEY;
       const baseURL = process.env.COMMITIONAL_AMPLIFY_URL;
       if (!apikey) throw new Error('Amplify API key is missing');
       if (!baseURL) throw new Error('Amplify API URL is missing');
 
       return new AI(AmplifyCompletion, baseURL, apikey);
+    }
+
+    /**
+     * Creates an AI Service from the configured preferencs and available ENV preferences.
+     * @returns - AI
+     */
+    static byPreference() {
+      // filter by available envs
+      // const []
     }
   }
   return AI;

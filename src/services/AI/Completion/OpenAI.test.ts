@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import Completion from './index.js';
 import OpenAICompletionProvider, { type OpenAICompletion, type IOpenAICompletion } from './OpenAI.js';
-import { type } from 'arktype';
 import axios from 'axios';
 
 describe('OpenAICompletion Integration Tests', () => {
@@ -37,7 +36,15 @@ describe('OpenAICompletion Integration Tests', () => {
       const expectedResponse = 'This is a test response';
       httpPostStub.resolves({ 
         data: { 
-          choices: [{ message: { content: expectedResponse } }] 
+          choices: [{
+            index: 0,
+            finish_reason: 'stop',
+            message: {
+              type: 'text',
+              role: 'assistant',
+              content: expectedResponse,
+            }
+          }] 
         } 
       });
       
@@ -96,19 +103,25 @@ describe('OpenAICompletion Integration Tests', () => {
       const jsonResponse = '{"name": "John", "age": 30}';
       httpPostStub.resolves({ 
         data: { 
-          choices: [{ message: { content: jsonResponse } }] 
+          choices: [{
+            index: 0,
+            finish_reason: 'stop',
+            message: {
+              type: 'text',
+              role: 'assistant',
+              content: jsonResponse
+            }
+          }] 
         } 
-      });
-      
-      const personSchema = type({
-        name: 'string',
-        age: 'number'
       });
       
       // Act
       openai.system('Return JSON data');
       openai.prompt('Get person data');
-      const result = await openai.json(personSchema);
+      const result = await openai.json({
+        name: 'string',
+        age: 'number'
+      });
       
       // Assert
       expect(result).to.deep.equal({ name: 'John', age: 30 });
@@ -119,18 +132,20 @@ describe('OpenAICompletion Integration Tests', () => {
       const invalidJsonResponse = '{"name": "John", "age": "thirty"}'; // age should be number
       httpPostStub.resolves({ 
         data: { 
-          choices: [{ message: { content: invalidJsonResponse } }] 
+          choices: [{
+            index: 0,
+            finish_reason: 'stop',
+            message: { type: 'text', content: invalidJsonResponse }
+          }] 
         } 
-      });
-      
-      const personSchema = type({
-        name: 'string',
-        age: 'number'
       });
       
       // Act
       openai.prompt('Get person data');
-      const result = await openai.json(personSchema);
+      const result = await openai.json({
+        name: 'string',
+        age: 'number'
+      });
       
       // Assert
       expect(result).to.be.instanceOf(Error);
@@ -141,14 +156,12 @@ describe('OpenAICompletion Integration Tests', () => {
       const errorMessage = 'API error occurred';
       httpPostStub.rejects(new Error(errorMessage));
       
-      const personSchema = type({
+      // Act
+      openai.prompt('Get person data');
+      const result = await openai.json({
         name: 'string',
         age: 'number'
       });
-      
-      // Act
-      openai.prompt('Get person data');
-      const result = await openai.json(personSchema);
       
       // Assert
       expect(result).to.be.instanceOf(Error);
@@ -160,18 +173,20 @@ describe('OpenAICompletion Integration Tests', () => {
       const invalidJson = 'This is not JSON';
       httpPostStub.resolves({ 
         data: { 
-          choices: [{ message: { content: invalidJson } }] 
+          choices: [{
+            index: 0,
+            finish_reason: 'stop',
+            message: { type: 'text', content: invalidJson }
+          }] 
         } 
-      });
-      
-      const personSchema = type({
-        name: 'string',
-        age: 'number'
       });
       
       // Act
       openai.prompt('Get person data');
-      const result = await openai.json(personSchema);
+      const result = await openai.json({
+        name: 'string',
+        age: 'number'
+      });
       
       // Assert
       expect(result).to.be.instanceOf(Error);
@@ -183,7 +198,15 @@ describe('OpenAICompletion Integration Tests', () => {
       // Arrange
       httpPostStub.resolves({ 
         data: { 
-          choices: [{ message: { content: 'Response' } }] 
+          choices: [{
+            index: 0,
+            finish_reason: 'stop',
+            message: {
+              type: 'text',
+              role: 'assistant',
+              content: 'Response'
+            }
+          }] 
         } 
       });
       
