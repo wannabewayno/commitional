@@ -65,8 +65,12 @@ export default function Provider() {
      * @returns - AI
      */
     static byPreference() {
-      // filter by available envs
-      // const []
+      if (process.env.COMMITIONAL_OPENAI_KEY) return AI.openai();
+      if (process.env.COMMITIONAL_AMPLIFY_KEY) return AI.amplify();
+
+      throw new Error(
+        'No OpenAI or Amplify key provided. Please set COMMITIONAL_{OPENAI|AMPLIFY}_KEY environment variable.',
+      );
     }
   }
   return AI;

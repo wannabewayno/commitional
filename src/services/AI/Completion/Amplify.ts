@@ -1,5 +1,5 @@
-import { ArkErrors, type, type Type } from "arktype";
-import type { Completion } from "./index.js";
+import { ArkErrors, type, type Type } from 'arktype';
+import type { Completion } from './index.js';
 
 interface SystemMessage extends BaseMessage {
   role: 'system';
@@ -63,10 +63,27 @@ interface CompletionRequest {
   temperature?: number;
 }
 
+enum Temperature {
+  Mathematics = 0.1, // Requires absolute precision
+  Science = 0.2, //
+  Analysis = 0.2, // Should stick closely to facts
+  Education = 0.3, // Needs accurate information
+  Training = 0.3, //
+  Troubleshooting = 0.3, // Logical consistency is key
+  Templating = 0.4, // Structured output is important
+  Coding = 0.5, // Needs structure but some creativity
+  Design = 0.7, // Benefits from creative variations
+  Marketing = 0.8, // Needs creativity but stays on message
+  Advertising = 0.8,
+  Writing = 1.2, // Creative writing benefits from randomness
+  Conversation = 1.5, // More natural with some unpredictability
+}
+
 const GPT4o = '8cac310c-065b-4866-827d-cdac270f7fb7'; // GPT-4o
 
 export default function Provider(Completion: Completion) {
   class AmplifyCompletion extends Completion {
+    private _temperature?: Temperature;
     private _system?: SystemMessage;
     private _prompt?: UserMessage;
 
@@ -80,6 +97,26 @@ export default function Provider(Completion: Completion) {
       return this;
     }
 
+    usecase(
+      usecase:
+        | 'Mathematics'
+        | 'Science'
+        | 'Analysis'
+        | 'Education'
+        | 'Training'
+        | 'Troubleshooting'
+        | 'Templating'
+        | 'Coding'
+        | 'Design'
+        | 'Marketing'
+        | 'Advertising'
+        | 'Writing'
+        | 'Conversation',
+    ): this {
+      this._temperature = Temperature[usecase];
+      return this;
+    }
+
     private buildMessages(): CompletionRequest['messages'] {
       const messages: CompletionRequest['messages'] = [];
       if (this._system) messages.push(this._system);
@@ -88,19 +125,25 @@ export default function Provider(Completion: Completion) {
       return messages;
     }
 
-    // So we actually don't care 
+    // So we actually don't care
     async text(): Promise<string | Error> {
       const messages = this.buildMessages();
 
-      const res = await this.http.post<CompletionResponse>('/external/api/completion', {
-        model_id: GPT4o,
-        messages
-      }).catch((v: Error) => ({ data: { error: v.message } }));
+      const res = await this.http
+        .post<CompletionResponse>('/external/api/completion', {
+          model_id: GPT4o,
+          messages,
+          temperature: this._temperature,
+        })
+        .catch((v: Error) => ({ data: { error: v.message } }));
 
       return isErrorResponse(res.data) ? new Error(res.data.error) : res.data.assistant_resp;
     }
 
-    async json<const SchemaDefinition extends object>(schemaDef: type.validate<SchemaDefinition>): Promise<type.instantiate<SchemaDefinition>['infer'] | Error> {
+    async json<const SchemaDefinition extends object>(
+      name: string,
+      schemaDef: type.validate<SchemaDefinition>,
+    ): Promise<type.instantiate<SchemaDefinition>['infer'] | Error> {
       // Ensure a system message exists
       if (!this._system) this._system = { role: 'system', content: '' };
 
@@ -112,32 +155,36 @@ export default function Provider(Completion: Completion) {
         'You **always** provide responses as valid json according to the following json schema',
         '```',
         schema.toJsonSchema(),
-        '```'
-      ].join('\n')
+        '```',
+      ].join('\n');
 
       // Build our messages (including any user provided stuff)
       const messages = this.buildMessages();
 
       // Make the request
-      const res = await this.http.post<CompletionResponse>('/external/api/completion', {
-        model_id: GPT4o,
-        messages
-      }).catch((v: Error) => ({ data: { error: v.message } }));
+      const res = await this.http
+        .post<CompletionResponse>('/external/api/completion', {
+          model_id: GPT4o,
+          messages,
+          temperature: this._temperature,
+        })
+        .catch((v: Error) => ({ data: { error: v.message } }));
 
       // An error occured, return a new error
       if (isErrorResponse(res.data)) return new Error(res.data.error);
 
       const json = this.parseJSON(res.data.assistant_resp);
       if (json instanceof Error) return json;
-      
+
       // Successsful response, check if the format is valid.
       const data = schema(json);
 
       // Successful response but invaid format, collect errors into a single error.
-      if (data instanceof ArkErrors) return new Error([''].concat(data.map((v, index) => `  ${index + 1}.) ${v.toString()}`)).join('\n'));
+      if (data instanceof ArkErrors)
+        return new Error([''].concat(data.map((v, index) => `  ${index + 1}.) ${v.toString()}`)).join('\n'));
 
       // Hooray it's valid.
-      return data
+      return data;
     }
   }
 

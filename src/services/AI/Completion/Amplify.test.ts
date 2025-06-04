@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import Completion from  './index.js'
+import Completion from './index.js';
 import AmplifyCompletionProvider, { type AmplifyCompletion, type IAmplifyCompletion } from './Amplify.js';
 import axios from 'axios';
 
@@ -15,8 +15,8 @@ describe('AmplifyCompletion Integration Tests', () => {
       const httpClient = axios.create(...args);
       httpPostStub = sinon.stub(httpClient, 'post');
       return httpClient;
-    }
-   
+    };
+
     AmplifyCompletion = AmplifyCompletionProvider(Completion({ create }));
   });
 
@@ -35,25 +35,25 @@ describe('AmplifyCompletion Integration Tests', () => {
       // Arrange
       const expectedResponse = 'This is a test response';
       httpPostStub.resolves({ data: { assistant_resp: expectedResponse } });
-      
+
       // Act
       amplify.system('You are a helpful assistant');
       amplify.prompt('Tell me about TypeScript');
       const result = await amplify.text();
-      
+
       // Assert
       expect(result).to.equal(expectedResponse);
       expect(httpPostStub.calledOnce).to.be.true;
-      
+
       const callArgs = httpPostStub.firstCall.args;
       expect(callArgs[0]).to.equal('/external/api/completion');
-      expect(callArgs[1].messages).to.deep.include({ 
-        role: 'system', 
-        content: 'You are a helpful assistant' 
+      expect(callArgs[1].messages).to.deep.include({
+        role: 'system',
+        content: 'You are a helpful assistant',
       });
-      expect(callArgs[1].messages).to.deep.include({ 
-        role: 'user', 
-        content: [{ type: 'text', text: 'Tell me about TypeScript' }] 
+      expect(callArgs[1].messages).to.deep.include({
+        role: 'user',
+        content: [{ type: 'text', text: 'Tell me about TypeScript' }],
       });
     });
 
@@ -61,11 +61,11 @@ describe('AmplifyCompletion Integration Tests', () => {
       // Arrange
       const errorMessage = 'API error occurred';
       httpPostStub.resolves({ data: { error: errorMessage } });
-      
+
       // Act
       amplify.prompt('Tell me about TypeScript');
       const result = await amplify.text();
-      
+
       // Assert
       expect(result).to.be.instanceOf(Error);
       expect((result as Error).message).to.equal(errorMessage);
@@ -77,15 +77,15 @@ describe('AmplifyCompletion Integration Tests', () => {
       // Arrange
       const jsonResponse = '{"name": "John", "age": 30}';
       httpPostStub.resolves({ data: { assistant_resp: jsonResponse } });
-      
+
       // Act
       amplify.system('Return JSON data');
       amplify.prompt('Get person data');
-      const result = await amplify.json({
+      const result = await amplify.json('Person', {
         name: 'string',
-        age: 'number'
+        age: 'number',
       });
-      
+
       // Assert
       expect(result).to.deep.equal({ name: 'John', age: 30 });
     });
@@ -94,14 +94,14 @@ describe('AmplifyCompletion Integration Tests', () => {
       // Arrange
       const invalidJsonResponse = '{"name": "John", "age": "thirty"}'; // age should be number
       httpPostStub.resolves({ data: { assistant_resp: invalidJsonResponse } });
-      
+
       // Act
       amplify.prompt('Get person data');
-      const result = await amplify.json({
+      const result = await amplify.json('Person', {
         name: 'string',
-        age: 'number'
+        age: 'number',
       });
-      
+
       // Assert
       expect(result).to.be.instanceOf(Error);
     });
@@ -110,14 +110,14 @@ describe('AmplifyCompletion Integration Tests', () => {
       // Arrange
       const errorMessage = 'API error occurred';
       httpPostStub.resolves({ data: { error: errorMessage } });
-      
+
       // Act
       amplify.prompt('Get person data');
-      const result = await amplify.json({
+      const result = await amplify.json('Person', {
         name: 'string',
-        age: 'number'
+        age: 'number',
       });
-      
+
       // Assert
       expect(result).to.be.instanceOf(Error);
       expect((result as Error).message).to.equal(errorMessage);
@@ -128,13 +128,10 @@ describe('AmplifyCompletion Integration Tests', () => {
     it('should support method chaining', async () => {
       // Arrange
       httpPostStub.resolves({ data: { assistant_resp: 'Response' } });
-      
+
       // Act & Assert - This should not throw
-      const result = await amplify
-        .system('You are a helpful assistant')
-        .prompt('Tell me about TypeScript')
-        .text();
-      
+      const result = await amplify.system('You are a helpful assistant').prompt('Tell me about TypeScript').text();
+
       expect(result).to.equal('Response');
     });
   });

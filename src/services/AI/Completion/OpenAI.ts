@@ -41,7 +41,13 @@ const scope = type.module({
   between_0_and_1: '0 <= number <= 1',
   plus_or_minus_2: '-2 <= number <= 2',
   less_than_2: 'number <= 2',
-  format_schema: { type: '"json_schema"', json_schema: 'object' },
+  format_schema: {
+    type: '"json_schema"',
+    json_schema: {
+      name: 'string',
+      schema: 'object',
+    },
+  },
   format_json: { type: '"json_object"' },
   format_text: { type: '"text"' },
   choices: {
@@ -77,30 +83,67 @@ const scope = type.module({
   },
 });
 
+enum Temperature {
+  Mathematics = 0.1, // Requires absolute precision
+  Science = 0.2, //
+  Analysis = 0.2, // Should stick closely to facts
+  Education = 0.3, // Needs accurate information
+  Training = 0.3, //
+  Troubleshooting = 0.3, // Logical consistency is key
+  Templating = 0.4, // Structured output is important
+  Coding = 0.5, // Needs structure but some creativity
+  Design = 0.7, // Benefits from creative variations
+  Marketing = 0.8, // Needs creativity but stays on message
+  Advertising = 0.8,
+  Writing = 1.2, // Creative writing benefits from randomness
+  Conversation = 1.5, // More natural with some unpredictability
+}
+
 type CompletionRequest = typeof scope.completion_request.infer;
 type CompletionResponse = typeof scope.completion_response.infer;
 type BaseMessage = typeof scope.base_message.infer;
 
 export default function Provider(Completion: Completion) {
   class OpenAICompletion extends Completion {
+    private _temperature: Temperature = Temperature.Coding;
     private _system?: BaseMessage;
     private _prompt?: BaseMessage;
 
-    system(message: string): this {
+    system(...messages: string[]): this {
       this._system = {
         role: 'developer',
-        content: message,
+        content: messages.join('\n'),
       };
 
       return this;
     }
 
-    prompt(message: string): this {
+    prompt(...messages: string[]): this {
       this._prompt = {
         role: 'user',
-        content: message,
+        content: messages.join('\n'),
       };
 
+      return this;
+    }
+
+    usecase(
+      usecase:
+        | 'Mathematics'
+        | 'Science'
+        | 'Analysis'
+        | 'Education'
+        | 'Training'
+        | 'Troubleshooting'
+        | 'Templating'
+        | 'Coding'
+        | 'Design'
+        | 'Marketing'
+        | 'Advertising'
+        | 'Writing'
+        | 'Conversation',
+    ): this {
+      this._temperature = Temperature[usecase];
       return this;
     }
 
@@ -121,6 +164,7 @@ export default function Provider(Completion: Completion) {
         .post<CompletionResponse>('/chat/completions', {
           model: 'gpt-4.1-mini',
           messages,
+          temperature: this._temperature,
         } as CompletionRequest)
         .catch((v: Error) => v);
 
@@ -135,6 +179,7 @@ export default function Provider(Completion: Completion) {
     }
 
     async json<const SchemaDefinition extends object>(
+      name: string,
       schemaDef: type.validate<SchemaDefinition>,
     ): Promise<type.instantiate<SchemaDefinition>['infer'] | Error> {
       const messages = this.buildMessages();
@@ -146,31 +191,36 @@ export default function Provider(Completion: Completion) {
         .post('/chat/completions', {
           model: 'gpt-4.1-mini',
           messages,
+          temperature: this._temperature,
           response_format: {
             type: 'json_schema',
-            json_schema: schema.toJsonSchema(),
+            json_schema: {
+              name,
+              schema: schema.toJsonSchema({ dialect: null }),
+            },
           },
-        } as CompletionRequest).catch((v: Error) => v);
+        } as CompletionRequest)
+        .catch((v: Error) => v);
 
-        if (res instanceof Error) return res;
-        const payload = scope.completion_response(res.data);
+      if (res instanceof Error) return res;
+      const payload = scope.completion_response(res.data);
 
-        // Success, however payload differs from expected payload.
-        if (payload instanceof ArkErrors) return formatArkErrors(payload);
-        const message = payload.choices[0].message.content;
-        
-        // Check to see if it's valid JSON
-        const json = this.parseJSON(message);
-        if (json instanceof Error) return json;
+      // Success, however payload differs from expected payload.
+      if (payload instanceof ArkErrors) return formatArkErrors(payload);
+      const message = payload.choices[0].message.content;
 
-        // Check if the JSON matches our schema.
-        const data = schema(json);
+      // Check to see if it's valid JSON
+      const json = this.parseJSON(message);
+      if (json instanceof Error) return json;
 
-        // Successful response but invaid format, collect errors into a single error.
-        if (data instanceof ArkErrors) return formatArkErrors(data);
+      // Check if the JSON matches our schema.
+      const data = schema(json);
 
-        // Hooray it's valid.
-        return data;
+      // Successful response but invaid format, collect errors into a single error.
+      if (data instanceof ArkErrors) return formatArkErrors(data);
+
+      // Hooray it's valid.
+      return data;
     }
   }
 

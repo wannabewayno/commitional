@@ -1,11 +1,26 @@
 import type { type, Type } from 'arktype';
 
 interface HttpClient {
-  post: <T>(url: string, data: unknown) => Promise<{ status: number, headers: Record<string, string>, data: T }>;
+  post: <T>(url: string, data: unknown) => Promise<{ status: number; headers: Record<string, string>; data: T }>;
 }
 interface HttpClientProvider {
-  create: (_: { baseURL: string, headers: Record<string, string>}) => HttpClient;
+  create: (_: { baseURL: string; headers: Record<string, string> }) => HttpClient;
 }
+
+type UseCase =
+  | 'Mathematics'
+  | 'Science'
+  | 'Analysis'
+  | 'Education'
+  | 'Training'
+  | 'Troubleshooting'
+  | 'Templating'
+  | 'Coding'
+  | 'Design'
+  | 'Marketing'
+  | 'Advertising'
+  | 'Writing'
+  | 'Conversation';
 
 /**
  * Abstract base class for handling AI completions from an Agentic API
@@ -27,7 +42,6 @@ export default function Provider(http: HttpClientProvider) {
       });
     }
 
-
     /**
      * Convenience for JSON.parse() with built in try/catch
      */
@@ -38,6 +52,12 @@ export default function Provider(http: HttpClientProvider) {
         return new Error(`Invalid JSON: ${error} for '${data}'`);
       }
     }
+
+    /**
+     * Internally, configure any parameters that align with the provided usecase
+     * @param usecase
+     */
+    abstract usecase(usecase: UseCase): this;
 
     /**
      * Sets the system message for the completion
@@ -66,7 +86,10 @@ export default function Provider(http: HttpClientProvider) {
      * @param schema The schema to validate the JSON against
      * @returns Promise that resolves to the typed JSON data
      */
-    abstract json<const SchemaDefinition extends object>(schema: type.validate<SchemaDefinition>): Promise<type.instantiate<SchemaDefinition>['infer'] | Error>;
+    abstract json<const SchemaDefinition extends object>(
+      name: string,
+      schema: type.validate<SchemaDefinition>,
+    ): Promise<type.instantiate<SchemaDefinition>['infer'] | Error>;
   }
 
   return Completion;

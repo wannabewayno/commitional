@@ -1,7 +1,7 @@
 import { input, select } from '@inquirer/prompts';
 import type RulesEngine from '../rules/index.js';
 import AIProvider from '../services/AI/index.js';
-import { type } from 'arktype';
+import toEnum from '../lib/toEnum.js';
 
 const AI = AIProvider();
 export default class TypePrompt {
@@ -10,32 +10,48 @@ export default class TypePrompt {
   constructor(rules: RulesEngine) {
     this.rules = rules.narrow('type');
   }
-  // Craft the Commit Message Standard from the Rules provided for the thing we're doing.
-  // You might even be able to get AI to generate this and then cache this as a system message on the user's system until next use.
-  // Fallback to the hardcopy if it can't be written to or something.
+
   async generate(scope: string, diff: string) {
-    const amplify = AI.Amplify();
-    // TODO: Register them based on availability to apikeys and preferences.
-    const res = await amplify.completion()
-    // Reference the good commit guide
-    // Tell the agent what it's role and purpose is
-    .system(
-      // Tell the agent what it's purpose is.
-      // TODO: Commit Message Standard from Rules
-      // Ideally this type prompt needs to be extended from some base prompt that has this.
-      // Give it rules to follow (print the current rules)
-    )
-    .prompt(
-      'Select the appropriate commit type for:',
-      '1. Commit Subject Format `<type>(scope?): <title>`',
-      '2. Git Diff'
-      // Receive the scope and git diff to create a type for.
-    )
-    // Force the output to be in JSON.
-    .json(type('"fix"|"feat"'));
+    const ai = AI.byPreference();
+
+    const [enumRule] = this.rules.getRulesOfType('enum');
+
+    const res = await (enumRule
+      ? ai
+          .completion()
+          .usecase('Coding')
+          .prompt(
+            'From the list of provided commit types, select the appropriate commit type for the git diff of staged files and the provided scope',
+            '## Scope',
+            scope,
+            '',
+            '## Commit types',
+            `${enumRule.value.join('\n')}`,
+            '',
+            '## Git Diff',
+            '```txt',
+            diff,
+            '```',
+          )
+          // Force the output to be in JSON.
+          .json('commit_type', { type: toEnum(enumRule.value) })
+      : ai
+          .completion()
+          .usecase('Coding')
+          .prompt(
+            'Generate an appropriate commit type for the provided staged files and user provided scope.',
+            '## Scope',
+            scope,
+            '## Git Diff',
+            '```txt',
+            diff,
+            '```',
+          )
+          // Force the output to be in JSON.
+          .json('commit_type', { type: 'string' }));
 
     if (res instanceof Error) throw res;
-    return res;
+    return res.type;
   }
 
   async prompt(initialValue?: string): Promise<string> {

@@ -16,7 +16,7 @@ describe('OpenAICompletion Integration Tests', () => {
       httpPostStub = sinon.stub(httpClient, 'post');
       return httpClient;
     };
-   
+
     OpenAICompletion = OpenAICompletionProvider(Completion({ create }));
   });
 
@@ -34,38 +34,40 @@ describe('OpenAICompletion Integration Tests', () => {
     it('should return text response when successful', async () => {
       // Arrange
       const expectedResponse = 'This is a test response';
-      httpPostStub.resolves({ 
-        data: { 
-          choices: [{
-            index: 0,
-            finish_reason: 'stop',
-            message: {
-              type: 'text',
-              role: 'assistant',
-              content: expectedResponse,
-            }
-          }] 
-        } 
+      httpPostStub.resolves({
+        data: {
+          choices: [
+            {
+              index: 0,
+              finish_reason: 'stop',
+              message: {
+                type: 'text',
+                role: 'assistant',
+                content: expectedResponse,
+              },
+            },
+          ],
+        },
       });
-      
+
       // Act
       openai.system('You are a helpful assistant');
       openai.prompt('Tell me about TypeScript');
       const result = await openai.text();
-      
+
       // Assert
       expect(result).to.equal(expectedResponse);
       expect(httpPostStub.calledOnce).to.be.true;
-      
+
       const callArgs = httpPostStub.firstCall.args;
       expect(callArgs[0]).to.equal('/chat/completions');
-      expect(callArgs[1].messages).to.deep.include({ 
-        role: 'developer', 
-        content: 'You are a helpful assistant' 
+      expect(callArgs[1].messages).to.deep.include({
+        role: 'developer',
+        content: 'You are a helpful assistant',
       });
-      expect(callArgs[1].messages).to.deep.include({ 
-        role: 'user', 
-        content: 'Tell me about TypeScript' 
+      expect(callArgs[1].messages).to.deep.include({
+        role: 'user',
+        content: 'Tell me about TypeScript',
       });
       expect(callArgs[1].model).to.equal('gpt-4.1-mini');
     });
@@ -74,11 +76,11 @@ describe('OpenAICompletion Integration Tests', () => {
       // Arrange
       const errorMessage = 'API error occurred';
       httpPostStub.rejects(new Error(errorMessage));
-      
+
       // Act
       openai.prompt('Tell me about TypeScript');
       const result = await openai.text();
-      
+
       // Assert
       expect(result).to.be.instanceOf(Error);
       expect((result as Error).message).to.equal(errorMessage);
@@ -87,11 +89,11 @@ describe('OpenAICompletion Integration Tests', () => {
     it('should return error when API response is malformed', async () => {
       // Arrange
       httpPostStub.resolves({ data: {} }); // Missing choices
-      
+
       // Act
       openai.prompt('Tell me about TypeScript');
       const result = await openai.text();
-      
+
       // Assert
       expect(result).to.be.instanceOf(Error);
     });
@@ -101,28 +103,30 @@ describe('OpenAICompletion Integration Tests', () => {
     it('should parse JSON response with valid schema', async () => {
       // Arrange
       const jsonResponse = '{"name": "John", "age": 30}';
-      httpPostStub.resolves({ 
-        data: { 
-          choices: [{
-            index: 0,
-            finish_reason: 'stop',
-            message: {
-              type: 'text',
-              role: 'assistant',
-              content: jsonResponse
-            }
-          }] 
-        } 
+      httpPostStub.resolves({
+        data: {
+          choices: [
+            {
+              index: 0,
+              finish_reason: 'stop',
+              message: {
+                type: 'text',
+                role: 'assistant',
+                content: jsonResponse,
+              },
+            },
+          ],
+        },
       });
-      
+
       // Act
       openai.system('Return JSON data');
       openai.prompt('Get person data');
-      const result = await openai.json({
+      const result = await openai.json('Person', {
         name: 'string',
-        age: 'number'
+        age: 'number',
       });
-      
+
       // Assert
       expect(result).to.deep.equal({ name: 'John', age: 30 });
     });
@@ -130,23 +134,25 @@ describe('OpenAICompletion Integration Tests', () => {
     it('should return error when schema validation fails', async () => {
       // Arrange
       const invalidJsonResponse = '{"name": "John", "age": "thirty"}'; // age should be number
-      httpPostStub.resolves({ 
-        data: { 
-          choices: [{
-            index: 0,
-            finish_reason: 'stop',
-            message: { type: 'text', content: invalidJsonResponse }
-          }] 
-        } 
+      httpPostStub.resolves({
+        data: {
+          choices: [
+            {
+              index: 0,
+              finish_reason: 'stop',
+              message: { type: 'text', content: invalidJsonResponse },
+            },
+          ],
+        },
       });
-      
+
       // Act
       openai.prompt('Get person data');
-      const result = await openai.json({
+      const result = await openai.json('Person', {
         name: 'string',
-        age: 'number'
+        age: 'number',
       });
-      
+
       // Assert
       expect(result).to.be.instanceOf(Error);
     });
@@ -155,14 +161,14 @@ describe('OpenAICompletion Integration Tests', () => {
       // Arrange
       const errorMessage = 'API error occurred';
       httpPostStub.rejects(new Error(errorMessage));
-      
+
       // Act
       openai.prompt('Get person data');
-      const result = await openai.json({
+      const result = await openai.json('Person', {
         name: 'string',
-        age: 'number'
+        age: 'number',
       });
-      
+
       // Assert
       expect(result).to.be.instanceOf(Error);
       expect((result as Error).message).to.equal(errorMessage);
@@ -171,23 +177,25 @@ describe('OpenAICompletion Integration Tests', () => {
     it('should return error when response is not valid JSON', async () => {
       // Arrange
       const invalidJson = 'This is not JSON';
-      httpPostStub.resolves({ 
-        data: { 
-          choices: [{
-            index: 0,
-            finish_reason: 'stop',
-            message: { type: 'text', content: invalidJson }
-          }] 
-        } 
+      httpPostStub.resolves({
+        data: {
+          choices: [
+            {
+              index: 0,
+              finish_reason: 'stop',
+              message: { type: 'text', content: invalidJson },
+            },
+          ],
+        },
       });
-      
+
       // Act
       openai.prompt('Get person data');
-      const result = await openai.json({
+      const result = await openai.json('Person', {
         name: 'string',
-        age: 'number'
+        age: 'number',
       });
-      
+
       // Assert
       expect(result).to.be.instanceOf(Error);
     });
@@ -196,26 +204,25 @@ describe('OpenAICompletion Integration Tests', () => {
   describe('Method chaining', () => {
     it('should support method chaining', async () => {
       // Arrange
-      httpPostStub.resolves({ 
-        data: { 
-          choices: [{
-            index: 0,
-            finish_reason: 'stop',
-            message: {
-              type: 'text',
-              role: 'assistant',
-              content: 'Response'
-            }
-          }] 
-        } 
+      httpPostStub.resolves({
+        data: {
+          choices: [
+            {
+              index: 0,
+              finish_reason: 'stop',
+              message: {
+                type: 'text',
+                role: 'assistant',
+                content: 'Response',
+              },
+            },
+          ],
+        },
       });
-      
+
       // Act & Assert - This should not throw
-      const result = await openai
-        .system('You are a helpful assistant')
-        .prompt('Tell me about TypeScript')
-        .text();
-      
+      const result = await openai.system('You are a helpful assistant').prompt('Tell me about TypeScript').text();
+
       expect(result).to.equal('Response');
     });
   });
