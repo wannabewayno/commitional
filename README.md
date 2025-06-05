@@ -25,9 +25,9 @@ When using the `--auto` flag, Commitional can leverage AI services to help gener
 - `COMMITIONAL_OPENAI_URL`: The OpenAI API endpoint (default: https://api.openai.com/v1/chat/completions)
 - `COMMITIONAL_OPENAI_PREFERENCE`: Priority level for using this service (lower numbers have higher priority, 0 disables the service)
 
-#### Amazon Bedrock (Amplify) Configuration
+#### Amplify Configuration
 
-- `COMMITIONAL_AMPLIFY_KEY`: Your AWS access key for Bedrock/Amplify
+- `COMMITIONAL_AMPLIFY_KEY`: Your API key for Amplify
 - `COMMITIONAL_AMPLIFY_URL`: The Amplify API endpoint
 - `COMMITIONAL_AMPLIFY_PREFERENCE`: Priority level for using this service (lower numbers have higher priority, 0 disables the service)
 
