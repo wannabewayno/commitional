@@ -1,11 +1,38 @@
 import { input, select } from '@inquirer/prompts';
 import type RulesEngine from '../rules/index.js';
+import AIProvider from '../services/AI/index.js';
 
-export default class SubjectPrompt {
+const AI = AIProvider();
+
+export default class TitlePrompt {
   private rules: RulesEngine;
 
   constructor(rules: RulesEngine) {
     this.rules = rules.narrow('subject');
+  }
+
+  async generate(scope: string, diff: string, type: string) {
+    const ai = AI.byPreference();
+
+    const res = await ai
+      .completion()
+      .usecase('Coding')
+      .prompt(
+        'Generate an appropriate commit title to be included in the commit subject for the provided staged files.',
+        "The commit's type and scope (if any) are shown below for context.",
+        '## Subject',
+        scope ? `${type}(${scope}): <title: goes here>` : `${type}: <title goes here>`,
+        '## Git Diff',
+        'Use the following git diff to determine a sensible title',
+        '```txt',
+        diff,
+        '```',
+      )
+      // Force the output to be in JSON.
+      .json('commit_title', { title: 'string' });
+
+    if (res instanceof Error) throw res;
+    return res.title;
   }
 
   async prompt(initialValue?: string): Promise<string> {

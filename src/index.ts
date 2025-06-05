@@ -25,13 +25,13 @@ program
   .version(packageJSON.version, '-v, --version', 'Output the current version')
   .option('-t, --type <type>', 'Commit type; feat, fix, test ...')
   .option('-s, --scope <scope>', 'Commit scope (if any)')
-  .option('-S, --subject <subject>', 'Commit subject')
+  .option('-t, --title <title>', 'Commit subject')
   .option('-b, --body <body>', 'Commit body')
   .option('-B, --breaking', 'Is this a Breaking change?')
   .option('-A, --auto', 'Use Generative AI to pre-fill your commit message', false)
   .addHelpCommand('help [command]', 'Display help for command')
   .action(
-    async (opts: { type?: string; scope?: string; subject?: string; breaking?: boolean; body?: string; auto: boolean }) => {
+    async (opts: { type?: string; scope?: string; title?: string; breaking?: boolean; body?: string; auto: boolean }) => {
       /*
       If the user has configured commitlint in the current working directory, attempt to load commitlint's config.
       We'll guide the user increating a commit message that adhere's to the commitlint config.
@@ -72,7 +72,9 @@ program
       if (opts.auto) opts.type = await typePrompt.generate(scope, diff);
       const type = await typePrompt.prompt(opts.type);
 
-      const title = await new TitlePrompt(rulesEngine).prompt(opts.subject);
+      const titlePrompt = new TitlePrompt(rulesEngine);
+      if (opts.auto) opts.title = await titlePrompt.generate(scope, diff, type);
+      const title = await titlePrompt.prompt(opts.title);
 
       const body = await new BodyPrompt(rulesEngine).prompt(opts.body);
 
