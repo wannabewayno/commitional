@@ -1,11 +1,13 @@
 import { confirm, editor, select, input } from '@inquirer/prompts';
 import type RulesEngine from '../rules/index.js';
+import AIProvider from '../services/AI/index.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
 const CUSTOM = 'custom';
 
+const AI = AIProvider();
 export default class BodyPrompt {
   private rules: RulesEngine;
 
@@ -59,6 +61,29 @@ export default class BodyPrompt {
     process.env.EDITOR = editorCmd;
 
     return null;
+  }
+
+  async generate(scope: string, diff: string, type: string, title: string) {
+    const ai = AI.byPreference();
+
+    const res = await ai
+      .completion()
+      .usecase('Coding')
+      .prompt(
+        'Generate an appropriate commit body for the provided staged files to be committed',
+        "The commit subject's type, scope and title have been provided for context",
+        '## Subject',
+        `${scope ? `${type}(${scope}): ${title}` : `${type}: ${title}`}`,
+        '## Git Diff',
+        '```txt',
+        diff,
+        '```',
+      )
+      // Force the output to be in JSON.
+      .json('commit_type', { type: 'string' });
+
+    if (res instanceof Error) throw res;
+    return res.type;
   }
 
   async prompt(initialValue?: string): Promise<string> {
