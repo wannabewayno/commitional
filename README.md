@@ -13,6 +13,38 @@ commitional
 npx commitional
 ```
 
+## Installation
+
+### Configuration
+
+When using the `--auto` flag, Commitional can leverage AI services to help generate commit messages. The following environment variables can be configured to use these services:
+
+#### OpenAI Configuration
+
+- `COMMITIONAL_OPENAI_KEY`: Your OpenAI API key
+- `COMMITIONAL_OPENAI_URL`: The OpenAI API endpoint (default: https://api.openai.com/v1/chat/completions)
+- `COMMITIONAL_OPENAI_PREFERENCE`: Priority level for using this service (lower numbers have higher priority, 0 disables the service)
+
+#### Amazon Bedrock (Amplify) Configuration
+
+- `COMMITIONAL_AMPLIFY_KEY`: Your AWS access key for Bedrock/Amplify
+- `COMMITIONAL_AMPLIFY_URL`: The Amplify API endpoint
+- `COMMITIONAL_AMPLIFY_PREFERENCE`: Priority level for using this service (lower numbers have higher priority, 0 disables the service)
+
+Example configuration in your `.bashrc` or `.zshrc`:
+
+```bash
+# OpenAI configuration
+export COMMITIONAL_OPENAI_KEY="your-openai-api-key"
+export COMMITIONAL_OPENAI_URL="https://api.openai.com/v1"
+export COMMITIONAL_OPENAI_PREFERENCE="1"  # First preference
+
+# Amplify configuration
+export COMMITIONAL_AMPLIFY_KEY="your-amplify-api-key"
+export COMMITIONAL_AMPLIFY_URL="https://amplify.planittesting.com"
+export COMMITIONAL_AMPLIFY_PREFERENCE="2"  # Second preference
+```
+
 ## Development
 
 ### Prerequisites
