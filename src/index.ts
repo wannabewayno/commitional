@@ -28,10 +28,10 @@ program
   .option('-S, --subject <subject>', 'Commit subject')
   .option('-b, --body <body>', 'Commit body')
   .option('-B, --breaking', 'Is this a Breaking change?')
-  .option('-A, --ai', 'Use Generative AI to pre-fill your commit message', false)
+  .option('-A, --auto', 'Use Generative AI to pre-fill your commit message', false)
   .addHelpCommand('help [command]', 'Display help for command')
   .action(
-    async (opts: { type?: string; scope?: string; subject?: string; breaking?: boolean; body?: string; ai: boolean }) => {
+    async (opts: { type?: string; scope?: string; subject?: string; breaking?: boolean; body?: string; auto: boolean }) => {
       /*
       If the user has configured commitlint in the current working directory, attempt to load commitlint's config.
       We'll guide the user increating a commit message that adhere's to the commitlint config.
@@ -68,8 +68,9 @@ program
       const deducedScope = scopeDeducer.deduceScope(stagedFiles) ?? (opts.scope ? opts.scope.split(',') : []);
       const scope = await new ScopePrompt(rulesEngine).prompt(deducedScope.join(','));
 
-      // I should keep it simple and do the AI stuff here and just pass it in to the validator.
-      const type = await new TypePrompt(rulesEngine).prompt(opts.type);
+      const typePrompt = new TypePrompt(rulesEngine);
+      if (opts.auto) opts.type = await typePrompt.generate(scope, diff);
+      const type = await typePrompt.prompt(opts.type);
 
       const title = await new SubjectPrompt(rulesEngine).prompt(opts.subject);
 

@@ -1,11 +1,57 @@
 import { input, select } from '@inquirer/prompts';
 import type RulesEngine from '../rules/index.js';
+import AIProvider from '../services/AI/index.js';
+import toEnum from '../lib/toEnum.js';
 
+const AI = AIProvider();
 export default class TypePrompt {
   private rules: RulesEngine;
 
   constructor(rules: RulesEngine) {
     this.rules = rules.narrow('type');
+  }
+
+  async generate(scope: string, diff: string) {
+    const ai = AI.byPreference();
+
+    const [enumRule] = this.rules.getRulesOfType('enum');
+
+    const res = await (enumRule
+      ? ai
+          .completion()
+          .usecase('Coding')
+          .prompt(
+            'From the list of provided commit types, select the appropriate commit type for the git diff of staged files and the provided scope',
+            '## Scope',
+            scope,
+            '',
+            '## Commit types',
+            `${enumRule.value.join('\n')}`,
+            '',
+            '## Git Diff',
+            '```txt',
+            diff,
+            '```',
+          )
+          // Force the output to be in JSON.
+          .json('commit_type', { type: toEnum(enumRule.value) })
+      : ai
+          .completion()
+          .usecase('Coding')
+          .prompt(
+            'Generate an appropriate commit type for the provided staged files and user provided scope.',
+            '## Scope',
+            scope,
+            '## Git Diff',
+            '```txt',
+            diff,
+            '```',
+          )
+          // Force the output to be in JSON.
+          .json('commit_type', { type: 'string' }));
+
+    if (res instanceof Error) throw res;
+    return res.type;
   }
 
   async prompt(initialValue?: string): Promise<string> {
