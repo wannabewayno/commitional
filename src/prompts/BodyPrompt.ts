@@ -71,7 +71,7 @@ export default class BodyPrompt {
       .usecase('Coding')
       .prompt(
         'Generate an appropriate commit body for the provided staged files to be committed',
-        "The commit subject's type, scope and title have been provided for context",
+        'The commit subject has been provided for context',
         '## Subject',
         `${scope ? `${type}(${scope}): ${title}` : `${type}: ${title}`}`,
         '## Git Diff',

@@ -76,7 +76,9 @@ program
       if (opts.auto) opts.title = await titlePrompt.generate(scope, diff, type);
       const title = await titlePrompt.prompt(opts.title);
 
-      const body = await new BodyPrompt(rulesEngine).prompt(opts.body);
+      const bodyPrompt = await new BodyPrompt(rulesEngine);
+      if (opts.auto) opts.body = await bodyPrompt.generate(scope, diff, type, title);
+      const body = await bodyPrompt.prompt(opts.body);
 
       const breaking =
         opts.breaking !== undefined
