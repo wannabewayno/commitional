@@ -14,13 +14,11 @@ class TestBasePrompt extends BasePrompt {
 
 describe('BasePrompt', () => {
   describe('commitStandard', () => {
-    let fsReadFileStub: sinon.SinonStub;
     let basePrompt: TestBasePrompt;
     const mockContent = '# Commit Message Standard\n\nThis is a test standard.';
 
     beforeEach(() => {
       // Create stub for fs.readFileSync
-      fsReadFileStub = sinon.stub(fs, 'readFileSync').returns(mockContent);
 
       // Create instance with minimal dependencies
       basePrompt = new TestBasePrompt(
@@ -32,23 +30,12 @@ describe('BasePrompt', () => {
       );
     });
 
-    afterEach(() => {
-      // Restore the stub
-      fsReadFileStub.restore();
-    });
-
     it('should read and return the content of commit-message-standard.md', () => {
       // Call the method through our test subclass
       const result = basePrompt.testCommitStandard();
 
       // Verify the result
-      expect(result).to.equal(mockContent);
-      console.log(result);
-
-      // Verify that readFileSync was called with the correct path
-      const __dirname = path.dirname(fileURLToPath(import.meta.url));
-      const expectedPath = path.join(__dirname, 'commit-message-standard.md');
-      expect(fsReadFileStub.calledWith(expectedPath, 'utf8')).to.be.true;
+      expect(result).to.match(/^## General Rules/);
     });
   });
 });
