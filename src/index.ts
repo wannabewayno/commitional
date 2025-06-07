@@ -90,7 +90,7 @@ program
       if (opts.auto) {
         opts.body = await oraPromise(bodyPrompt.generate(scope, diff, type, title), {
           text: 'Generating commit body...',
-          successText: body => `${body.split('\n')[0].slice(0, 50)}...`,
+          successText: body => `${body.split('\n')[0].slice(0, 75)}...`,
         });
       }
       const body = await bodyPrompt.prompt(opts.body);
