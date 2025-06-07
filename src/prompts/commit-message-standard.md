@@ -1,5 +1,3 @@
-# Commit Message Standard
-
 ## General Rules
 - Commit messages must have a subject line and may have body copy. These must be separated by a blank line.
 - The subject line must not exceed 50 characters

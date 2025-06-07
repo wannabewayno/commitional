@@ -13,6 +13,7 @@ export default class TitlePrompt extends BasePrompt {
     const res = await ai
       .completion()
       .usecase('Coding')
+      .system('', this.commitStandard())
       .prompt(
         'Generate an appropriate commit title to be included in the commit subject for the provided staged files.',
         "The commit's type and scope (if any) are shown below for context.",
