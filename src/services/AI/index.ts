@@ -2,6 +2,7 @@ import CompletionProvider, { type ICompletion } from './Completion/index.js';
 import OpenAICompletionProvider from './Completion/OpenAI.js';
 import AmplifyCompletionProvider from './Completion/Amplify.js';
 import PerplexityCompletionProvider from './Completion/Perplexity.js';
+import xAICompletionProvider from './Completion/Perplexity.js';
 import axios from 'axios';
 
 /**
@@ -13,6 +14,7 @@ export default function Provider() {
   const OpenAICompletion = OpenAICompletionProvider(Completion);
   const AmplifyCompletion = AmplifyCompletionProvider(Completion);
   const PerplexityCompletion = PerplexityCompletionProvider(Completion);
+  const xAICompletion = xAICompletionProvider(Completion);
 
   /**
    * AI class for handling completions using a specified completion builder
@@ -75,6 +77,8 @@ export default function Provider() {
      */
     private static loadNamedService(name: string, url?: string, apiKey?: string) {
       switch (name) {
+        case 'xai':
+          return new AI(xAICompletion, url, apiKey);
         case 'openai':
           return new AI(OpenAICompletion, url, apiKey);
         case 'perplexity':

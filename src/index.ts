@@ -109,7 +109,7 @@ program
       });
       console.log('\nCommit message:');
       console.log('------------------------');
-      console.log(`${Subject}\n\n${Body}`);
+      console.log(`[Subject]\n${Subject}\n\n[Body]\n${Body}`);
       console.log('------------------------');
 
       // Then commit with this message.
