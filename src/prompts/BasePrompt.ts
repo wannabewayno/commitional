@@ -1,11 +1,7 @@
 import type RulesEngine from '../rules/index.js';
 import type { CommitPart } from '../rules/index.js';
 import AIProvider from '../services/AI/index.js';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import commitMessageStandard from './commit-message-standard.js';
 
 export default class BasePrompt {
   protected AI = AIProvider();
@@ -16,6 +12,6 @@ export default class BasePrompt {
   }
 
   protected commitStandard(): string {
-    return fs.readFileSync(path.join(__dirname, 'commit-message-standard.md'), 'utf8');
+    return commitMessageStandard;
   }
 }

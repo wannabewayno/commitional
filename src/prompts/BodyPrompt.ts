@@ -65,6 +65,13 @@ export default class BodyPrompt extends BasePrompt {
     const res = await ai
       .completion()
       .usecase('Coding')
+      .system(
+        'You are integrated into a cli that helps software engineers write meaningful git commits.',
+        'You will be provided with the git diff of the currenty staged files to be committed asked to either generate a commit type, scope, title, or body.',
+        'If previous parts of the commit message are known, these will also be provided for you.',
+        'The following rules and guidelines must be adhered to.\n',
+        this.commitStandard(),
+      )
       .prompt(
         'Generate an appropriate commit body for the provided staged files to be committed',
         'The commit subject has been provided for context',
@@ -76,10 +83,10 @@ export default class BodyPrompt extends BasePrompt {
         '```',
       )
       // Force the output to be in JSON.
-      .json('commit_type', { type: 'string' });
+      .json('commit_body', { body: 'string' });
 
     if (res instanceof Error) throw res;
-    return res.type;
+    return res.body;
   }
 
   async prompt(initialValue?: string): Promise<string> {

@@ -12,11 +12,19 @@ export default class TypePrompt extends BasePrompt {
     const ai = this.AI.byPreference();
 
     const [enumRule] = this.rules.getRulesOfType('enum');
+    const completion = ai
+      .completion()
+      .usecase('Coding')
+      .system(
+        'You are integrated into a cli that helps software engineers write meaningful git commits.',
+        'You will be provided with the git diff of the currenty staged files to be committed asked to either generate a commit type, scope, title, or body.',
+        'If previous parts of the commit message are known, these will also be provided for you.',
+        'The following rules and guidelines must be adhered to.\n',
+        this.commitStandard(),
+      );
 
     const res = await (enumRule
-      ? ai
-          .completion()
-          .usecase('Coding')
+      ? completion
           .prompt(
             'From the list of provided commit types, select the appropriate commit type for the git diff of staged files and the provided scope',
             '## Scope',
@@ -32,9 +40,7 @@ export default class TypePrompt extends BasePrompt {
           )
           // Force the output to be in JSON.
           .json('commit_type', { type: toEnum(enumRule.value) })
-      : ai
-          .completion()
-          .usecase('Coding')
+      : completion
           .prompt(
             'Generate an appropriate commit type for the provided staged files and user provided scope.',
             '## Scope',

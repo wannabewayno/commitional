@@ -13,7 +13,13 @@ export default class TitlePrompt extends BasePrompt {
     const res = await ai
       .completion()
       .usecase('Coding')
-      .system('', this.commitStandard())
+      .system(
+        'You are integrated into a cli that helps software engineers write meaningful git commits.',
+        'You will be provided with the git diff of the currenty staged files to be committed asked to either generate a commit type, scope, title, or body.',
+        'If previous parts of the commit message are known, these will also be provided for you.',
+        'The following rules and guidelines must be adhered to.\n',
+        this.commitStandard(),
+      )
       .prompt(
         'Generate an appropriate commit title to be included in the commit subject for the provided staged files.',
         "The commit's type and scope (if any) are shown below for context.",

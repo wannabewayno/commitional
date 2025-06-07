@@ -1,4 +1,4 @@
-## General Rules
+export default `## General Rules
 - Commit messages must have a subject line and may have body copy. These must be separated by a blank line.
 - The subject line must not exceed 50 characters
 - The subject line should be capitalized and must not end in a period
@@ -15,8 +15,8 @@ This is an example of a complete commit message that adheres to this standard. P
     characters or so. In some contexts, the first line is treated as the
     subject of the commit and the rest of the text as the body. The
     blank line separating the summary from the body is critical (unless
-    you omit the body entirely); various tools like `log`, `shortlog`
-    and `rebase` can get confused if you run the two together.
+    you omit the body entirely); various tools like \`log\`, \`shortlog\`
+    and \`rebase\` can get confused if you run the two together.
 
     Explain the problem that this commit is solving. Focus on why you
     are making this change as opposed to how (the code explains that).
@@ -44,7 +44,7 @@ To perform a *simple* commit, a single command if sufficient:
 
     $ git commit -m"Fix my subject line style"
 
-If you need to write copy, issue `git commit`. Git will now open your default text editor. To set a custom editor, use `git config --global core.editor nano` (in this example, nano is the editor).
+If you need to write copy, issue \`git commit\`. Git will now open your default text editor. To set a custom editor, use \`git config --global core.editor nano\` (in this example, nano is the editor).
 
 Here's an example of a subject and body commit message:
 
@@ -140,7 +140,7 @@ Here's a perfect example:
       them.
 
 This is way easier to parse than the corresponding diff.
-```diff
+\`\`\`diff
 ---
  src/main.cpp             |  2 +-
  src/serialize.h          | 63 ++++------------------------------------
@@ -340,4 +340,5 @@ index b16f3f7f5780c..e3066a51ab983 100644
              {
                  CAlert alert;
                  stream >> alert;
-```
+\`\`\`
+`;
