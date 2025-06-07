@@ -113,7 +113,7 @@ program
       console.log('------------------------');
 
       // Then commit with this message.
-      await git.commit(Subject, Body);
+      await oraPromise(git.commit(Subject, Body), 'Committing...');
 
       process.exit(0);
     },
