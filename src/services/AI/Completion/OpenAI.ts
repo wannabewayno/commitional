@@ -105,9 +105,10 @@ type BaseMessage = typeof scope.base_message.infer;
 
 export default function Provider(Completion: Completion) {
   class OpenAICompletion extends Completion {
-    constructor(baseURL: string, apiKey?: string) {
+    constructor(baseURL?: string, apiKey?: string) {
       const headers: Record<string, string> = {};
       if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+      if (!baseURL) baseURL = 'https://api.openai.com/v1';
 
       super(baseURL, headers);
     }

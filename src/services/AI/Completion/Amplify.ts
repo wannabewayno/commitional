@@ -83,9 +83,10 @@ const GPT4o = '8cac310c-065b-4866-827d-cdac270f7fb7'; // GPT-4o
 
 export default function Provider(Completion: Completion) {
   class AmplifyCompletion extends Completion {
-    constructor(baseURL: string, apiKey?: string) {
+    constructor(baseURL?: string, apiKey?: string) {
       const headers: Record<string, string> = {};
       if (apiKey) headers.Token = apiKey;
+      if (!baseURL) baseURL = 'https://amplify.planittesting.com';
 
       super(baseURL, headers);
     }

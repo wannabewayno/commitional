@@ -16,7 +16,7 @@ export default function Provider() {
    * AI class for handling completions using a specified completion builder
    * @template Builder - A constructor type that creates a CompletionBuilder instance
    */
-  class AI<Builder extends new (baseURL: string, apiKey?: string) => ICompletion> {
+  class AI<Builder extends new (baseURL?: string, apiKey?: string) => ICompletion> {
     /**
      * Creates an instance of the AI class
      * @param CompletionBuilder - The completion builder constructor
@@ -25,7 +25,7 @@ export default function Provider() {
      */
     constructor(
       private readonly CompletionBuilder: Builder,
-      private readonly baseURL: string,
+      private readonly baseURL?: string,
       private readonly apiKey?: string,
     ) {}
 
@@ -71,7 +71,7 @@ export default function Provider() {
      * @returns An AI service instance or an error if the service cannot be loaded
      * @private
      */
-    private static loadNamedService(name: string, url: string, apiKey: string) {
+    private static loadNamedService(name: string, url?: string, apiKey?: string) {
       switch (name) {
         case 'openai':
           return new AI(OpenAICompletion, url, apiKey);
@@ -90,7 +90,7 @@ export default function Provider() {
      */
     private static loadEnvForNamedService(
       name: string,
-    ): { name: string; apiKey: string; url: string; preference: number } | Error {
+    ): { name: string; apiKey: string; url?: string; preference: number } | Error {
       name = name.toUpperCase();
       const [apiKey, url, preference] = ['KEY', 'URL', 'PREFERENCE'].map(
         suffix => process.env[`COMMITIONAL_${name}_${suffix}`],
@@ -101,8 +101,6 @@ export default function Provider() {
         return new Error(
           `${name} api has been disabled, to re-enable set COMMITIONA_${name}_PREFERENCE to a number greater than 0`,
         );
-      if (!url)
-        return new Error(`No URL provided for ${name} service. Please set COMMITIONAL_${name}_URL environment variable.`);
       if (!apiKey)
         return new Error(
           `No API key provided for ${name} service. Please set COMMITIONAL_${name}_KEY environment variable.`,
