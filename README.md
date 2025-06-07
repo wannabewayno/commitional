@@ -33,6 +33,8 @@ The following environment variables can be configured to use these services:
 **Allowed Services**
 - OpenAI
 - Amplify
+- xAI
+- Perplexity
 
 **Example**
 configuration in your `.bashrc` or `.zshrc`:
