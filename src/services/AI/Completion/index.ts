@@ -32,14 +32,10 @@ export default function Provider(http: HttpClientProvider) {
      * Creates a new Completion instance
      * @param apiKey The API key used for authentication
      */
-    constructor(baseURL: string, apiKey: string) {
-      this.http = http.create({
-        baseURL,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-      });
+    constructor(baseURL: string, headers: Record<string, string>) {
+      if (!headers['Content-Type']) headers['Content-Type'] = 'application/json';
+
+      this.http = http.create({ baseURL, headers });
     }
 
     /**

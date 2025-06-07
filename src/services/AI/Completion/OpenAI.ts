@@ -105,6 +105,13 @@ type BaseMessage = typeof scope.base_message.infer;
 
 export default function Provider(Completion: Completion) {
   class OpenAICompletion extends Completion {
+    constructor(baseURL: string, apiKey?: string) {
+      const headers: Record<string, string> = {};
+      if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+      super(baseURL, headers);
+    }
+
     private _temperature: Temperature = Temperature.Coding;
     private _system?: BaseMessage;
     private _prompt?: BaseMessage;

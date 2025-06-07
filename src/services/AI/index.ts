@@ -16,7 +16,7 @@ export default function Provider() {
    * AI class for handling completions using a specified completion builder
    * @template Builder - A constructor type that creates a CompletionBuilder instance
    */
-  class AI<Builder extends new (baseURL: string, apiKey: string) => ICompletion> {
+  class AI<Builder extends new (baseURL: string, apiKey?: string) => ICompletion> {
     /**
      * Creates an instance of the AI class
      * @param CompletionBuilder - The completion builder constructor
@@ -26,7 +26,7 @@ export default function Provider() {
     constructor(
       private readonly CompletionBuilder: Builder,
       private readonly baseURL: string,
-      private readonly apiKey: string,
+      private readonly apiKey?: string,
     ) {}
 
     /**
