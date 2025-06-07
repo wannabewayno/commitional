@@ -1,47 +1,49 @@
 # commitional
-
-CLI tool for crafting commit messages
+CLI for crafting commit messages that adhere to any linting rules defined.
+Compatible out-of-the-box with commitlint.
+Hook up your favourite AI API to autogenerate commit messages based on the changes being made.
 
 ## Usage
-**Install globally**
-```bash
-commitional
-```
+**help**
+use the `--help` flag to see a list of allowed subcommands and options.
 
-**Installed in workspace**
-```bash
-npx commitional
-```
+| Runtime       | Global                     | Workspace                   |
+| ------------- | -------------------------- | --------------------------- |
+| Bun           | `commitional`              | `bunx commitional`          |
+| Node          | `commitional`              | `npx commitional`           |
+
 
 ## Installation
+| Runtime       | Global                       | Workspace                            |
+| ------------- | ---------------------------- | ------------------------------------ |
+| Bun           | `bun install commitional -g` | `bun add -d commitional`             |
+| Node          | `npm install commitional -g` | `npm i --save-dev commitional`       |
 
 ### Configuration
 
-When using the `--auto` flag, Commitional can leverage AI services to help generate commit messages. The following environment variables can be configured to use these services:
+When using the `--auto` flag, Commitional can leverage configured AI APIs to help generate commit messages.
+The following environment variables can be configured to use these services:
 
-#### OpenAI Configuration
+| Env Variable                       | Description                                                                                        | Default                        | 
+| ---------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------ |
+| COMMITIONAL_{{Service}}_KEY        | Your API key                                                                                       |                                |
+| COMMITIONAL_{{Service}}_URL        | The base url of the service's api endpoint                                                         | Current public api endpoint    |
+| COMMITIONAL_{{Service}}_PREFERENCE | Priority level for using this service (lower numbers have higher priority, 0 disables the service) | 1                              |
+ 
+**Allowed Services**
+- OpenAI
+- Amplify
 
-- `COMMITIONAL_OPENAI_KEY`: Your OpenAI API key
-- `COMMITIONAL_OPENAI_URL`: The OpenAI API endpoint (default: https://api.openai.com/v1/chat/completions)
-- `COMMITIONAL_OPENAI_PREFERENCE`: Priority level for using this service (lower numbers have higher priority, 0 disables the service)
-
-#### Amplify Configuration
-
-- `COMMITIONAL_AMPLIFY_KEY`: Your API key for Amplify
-- `COMMITIONAL_AMPLIFY_URL`: The Amplify API endpoint
-- `COMMITIONAL_AMPLIFY_PREFERENCE`: Priority level for using this service (lower numbers have higher priority, 0 disables the service)
-
-Example configuration in your `.bashrc` or `.zshrc`:
+**Example**
+configuration in your `.bashrc` or `.zshrc`:
 
 ```bash
 # OpenAI configuration
 export COMMITIONAL_OPENAI_KEY="your-openai-api-key"
-export COMMITIONAL_OPENAI_URL="https://api.openai.com/v1"
 export COMMITIONAL_OPENAI_PREFERENCE="1"  # First preference
 
 # Amplify configuration
-export COMMITIONAL_AMPLIFY_KEY="your-amplify-api-key"
-export COMMITIONAL_AMPLIFY_URL="https://amplify.planittesting.com"
+export COMMITIONAL_AMPLIFY_KEY="your-amplify-token"
 export COMMITIONAL_AMPLIFY_PREFERENCE="2"  # Second preference
 ```
 
@@ -50,22 +52,22 @@ export COMMITIONAL_AMPLIFY_PREFERENCE="2"  # Second preference
 ### Prerequisites
 
 - Node.js (v18 or higher) or Bun
-- npm or yarn
+- npm, yarn or bun
 
 ### Setup
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/commitional.git
+git clone https://github.com/wannabewayno/commitional.git
 cd commitional
 ```
 
 2. Install dependencies
 ```bash
-# Bun
+# Node
 npm install
 
-# Node
+# Bun
 bun install
 ```
 
