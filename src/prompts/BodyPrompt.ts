@@ -89,7 +89,7 @@ export default class BodyPrompt {
   async prompt(initialValue?: string): Promise<string> {
     let answer: string;
 
-    // Body is optional unless required by some rules.
+    // Body is optional unless required by user configured rules.
 
     // If it's valid
     if (this.rules.validate(initialValue)) {

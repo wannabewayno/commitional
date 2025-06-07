@@ -33,11 +33,10 @@ program
   .action(
     async (opts: { type?: string; scope?: string; title?: string; breaking?: boolean; body?: string; auto: boolean }) => {
       /*
-      If the user has configured commitlint in the current working directory, attempt to load commitlint's config.
-      We'll guide the user increating a commit message that adhere's to the commitlint config.
-      Otherwise we'll use our default.
-    */
-      // by default pick some reasonable defaults
+        If the user has configured commitlint in the current working directory, attempt to load commitlint's config.
+        We'll guide the user in creating a commit message that adheres to the commitlint config.
+        Otherwise it'll load a default config.
+      */
       const config = await loadConfig();
 
       // Create a new *git* instance scoped to the cwd
@@ -85,8 +84,7 @@ program
           ? opts.breaking
           : await confirm({ message: 'Does this change introduce any breaking changes?' });
 
-      // const commitMessage = await promptCommitMessage();
-      const formattedMessage = formatCommitMessage({
+      const [Subject, Body] = formatCommitMessage({
         type,
         title,
         body,
@@ -95,11 +93,11 @@ program
       });
       console.log('\nCommit message:');
       console.log('------------------------');
-      console.log(formattedMessage.join('\n\n'));
+      console.log(`${Subject}'\n\n'${Body}`);
       console.log('------------------------');
 
       // Then commit with this message.
-      await git.commit(...formattedMessage);
+      await git.commit(Subject, Body);
 
       process.exit(0);
     },
