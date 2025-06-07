@@ -94,17 +94,17 @@ This provied an easy way to get a quick overview by means of reading the shortlo
 ## Use the Imperative
 Inkeeping with the standard output of git itself, all commit subject lines must be written using the imperative:
 
-Good
+**Good**
 - Refactor subsystem X for readability
 - Update getting started documentation
 - Remove deprecated methods
 - Release version 1.0.0
   
-Bad
-Fixed bug with Y
-Changing behavior of X
+**Bad**
+- Fixed bug with Y
+- Changing behavior of X
 
-Very Bad
+**Very Bad**
 - More fixes for broken stuff
 - Sweet new API methods
 - 42
@@ -142,3 +142,204 @@ Here's a perfect example:
       them.
 
 This is way easier to parse than the corresponding diff.
+```diff
+---
+ src/main.cpp             |  2 +-
+ src/serialize.h          | 63 ++++------------------------------------
+ src/test/alert_tests.cpp |  2 +-
+ 3 files changed, 8 insertions(+), 59 deletions(-)
+
+diff --git a/src/main.cpp b/src/main.cpp
+index 353cde0bd7cd7..3add3491c8a58 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -3228,7 +3228,7 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
+             }
+         }
+         uint64_t nRewind = blkdat.GetPos();
+-        while (blkdat.good() && !blkdat.eof()) {
++        while (!blkdat.eof()) {
+             boost::this_thread::interruption_point();
+ 
+             blkdat.SetPos(nRewind);
+diff --git a/src/serialize.h b/src/serialize.h
+index f876efd9b5a41..748a2a0d4e928 100644
+--- a/src/serialize.h
++++ b/src/serialize.h
+@@ -870,8 +870,6 @@ class CDataStream
+     typedef CSerializeData vector_type;
+     vector_type vch;
+     unsigned int nReadPos;
+-    short state;
+-    short exceptmask;
+ public:
+     int nType;
+     int nVersion;
+@@ -923,8 +921,6 @@ class CDataStream
+         nReadPos = 0;
+         nType = nTypeIn;
+         nVersion = nVersionIn;
+-        state = 0;
+-        exceptmask = std::ios::badbit | std::ios::failbit;
+     }
+ 
+     CDataStream& operator+=(const CDataStream& b)
+@@ -1047,19 +1043,7 @@ class CDataStream
+     //
+     // Stream subset
+     //
+-    void setstate(short bits, const char* psz)
+-    {
+-        state |= bits;
+-        if (state & exceptmask)
+-            throw std::ios_base::failure(psz);
+-    }
+-
+     bool eof() const             { return size() == 0; }
+-    bool fail() const            { return state & (std::ios::badbit | std::ios::failbit); }
+-    bool good() const            { return !eof() && (state == 0); }
+-    void clear(short n)          { state = n; }  // name conflict with vector clear()
+-    short exceptions()           { return exceptmask; }
+-    short exceptions(short mask) { short prev = exceptmask; exceptmask = mask; setstate(0, "CDataStream"); return prev; }
+     CDataStream* rdbuf()         { return this; }
+     int in_avail()               { return size(); }
+ 
+@@ -1079,9 +1063,7 @@ class CDataStream
+         {
+             if (nReadPosNext > vch.size())
+             {
+-                setstate(std::ios::failbit, "CDataStream::read() : end of data");
+-                memset(pch, 0, nSize);
+-                nSize = vch.size() - nReadPos;
++                throw std::ios_base::failure("CDataStream::read() : end of data");
+             }
+             memcpy(pch, &vch[nReadPos], nSize);
+             nReadPos = 0;
+@@ -1101,7 +1083,7 @@ class CDataStream
+         if (nReadPosNext >= vch.size())
+         {
+             if (nReadPosNext > vch.size())
+-                setstate(std::ios::failbit, "CDataStream::ignore() : end of data");
++                throw std::ios_base::failure("CDataStream::ignore() : end of data");
+             nReadPos = 0;
+             vch.clear();
+             return (*this);
+@@ -1174,8 +1156,6 @@ class CAutoFile
+ {
+ protected:
+     FILE* file;
+-    short state;
+-    short exceptmask;
+ public:
+     int nType;
+     int nVersion;
+@@ -1185,8 +1165,6 @@ class CAutoFile
+         file = filenew;
+         nType = nTypeIn;
+         nVersion = nVersionIn;
+-        state = 0;
+-        exceptmask = std::ios::badbit | std::ios::failbit;
+     }
+ 
+     ~CAutoFile()
+@@ -1213,19 +1191,6 @@ class CAutoFile
+     //
+     // Stream subset
+     //
+-    void setstate(short bits, const char* psz)
+-    {
+-        state |= bits;
+-        if (state & exceptmask)
+-            throw std::ios_base::failure(psz);
+-    }
+-
+-    bool fail() const            { return state & (std::ios::badbit | std::ios::failbit); }
+-    bool good() const            { return state == 0; }
+-    void clear(short n = 0)      { state = n; }
+-    short exceptions()           { return exceptmask; }
+-    short exceptions(short mask) { short prev = exceptmask; exceptmask = mask; setstate(0, "CAutoFile"); return prev; }
+-
+     void SetType(int n)          { nType = n; }
+     int GetType()                { return nType; }
+     void SetVersion(int n)       { nVersion = n; }
+@@ -1238,7 +1203,7 @@ class CAutoFile
+         if (!file)
+             throw std::ios_base::failure("CAutoFile::read : file handle is NULL");
+         if (fread(pch, 1, nSize, file) != nSize)
+-            setstate(std::ios::failbit, feof(file) ? "CAutoFile::read : end of file" : "CAutoFile::read : fread failed");
++            throw std::ios_base::failure(feof(file) ? "CAutoFile::read : end of file" : "CAutoFile::read : fread failed");
+         return (*this);
+     }
+ 
+@@ -1247,7 +1212,7 @@ class CAutoFile
+         if (!file)
+             throw std::ios_base::failure("CAutoFile::write : file handle is NULL");
+         if (fwrite(pch, 1, nSize, file) != nSize)
+-            setstate(std::ios::failbit, "CAutoFile::write : write failed");
++            throw std::ios_base::failure("CAutoFile::write : write failed");
+         return (*this);
+     }
+ 
+@@ -1292,16 +1257,7 @@ class CBufferedFile
+     uint64_t nRewind;     // how many bytes we guarantee to rewind
+     std::vector<char> vchBuf; // the buffer
+ 
+-    short state;
+-    short exceptmask;
+-
+ protected:
+-    void setstate(short bits, const char *psz) {
+-        state |= bits;
+-        if (state & exceptmask)
+-            throw std::ios_base::failure(psz);
+-    }
+-
+     // read data from the source to fill the buffer
+     bool Fill() {
+         unsigned int pos = nSrcPos % vchBuf.size();
+@@ -1313,8 +1269,7 @@ class CBufferedFile
+             return false;
+         size_t read = fread((void*)&vchBuf[pos], 1, readNow, src);
+         if (read == 0) {
+-            setstate(std::ios_base::failbit, feof(src) ? "CBufferedFile::Fill : end of file" : "CBufferedFile::Fill : fread failed");
+-            return false;
++            throw std::ios_base::failure(feof(src) ? "CBufferedFile::Fill : end of file" : "CBufferedFile::Fill : fread failed");
+         } else {
+             nSrcPos += read;
+             return true;
+@@ -1327,12 +1282,7 @@ class CBufferedFile
+ 
+     CBufferedFile(FILE *fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nTypeIn, int nVersionIn) :
+         src(fileIn), nSrcPos(0), nReadPos(0), nReadLimit((uint64_t)(-1)), nRewind(nRewindIn), vchBuf(nBufSize, 0),
+-        state(0), exceptmask(std::ios_base::badbit | std::ios_base::failbit), nType(nTypeIn), nVersion(nVersionIn) {
+-    }
+-
+-    // check whether no error occurred
+-    bool good() const {
+-        return state == 0;
++        nType(nTypeIn), nVersion(nVersionIn) {
+     }
+ 
+     // check whether we're at the end of the source file
+@@ -1391,7 +1341,6 @@ class CBufferedFile
+         nLongPos = ftell(src);
+         nSrcPos = nLongPos;
+         nReadPos = nLongPos;
+-        state = 0;
+         return true;
+     }
+ 
+diff --git a/src/test/alert_tests.cpp b/src/test/alert_tests.cpp
+index b16f3f7f5780c..e3066a51ab983 100644
+--- a/src/test/alert_tests.cpp
++++ b/src/test/alert_tests.cpp
+@@ -83,7 +83,7 @@ struct ReadAlerts
+         std::vector<unsigned char> vch(alert_tests::alertTests, alert_tests::alertTests + sizeof(alert_tests::alertTests));
+         CDataStream stream(vch, SER_DISK, CLIENT_VERSION);
+         try {
+-            while (stream.good())
++            while (!stream.eof())
+             {
+                 CAlert alert;
+                 stream >> alert;
+```

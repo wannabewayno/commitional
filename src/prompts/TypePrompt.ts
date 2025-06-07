@@ -1,18 +1,15 @@
 import { input, select } from '@inquirer/prompts';
 import type RulesEngine from '../rules/index.js';
-import AIProvider from '../services/AI/index.js';
 import toEnum from '../lib/toEnum.js';
+import BasePrompt from './BasePrompt.js';
 
-const AI = AIProvider();
-export default class TypePrompt {
-  private rules: RulesEngine;
-
+export default class TypePrompt extends BasePrompt {
   constructor(rules: RulesEngine) {
-    this.rules = rules.narrow('type');
+    super(rules, 'type');
   }
 
   async generate(scope: string, diff: string) {
-    const ai = AI.byPreference();
+    const ai = this.AI.byPreference();
 
     const [enumRule] = this.rules.getRulesOfType('enum');
 

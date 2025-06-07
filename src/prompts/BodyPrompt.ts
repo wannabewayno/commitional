@@ -1,18 +1,14 @@
 import { confirm, editor, select, input } from '@inquirer/prompts';
 import type RulesEngine from '../rules/index.js';
-import AIProvider from '../services/AI/index.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import BasePrompt from './BasePrompt.js';
 
 const CUSTOM = 'custom';
-
-const AI = AIProvider();
-export default class BodyPrompt {
-  private rules: RulesEngine;
-
+export default class BodyPrompt extends BasePrompt {
   constructor(rules: RulesEngine) {
-    this.rules = rules.narrow('body');
+    super(rules, 'body');
   }
 
   private async checkEditor(): Promise<Error | null> {
@@ -64,7 +60,7 @@ export default class BodyPrompt {
   }
 
   async generate(scope: string, diff: string, type: string, title: string) {
-    const ai = AI.byPreference();
+    const ai = this.AI.byPreference();
 
     const res = await ai
       .completion()

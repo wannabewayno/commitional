@@ -1,18 +1,14 @@
 import { input, select } from '@inquirer/prompts';
 import type RulesEngine from '../rules/index.js';
-import AIProvider from '../services/AI/index.js';
+import BasePrompt from './BasePrompt.js';
 
-const AI = AIProvider();
-
-export default class TitlePrompt {
-  private rules: RulesEngine;
-
+export default class TitlePrompt extends BasePrompt {
   constructor(rules: RulesEngine) {
-    this.rules = rules.narrow('subject');
+    super(rules, 'subject');
   }
 
   async generate(scope: string, diff: string, type: string) {
-    const ai = AI.byPreference();
+    const ai = this.AI.byPreference();
 
     const res = await ai
       .completion()

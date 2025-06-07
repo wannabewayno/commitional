@@ -1,12 +1,11 @@
 import { input, select } from '@inquirer/prompts';
 import { red } from 'yoctocolors';
 import type RulesEngine from '../rules/index.js';
+import BasePrompt from './BasePrompt.js';
 
-export default class ScopePrompt {
-  private rules: RulesEngine;
-
+export default class ScopePrompt extends BasePrompt {
   constructor(rules: RulesEngine) {
-    this.rules = rules.narrow('scope');
+    super(rules, 'scope');
   }
 
   async prompt(deducedScopes: string): Promise<string> {
