@@ -7,7 +7,9 @@ import { ScopeDeducer } from './services/ScopeDeducer/index.js';
 import loadConfig from './config/index.js';
 import { TypePrompt, ScopePrompt, TitlePrompt, BodyPrompt } from './prompts/index.js';
 import { confirm } from '@inquirer/prompts';
-import { red } from 'yoctocolors';
+import { green, red } from 'yoctocolors';
+import { oraPromise } from 'ora';
+import { commitSubject } from './lib/formatCommitBody.js';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
@@ -67,15 +69,30 @@ program
       const scope = await new ScopePrompt(rulesEngine).prompt(deducedScope.join(','));
 
       const typePrompt = new TypePrompt(rulesEngine);
-      if (opts.auto) opts.type = await typePrompt.generate(scope, diff);
+      if (opts.auto) {
+        opts.type = await oraPromise(typePrompt.generate(scope, diff), {
+          text: `Generating ${commitSubject({ type: green('<type>'), scope, title: '<title>', breaking: false })}`,
+          successText: type => `${commitSubject({ type, scope, title: '<title>', breaking: false })}`,
+        });
+      }
       const type = await typePrompt.prompt(opts.type);
 
       const titlePrompt = new TitlePrompt(rulesEngine);
-      if (opts.auto) opts.title = await titlePrompt.generate(scope, diff, type);
+      if (opts.auto) {
+        opts.title = await oraPromise(titlePrompt.generate(scope, diff, type), {
+          text: `Generating ${commitSubject({ type, scope, title: green('<title>'), breaking: false })}`,
+          successText: title => `${commitSubject({ type, scope, title, breaking: false })}`,
+        });
+      }
       const title = await titlePrompt.prompt(opts.title);
 
       const bodyPrompt = await new BodyPrompt(rulesEngine);
-      if (opts.auto) opts.body = await bodyPrompt.generate(scope, diff, type, title);
+      if (opts.auto) {
+        opts.body = await oraPromise(bodyPrompt.generate(scope, diff, type, title), {
+          text: 'Generating commit body...',
+          successText: body => `${body.split('\n')[0].slice(0, 50)}...`,
+        });
+      }
       const body = await bodyPrompt.prompt(opts.body);
 
       const breaking =

@@ -1,8 +1,8 @@
 import type { CommitMessage } from '../prompts/index.js';
+import { commitSubject } from './formatCommitBody.js';
 
 export function formatCommitMessage(commit: CommitMessage): [subject: string, body?: string] {
-  const prefix = commit.scope ? `${commit.type}(${commit.scope})` : commit.type;
-  const subject = `${prefix}: ${commit.title}${commit.breaking ? ' ⚠️' : ''}`;
+  const subject = commitSubject(commit);
 
   if (!commit.body) return [subject];
   return [subject, commit.body];
