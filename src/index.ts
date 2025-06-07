@@ -7,6 +7,7 @@ import { ScopeDeducer } from './services/ScopeDeducer/index.js';
 import loadConfig from './config/index.js';
 import { TypePrompt, ScopePrompt, TitlePrompt, BodyPrompt } from './prompts/index.js';
 import { confirm } from '@inquirer/prompts';
+import { red } from 'yoctocolors';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
@@ -50,14 +51,12 @@ program
       console.log('\nStaged Files:');
       console.log('-------------');
       if (stagedFiles.length > 0) stagedFiles.forEach(file => console.log(file));
-      else console.log('No files staged');
+      else {
+        console.log(red('No files staged to commit'));
+        return;
+      }
 
       const diff = await git.stagedDiff();
-      if (diff) {
-        console.log('\nStaged Changes:');
-        console.log('--------------');
-        console.log(diff);
-      }
 
       const rulesEngine = RulesEngine.fromConfig(config.rules);
 
