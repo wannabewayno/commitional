@@ -45,6 +45,7 @@
     "arktype": "^2.1.20",
     "axios": "^1.9.0",
     "commander": "^11.1.0",
+    "ora": "^8.2.0",
     "simple-git": "~3.27.0",
     "yoctocolors": "^2.1.1"
   },
