@@ -113,7 +113,10 @@ program
       console.log('------------------------');
 
       // Then commit with this message.
-      await oraPromise(git.commit(Subject, Body), 'Committing...');
+      await oraPromise(git.commit(Subject, Body), {
+        text: 'Committing...',
+        successText: ({ commitHash }) => `${commitHash ? commitHash : 'Successsfully Committed'}`,
+      });
 
       process.exit(0);
     },
