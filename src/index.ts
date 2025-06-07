@@ -8,7 +8,7 @@ import loadConfig from './config/index.js';
 import { TypePrompt, ScopePrompt, TitlePrompt, BodyPrompt } from './prompts/index.js';
 import { confirm } from '@inquirer/prompts';
 import { green, red } from 'yoctocolors';
-import { oraPromise } from 'ora';
+import ora, { oraPromise } from 'ora';
 import { commitSubject } from './lib/formatCommitBody.js';
 
 process.on('uncaughtException', error => {
@@ -112,13 +112,10 @@ program
       console.log(`[Subject]\n${Subject}\n\n[Body]\n${Body}`);
       console.log('------------------------');
 
-      // Then commit with this message.
-      await oraPromise(git.commit(Subject, Body), {
-        text: 'Committing...',
-        successText: ({ commitHash }) => `${commitHash ? commitHash : 'Successsfully Committed'}`,
-      });
-
-      process.exit(0);
+      const spinner = ora('Commiting...').start();
+      const res = await git.commit(Subject, Body);
+      if (res.success) spinner.succeed(res.commitHash);
+      else spinner.fail(res.error?.message);
     },
   );
 
