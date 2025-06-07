@@ -28,6 +28,8 @@ type UseCase =
 export default function Provider(http: HttpClientProvider) {
   abstract class Completion {
     protected readonly http: HttpClient;
+    protected model?: string;
+
     /**
      * Creates a new Completion instance
      * @param apiKey The API key used for authentication
@@ -36,6 +38,16 @@ export default function Provider(http: HttpClientProvider) {
       if (!headers['Content-Type']) headers['Content-Type'] = 'application/json';
 
       this.http = http.create({ baseURL, headers });
+    }
+
+    /**
+     * Sets the model to use for completions
+     * @param model The model identifier to use
+     * @returns The current instance for method chaining
+     */
+    setModel(model: string): this {
+      this.model = model;
+      return this;
     }
 
     /**

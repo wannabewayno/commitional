@@ -29,6 +29,7 @@ The following environment variables can be configured to use these services:
 | COMMITIONAL_{{Service}}_KEY        | Your API key                                                                                       |                                |
 | COMMITIONAL_{{Service}}_URL        | The base url of the service's api endpoint                                                         | Current public api endpoint    |
 | COMMITIONAL_{{Service}}_PREFERENCE | Priority level for using this service (lower numbers have higher priority, 0 disables the service) | 1                              |
+| COMMITIONAL_{{Service}}_MODEL     | The model identifier to use for this service                                                       | Service-specific default       |
  
 **Allowed Services**
 - OpenAI
@@ -43,10 +44,12 @@ configuration in your `.bashrc` or `.zshrc`:
 # OpenAI configuration
 export COMMITIONAL_OPENAI_KEY="your-openai-api-key"
 export COMMITIONAL_OPENAI_PREFERENCE="1"  # First preference
+export COMMITIONAL_OPENAI_MODEL="gpt-4"   # Use GPT-4 model
 
 # Amplify configuration
 export COMMITIONAL_AMPLIFY_KEY="your-amplify-token"
 export COMMITIONAL_AMPLIFY_PREFERENCE="2"  # Second preference
+export COMMITIONAL_AMPLIFY_MODEL="custom-model"  # Use custom model
 ```
 
 ## Development

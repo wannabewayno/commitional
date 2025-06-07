@@ -162,7 +162,7 @@ export default function Provider(Completion: Completion) {
       // further paramters subject to fine-tuning and testing.
       const res = await this.http
         .post<CompletionResponse>('/chat/completions', {
-          model: 'sonar',
+          model: this.model || 'sonar',
           messages,
           temperature: this._temperature,
         } as CompletionRequest)
@@ -189,7 +189,7 @@ export default function Provider(Completion: Completion) {
       // Exactly the same as text, except prime the model return a JSON schema
       const res = await this.http
         .post('/chat/completions', {
-          model: 'sonar',
+          model: this.model || 'sonar',
           messages,
           temperature: this._temperature,
           response_format: {

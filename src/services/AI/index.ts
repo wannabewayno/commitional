@@ -2,7 +2,7 @@ import CompletionProvider, { type ICompletion } from './Completion/index.js';
 import OpenAICompletionProvider from './Completion/OpenAI.js';
 import AmplifyCompletionProvider from './Completion/Amplify.js';
 import PerplexityCompletionProvider from './Completion/Perplexity.js';
-import xAICompletionProvider from './Completion/Perplexity.js';
+import xAICompletionProvider from './Completion/xAI.js';
 import axios from 'axios';
 
 /**
@@ -31,6 +31,7 @@ export default function Provider() {
       private readonly CompletionBuilder: Builder,
       private readonly baseURL?: string,
       private readonly apiKey?: string,
+      private readonly defaultModel?: string,
     ) {}
 
     /**
@@ -38,7 +39,10 @@ export default function Provider() {
      * @returns A new CompletionBuilder instance
      */
     completion() {
-      return new this.CompletionBuilder(this.baseURL, this.apiKey);
+      const instance = new this.CompletionBuilder(this.baseURL, this.apiKey);
+      if (this.defaultModel) instance.setModel(this.defaultModel);
+
+      return instance;
     }
 
     /**
@@ -47,7 +51,9 @@ export default function Provider() {
      * @throws Error if no services are available with proper credentials
      */
     static byPreference() {
-      const potentialServices = ['openai', 'amplify'].map(service => AI.loadEnvForNamedService(service));
+      const potentialServices = ['openai', 'amplify', 'perplexity', 'xai'].map(service =>
+        AI.loadEnvForNamedService(service),
+      );
 
       const availableServices = potentialServices.filter(v => !(v instanceof Error)) as Exclude<
         ReturnType<typeof AI.loadEnvForNamedService>,
@@ -61,9 +67,9 @@ export default function Provider() {
       // Sort them by their preference.
       availableServices.sort((a, b) => a.preference - b.preference);
 
-      const [{ name, url, apiKey }] = availableServices;
+      const [{ name, url, apiKey, model }] = availableServices;
 
-      const service = AI.loadNamedService(name, url, apiKey);
+      const service = AI.loadNamedService(name, url, apiKey, model);
       if (service instanceof Error) throw service;
 
       return service;
@@ -75,16 +81,16 @@ export default function Provider() {
      * @returns An AI service instance or an error if the service cannot be loaded
      * @private
      */
-    private static loadNamedService(name: string, url?: string, apiKey?: string) {
+    private static loadNamedService(name: string, url?: string, apiKey?: string, model?: string) {
       switch (name) {
         case 'xai':
-          return new AI(xAICompletion, url, apiKey);
+          return new AI(xAICompletion, url, apiKey, model);
         case 'openai':
-          return new AI(OpenAICompletion, url, apiKey);
+          return new AI(OpenAICompletion, url, apiKey, model);
         case 'perplexity':
-          return new AI(PerplexityCompletion, url, apiKey);
+          return new AI(PerplexityCompletion, url, apiKey, model);
         case 'amplify':
-          return new AI(AmplifyCompletion, url, apiKey);
+          return new AI(AmplifyCompletion, url, apiKey, model);
         default:
           return new Error(`Unknown service: ${name}`);
       }
@@ -98,9 +104,9 @@ export default function Provider() {
      */
     private static loadEnvForNamedService(
       name: string,
-    ): { name: string; apiKey: string; url?: string; preference: number } | Error {
+    ): { name: string; apiKey: string; url?: string; model?: string; preference: number } | Error {
       name = name.toUpperCase();
-      const [apiKey, url, preference] = ['KEY', 'URL', 'PREFERENCE'].map(
+      const [apiKey, url, preference, model] = ['KEY', 'URL', 'PREFERENCE', 'MODEL'].map(
         suffix => process.env[`COMMITIONAL_${name}_${suffix}`],
       );
 
@@ -114,7 +120,7 @@ export default function Provider() {
           `No API key provided for ${name} service. Please set COMMITIONAL_${name}_KEY environment variable.`,
         );
 
-      return { name: name.toLowerCase(), apiKey, url, preference: preference ? Number(preference) : 1 };
+      return { name: name.toLowerCase(), apiKey, url, model, preference: preference ? Number(preference) : 1 };
     }
   }
   return AI;

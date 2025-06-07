@@ -3,7 +3,10 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { findPackageJSON } from 'node:module';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class JavascriptRuntime {
   name: string;
@@ -76,8 +79,8 @@ describe('Package Installation Tests', function () {
   let packagePath: string;
 
   before(() => {
-    const packageJSONPath = findPackageJSON('..', import.meta.url);
-    if (!packageJSONPath) throw new Error('Could not find package.json');
+    const packageJSONPath = path.join(__dirname, '..', 'package.json');
+    if (!fs.existsSync(packageJSONPath)) throw new Error('Could not find package.json');
 
     // dirname of this
     packagePath = path.dirname(packageJSONPath);

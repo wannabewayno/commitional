@@ -139,7 +139,7 @@ export default function Provider(Completion: Completion) {
 
       const res = await this.http
         .post<CompletionResponse>('/external/api/completion', {
-          model_id: GPT4o,
+          model_id: this.model || GPT4o,
           messages,
           temperature: this._temperature,
         })
@@ -172,7 +172,7 @@ export default function Provider(Completion: Completion) {
       // Make the request
       const res = await this.http
         .post<CompletionResponse>('/external/api/completion', {
-          model_id: GPT4o,
+          model_id: this.model || GPT4o,
           messages,
           temperature: this._temperature,
         })
