@@ -7,7 +7,7 @@ import { ScopeDeducer } from './services/ScopeDeducer/index.js';
 import loadConfig from './config/index.js';
 import { TypePrompt, ScopePrompt, TitlePrompt, BodyPrompt } from './prompts/index.js';
 import { confirm } from '@inquirer/prompts';
-import { green, red } from 'yoctocolors';
+import { blue, green, red } from 'yoctocolors';
 import ora, { oraPromise } from 'ora';
 import { commitSubject } from './lib/formatCommitBody.js';
 import { select, Separator } from 'inquirer-select-with-banner';
@@ -108,13 +108,9 @@ program
         breaking,
         scope,
       });
-      console.log('\nCommit message:');
-      console.log('------------------------');
-      console.log(`[Subject]\n${Subject}\n\n[Body]\n${Body}`);
-      console.log('------------------------');
 
       await select({
-        message: 'Edit commit message?',
+        message: 'Commit or Edit',
         choices: ['Commit!', new Separator(), 'type', 'scope', 'title', 'body', 'breaking'],
         loop: false,
         banner: choice => {
@@ -123,14 +119,12 @@ program
             title: choice.value === 'title' ? `${red('>')}${green(title)}${red('<')}` : title,
             body: choice.value === 'body' ? `${red('>')}${green(body)}${red('<')}` : body,
             breaking,
-            scope: choice.value === 'scope' ? `${red('>')}${green(scope)}${red('<')}` : scope,
+            scope: choice.value === 'scope' ? `${red('>')}${scope ? green(scope) : blue('scope')}${red('<')}` : scope,
           });
 
-          return `${Subject}\n\n${Body}`;
+          return `\n----------------------------------------\n${Subject}\n\n${Body}`;
         },
       });
-
-      // Time to now show the banner function update the format of the banner.
 
       const spinner = ora('Commiting...').start();
       const res = await git.commit(Subject, Body);
