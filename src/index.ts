@@ -10,6 +10,7 @@ import { confirm } from '@inquirer/prompts';
 import { green, red } from 'yoctocolors';
 import ora, { oraPromise } from 'ora';
 import { commitSubject } from './lib/formatCommitBody.js';
+import { select, Separator } from 'inquirer-select-with-banner';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
@@ -111,6 +112,25 @@ program
       console.log('------------------------');
       console.log(`[Subject]\n${Subject}\n\n[Body]\n${Body}`);
       console.log('------------------------');
+
+      await select({
+        message: 'Edit commit message?',
+        choices: ['Commit!', new Separator(), 'type', 'scope', 'title', 'body', 'breaking'],
+        loop: false,
+        banner: choice => {
+          const [Subject, Body] = formatCommitMessage({
+            type: choice.value === 'type' ? `${red('>')}${green(type)}${red('<')}` : type,
+            title: choice.value === 'title' ? `${red('>')}${green(title)}${red('<')}` : title,
+            body: choice.value === 'body' ? `${red('>')}${green(body)}${red('<')}` : body,
+            breaking,
+            scope: choice.value === 'scope' ? `${red('>')}${green(scope)}${red('<')}` : scope,
+          });
+
+          return `${Subject}\n\n${Body}`;
+        },
+      });
+
+      // Time to now show the banner function update the format of the banner.
 
       const spinner = ora('Commiting...').start();
       const res = await git.commit(Subject, Body);
