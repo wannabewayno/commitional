@@ -146,8 +146,6 @@ program
         scope,
       });
 
-      const commit = 'commit';
-
       await new PromptFlow(
         'Commit or Edit',
         {
