@@ -5,7 +5,7 @@ import Git from './services/Git/index.js';
 import RulesEngine from './rules/index.js';
 import { ScopeDeducer } from './services/ScopeDeducer/index.js';
 import loadConfig from './config/index.js';
-import { TypePrompt, ScopePrompt, TitlePrompt, BodyPrompt } from './prompts/index.js';
+import { TypePrompt, ScopePrompt, TitlePrompt, BodyPrompt, CommitMessage } from './prompts/index.js';
 import { confirm } from '@inquirer/prompts';
 import { blue, green, red } from 'yoctocolors';
 import ora, { oraPromise } from 'ora';
@@ -138,13 +138,20 @@ program
           ? opts.breaking
           : await confirm({ message: 'Does this change introduce any breaking changes?' });
 
-      const [Subject, Body] = formatCommitMessage({
+      const formatpart = (part: keyof typeof commit, selection: string) => {
+        if (part === 'breaking') return '';
+        if (selection !== part) return commit[part];
+        const value = commit[part];
+        return `${red('>')}${value ? green(value) : blue(part)}${red('<')}`;
+      };
+
+      const commit = {
         type,
         title,
         body,
         breaking,
         scope,
-      });
+      };
 
       await new PromptFlow(
         'Commit or Edit',
@@ -159,11 +166,11 @@ program
         {
           banner: choice => {
             const [Subject, Body] = formatCommitMessage({
-              type: choice.value === 'type' ? `${red('>')}${green(type)}${red('<')}` : type,
-              title: choice.value === 'title' ? `${red('>')}${green(title)}${red('<')}` : title,
-              body: choice.value === 'body' ? `${red('>')}${green(body)}${red('<')}` : body,
+              type: formatpart('type', choice.name),
+              title: formatpart('title', choice.name),
+              body: formatpart('body', choice.name),
               breaking,
-              scope: choice.value === 'scope' ? `${red('>')}${scope ? green(scope) : blue('scope')}${red('<')}` : scope,
+              scope: formatpart('scope', choice.name),
             });
 
             return `\n----------------------------------------\n${Subject}\n\n${Body}`;
@@ -172,7 +179,9 @@ program
       ).prompt();
 
       const spinner = ora('Commiting...').start();
-      const res = await git.commit(Subject, Body);
+
+      const res = await git.commit(...formatCommitMessage(commit));
+
       if (res.success) spinner.succeed(res.commitHash);
       else spinner.fail(res.error?.message);
     },
