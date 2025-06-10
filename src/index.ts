@@ -125,7 +125,7 @@ program
       const title = await titlePrompt.prompt(opts.title);
 
       const bodyPrompt = await new BodyPrompt(rulesEngine);
-      const truncate = (str: string, length: number) => (str.length > length ? `${str.slice(0, length)}...` : str);
+
       if (opts.auto) {
         opts.body = await oraPromise(bodyPrompt.generate(scope, diff, type, title), {
           text: 'Generating commit body...',
