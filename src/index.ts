@@ -10,7 +10,7 @@ import { confirm } from '@inquirer/prompts';
 import { blue, green, red } from 'yoctocolors';
 import ora, { oraPromise } from 'ora';
 import { commitSubject } from './lib/formatCommitBody.js';
-import { select, Separator } from 'inquirer-select-with-banner';
+import { select, type SelectWithBannerConfig, Separator } from 'inquirer-select-with-banner';
 import { truncate } from './lib/truncate.js';
 
 process.on('uncaughtException', error => {
@@ -23,6 +23,42 @@ process.on('uncaughtException', error => {
 });
 
 const program = new Command();
+
+const Break = Symbol('break');
+
+type ChainOptions = {
+  // biome-ignore lint/suspicious/noConfusingVoidType: <explanation>
+  [x: string]: typeof Break | (() => typeof Break | void) | (() => Promise<typeof Break | void>);
+};
+
+class PromptFlow {
+  constructor(
+    private readonly message: string,
+    private readonly options: ChainOptions,
+    private readonly config?: Omit<SelectWithBannerConfig<string | number>, 'message' | 'choices'>,
+  ) {
+    // convert into array of choices
+    // Potentially we need to pass an array of options... so we can have separators and sheeeit
+
+    // if there's no break condition, we need to throw an error otherwise when running this, it will be an infinite loop
+    if (!Object.values(options).some(v => v === Break))
+      throw new Error('No break condition, will result in an infinite prompt loop');
+  }
+
+  async prompt(): Promise<void> {
+    const answer = await select<keyof typeof this.options>({
+      message: this.message,
+      choices: Object.keys(this.options) as string[],
+      ...this.config,
+    });
+
+    const handler = this.options[answer];
+    const value = typeof handler === 'function' ? await Promise.resolve(handler()) : handler;
+
+    if (value === Break) return;
+    return this.prompt();
+  }
+}
 
 program
   .name('commitional')
@@ -112,12 +148,17 @@ program
 
       const commit = 'commit';
 
-      while (true) {
-
-        const answer = await select({
-          message: 'Commit or Edit',
-          choices: [{ value: commit, name: 'Commit!' }, new Separator(), 'type', 'scope', 'title', 'body', 'breaking'],
-          loop: false,
+      await new PromptFlow(
+        'Commit or Edit',
+        {
+          Commit: Break,
+          type: () => console.log('type!'),
+          scope: () => console.log('scope!'),
+          title: () => console.log('title!'),
+          body: () => console.log('body!'),
+          breaking: () => console.log('breaking!'),
+        },
+        {
           banner: choice => {
             const [Subject, Body] = formatCommitMessage({
               type: choice.value === 'type' ? `${red('>')}${green(type)}${red('<')}` : type,
@@ -129,10 +170,8 @@ program
 
             return `\n----------------------------------------\n${Subject}\n\n${Body}`;
           },
-        });
-
-        if (answer === commit) break;
-      }
+        },
+      ).prompt();
 
       const spinner = ora('Commiting...').start();
       const res = await git.commit(Subject, Body);
