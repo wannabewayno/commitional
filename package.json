@@ -8,6 +8,7 @@
   },
   "type": "module",
   "scripts": {
+    "prepare": "husky",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "dev": "node esbuild.config.mjs",
     "test": "npm run build && mocha",
