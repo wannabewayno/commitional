@@ -109,22 +109,29 @@ program
         scope,
       });
 
-      await select({
-        message: 'Commit or Edit',
-        choices: ['Commit!', new Separator(), 'type', 'scope', 'title', 'body', 'breaking'],
-        loop: false,
-        banner: choice => {
-          const [Subject, Body] = formatCommitMessage({
-            type: choice.value === 'type' ? `${red('>')}${green(type)}${red('<')}` : type,
-            title: choice.value === 'title' ? `${red('>')}${green(title)}${red('<')}` : title,
-            body: choice.value === 'body' ? `${red('>')}${green(body)}${red('<')}` : body,
-            breaking,
-            scope: choice.value === 'scope' ? `${red('>')}${scope ? green(scope) : blue('scope')}${red('<')}` : scope,
-          });
+      const commit = 'commit';
 
-          return `\n----------------------------------------\n${Subject}\n\n${Body}`;
-        },
-      });
+      while (true) {
+
+        const answer = await select({
+          message: 'Commit or Edit',
+          choices: [{ value: commit, name: 'Commit!' }, new Separator(), 'type', 'scope', 'title', 'body', 'breaking'],
+          loop: false,
+          banner: choice => {
+            const [Subject, Body] = formatCommitMessage({
+              type: choice.value === 'type' ? `${red('>')}${green(type)}${red('<')}` : type,
+              title: choice.value === 'title' ? `${red('>')}${green(title)}${red('<')}` : title,
+              body: choice.value === 'body' ? `${red('>')}${green(body)}${red('<')}` : body,
+              breaking,
+              scope: choice.value === 'scope' ? `${red('>')}${scope ? green(scope) : blue('scope')}${red('<')}` : scope,
+            });
+
+            return `\n----------------------------------------\n${Subject}\n\n${Body}`;
+          },
+        });
+
+        if (answer === commit) break;
+      }
 
       const spinner = ora('Commiting...').start();
       const res = await git.commit(Subject, Body);
