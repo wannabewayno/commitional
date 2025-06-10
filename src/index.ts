@@ -11,6 +11,7 @@ import { blue, green, red } from 'yoctocolors';
 import ora, { oraPromise } from 'ora';
 import { commitSubject } from './lib/formatCommitBody.js';
 import { select, Separator } from 'inquirer-select-with-banner';
+import { truncate } from './lib/truncate.js';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
@@ -91,7 +92,7 @@ program
       if (opts.auto) {
         opts.body = await oraPromise(bodyPrompt.generate(scope, diff, type, title), {
           text: 'Generating commit body...',
-          successText: body => `${body.split('\n')[0].slice(0, 75)}...`,
+          successText: body => truncate(body.split('\n')[0], 75),
         });
       }
       const body = await bodyPrompt.prompt(opts.body);
