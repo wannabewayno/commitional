@@ -2,18 +2,27 @@ import { input, select } from '@inquirer/prompts';
 import { red } from 'yoctocolors';
 import type RulesEngine from '../rules/index.js';
 import BasePrompt from './BasePrompt.js';
+import type { CommitMessage } from './index.js';
+import { ScopeDeducer } from '../services/ScopeDeducer/index.js';
+import type Diff from '../services/Git/Diff.js';
 
 export default class ScopePrompt extends BasePrompt {
   constructor(rules: RulesEngine) {
     super(rules, 'scope');
   }
 
-  async prompt(deducedScopes: string): Promise<string> {
+  async generate(diff: Diff, _commit: Partial<CommitMessage>): Promise<string> {
+    const scopeDeducer = ScopeDeducer.fromRulesEngine(this.rules);
+    const scope = scopeDeducer.deduceScope(diff.files) ?? [];
+    return scope.join(',');
+  }
+
+  async prompt(initialValue?: string): Promise<string> {
     let answer: string;
 
-    if (this.rules.validate(deducedScopes)) answer = deducedScopes as string;
+    if (this.rules.validate(initialValue)) answer = initialValue as string;
     else {
-      const scopes = deducedScopes.split(',').filter(v => v.trim() !== '');
+      const scopes = (initialValue ?? '').split(',').filter(v => v.trim() !== '');
 
       answer = scopes.length
         ? await select({ message: "Select the scope of the change that you're committing:", choices: scopes })

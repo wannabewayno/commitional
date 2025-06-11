@@ -7,7 +7,7 @@ describe('MaxLineLengthRule', () => {
   let rule: MaxLineLengthRule;
 
   beforeEach(() => {
-    rule = new MaxLineLengthRule(RuleConfigSeverity.Error, 'always', maxLength);
+    rule = new MaxLineLengthRule('subject', RuleConfigSeverity.Error, 'always', maxLength);
   });
 
   describe('validate', () => {

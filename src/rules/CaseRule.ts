@@ -1,4 +1,5 @@
 import { BaseRuleWithValue, type RuleConfigCondition, type RuleConfigSeverity } from './BaseRule.js';
+import type { CommitPart } from './index.js';
 
 function capitalize(input: string) {
   return input.charAt(0).toUpperCase() + input.slice(1);
@@ -24,9 +25,9 @@ export type CaseType =
   | 'start-case';
 
 export class CaseRule extends BaseRuleWithValue<CaseType[]> {
-  constructor(level: RuleConfigSeverity, applicable: RuleConfigCondition, value: CaseType | CaseType[]) {
+  constructor(name: CommitPart, level: RuleConfigSeverity, applicable: RuleConfigCondition, value: CaseType | CaseType[]) {
     value = !Array.isArray(value) ? [value] : value;
-    super(level, applicable, value);
+    super(name, level, applicable, value);
   }
 
   validate(input: string): boolean {

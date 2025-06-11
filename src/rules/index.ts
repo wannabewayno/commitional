@@ -173,8 +173,11 @@ export default class RulesEngine<Config extends Rules = Rules> {
         // Only continue if a rule matches the part we're interested in
         if (!ruleConfig) return rules;
 
-        // Extract the rule type from the name, Example: 'subject-enum' => 'enum', 'header-case' => 'case'
-        const ruleType = ruleName.replace(/^\w+-/, '') as RuleType;
+        // Extract the rule type and commit part from the name
+        // Examples:
+        // 'subject-enum' => ['subject', 'enum']
+        // 'header-allow-empty' => ['header', 'allow-empty']
+        const [name, type] = ruleName.split(/(?<=^\w+)-/) as [CommitPart, RuleType];
 
         // Commitlint allows ruleConfigs to be a function, if so call it and get it's value
         const resolvedRuleConfig = ruleConfig instanceof Function ? ruleConfig() : ruleConfig;
@@ -185,7 +188,7 @@ export default class RulesEngine<Config extends Rules = Rules> {
         // Load the associated rule from the rule-type
         // If we don't know about a rule, don't worry about it, we'll support one day but don't throw an error, just don't handle it
         // The linter will pick it up anyway.
-        const rule = RulesEngine.createRule(ruleType, resolvedRuleConfig);
+        const rule = RulesEngine.createRule(name, type, resolvedRuleConfig);
         // Yes this is what we need the thing for. And if it's
         if (rule) rules[ruleName as RuleString] = rule;
 
@@ -198,6 +201,7 @@ export default class RulesEngine<Config extends Rules = Rules> {
   }
 
   static createRule<T extends RuleType>(
+    ruleName: CommitPart,
     ruleType: T,
     [level, condition, value]:
       | readonly [RuleConfigSeverity, RuleConfigCondition, unknown]
@@ -205,36 +209,36 @@ export default class RulesEngine<Config extends Rules = Rules> {
   ): RuleMapping[T] | undefined {
     switch (ruleType) {
       case 'empty':
-        return new EmptyRule(level, condition) as RuleMapping[T];
+        return new EmptyRule(ruleName, level, condition) as RuleMapping[T];
       case 'max-length':
         if (typeof value !== 'number') break;
-        return new MaxLengthRule(level, condition, value) as RuleMapping[T];
+        return new MaxLengthRule(ruleName, level, condition, value) as RuleMapping[T];
       case 'min-length':
         if (typeof value !== 'number') break;
-        return new MinLengthRule(level, condition, value) as RuleMapping[T];
+        return new MinLengthRule(ruleName, level, condition, value) as RuleMapping[T];
       case 'case': {
         const cases = !Array.isArray(value) ? [value] : value;
         if (cases.some(v => typeof v !== 'string')) break;
-        return new CaseRule(level, condition, cases) as RuleMapping[T];
+        return new CaseRule(ruleName, level, condition, cases) as RuleMapping[T];
       }
       case 'enum':
         if (!Array.isArray(value)) break;
-        return new EnumRule(level, condition, value) as RuleMapping[T];
+        return new EnumRule(ruleName, level, condition, value) as RuleMapping[T];
       case 'full-stop':
         if (typeof value !== 'string') break;
-        return new FullStopRule(level, condition, value) as RuleMapping[T];
+        return new FullStopRule(ruleName, level, condition, value) as RuleMapping[T];
       case 'leading-blank':
-        return new LeadingBlankRule(level, condition) as RuleMapping[T];
+        return new LeadingBlankRule(ruleName, level, condition) as RuleMapping[T];
       case 'max-line-length':
         if (typeof value !== 'number') break;
-        return new MaxLineLengthRule(level, condition, value) as RuleMapping[T];
+        return new MaxLineLengthRule(ruleName, level, condition, value) as RuleMapping[T];
       case 'trim':
-        return new TrimRule(level, condition) as RuleMapping[T];
+        return new TrimRule(ruleName, level, condition) as RuleMapping[T];
       case 'exclamation-mark':
-        return new ExclamationMarkRule(level, condition) as RuleMapping[T];
+        return new ExclamationMarkRule(ruleName, level, condition) as RuleMapping[T];
       case 'allow-multiple':
         if (typeof value !== 'string') break;
-        return new AllowMultipleRule(level, condition, value ? value : ',') as RuleMapping[T];
+        return new AllowMultipleRule(ruleName, level, condition, value ? value : ',') as RuleMapping[T];
     }
     return;
   }

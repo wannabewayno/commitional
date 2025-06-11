@@ -1,4 +1,5 @@
 import { simpleGit, type SimpleGit } from 'simple-git';
+import Diff from './Diff.js';
 
 /**
  * Interface for git commit result
@@ -85,15 +86,32 @@ export default class Git {
   }
 
   /**
-   * Get the diff of staged changes
+   * Get the diff of staged files relative to the last commit (i.e the current HEAD)
+   * @param path Optional specific file path to get diff for
+   * @returns Diff instance or Error
    */
-  async stagedDiff(): Promise<string> {
-    try {
-      const diff = await this.git.diff(['--cached']);
-      return diff;
-    } catch (error) {
-      console.error('Error getting staged diff:', error);
-      return '';
+  async stagedDiff(path?: string): Promise<Diff | Error> {
+    if (path) {
+      try {
+        const diff = await this.git.diff(['--staged', '--', path]);
+        return new Diff({ [path]: diff });
+      } catch (error: unknown) {
+        return new Error(`Error getting staged diff: ${(error as Error).message}`);
+      }
+    } else {
+      // Get all staged files
+      const stagedFiles = await this.stagedFiles();
+
+      // Git individual diffs for each staged file.
+      const diffs = await Promise.all(stagedFiles.map(v => this.stagedDiff(v)));
+
+      // Reduce over staged diffs, filtering out any errors
+      const allDiffs = diffs.reduce((allDiffs: Diff, diff) => {
+        if (diff instanceof Error) return allDiffs;
+        return allDiffs.merge(diff);
+      }, new Diff());
+
+      return allDiffs;
     }
   }
 }

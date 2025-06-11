@@ -1,16 +1,14 @@
 import { RuleConfigSeverity, type RuleConfigCondition, type RuleConfigTuple } from '@commitlint/types';
-import { CommitPart } from './index.js';
+import type { CommitPart } from './index.js';
 export { RuleConfigSeverity };
 export type { RuleConfigCondition, RuleConfigTuple };
 
 export abstract class BaseRule {
-  protected readonly applicable: RuleConfigCondition = 'always';
-  protected readonly level: RuleConfigSeverity;
-
-  constructor(level: RuleConfigSeverity, applicable?: RuleConfigCondition) {
-    if (applicable) this.applicable = applicable;
-    this.level = level;
-  }
+  constructor(
+    public readonly name: CommitPart,
+    protected readonly level: RuleConfigSeverity,
+    public readonly applicable: RuleConfigCondition = 'always',
+  ) {}
 
   /**
    * Check if the input passes the rule
@@ -62,10 +60,11 @@ export abstract class BaseRule {
 
 export abstract class BaseRuleWithValue<T = unknown> extends BaseRule {
   constructor(
+    name: CommitPart,
     level: RuleConfigSeverity,
     applicable: RuleConfigCondition,
     public readonly value: T,
   ) {
-    super(level, applicable);
+    super(name, level, applicable);
   }
 }

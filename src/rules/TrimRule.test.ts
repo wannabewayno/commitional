@@ -6,7 +6,7 @@ describe('TrimRule', () => {
   let rule: TrimRule;
 
   beforeEach(() => {
-    rule = new TrimRule(RuleConfigSeverity.Error, 'always');
+    rule = new TrimRule('subject', RuleConfigSeverity.Error, 'always');
   });
 
   describe('validate', () => {

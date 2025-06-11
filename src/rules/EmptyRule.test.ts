@@ -6,7 +6,7 @@ describe('EmptyRule', () => {
   // Test construction
   describe('constructor', () => {
     it('should create a rule with the correct parameters', () => {
-      const rule = new EmptyRule(RuleConfigSeverity.Error, 'always');
+      const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'always');
       assert.ok(rule);
     });
   });
@@ -14,13 +14,13 @@ describe('EmptyRule', () => {
   // Test validation
   describe('validate', () => {
     it('should validate empty text', () => {
-      const rule = new EmptyRule(RuleConfigSeverity.Error, 'always');
+      const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'always');
       assert.strictEqual(rule.validate(''), true);
       assert.strictEqual(rule.validate('   '), true);
     });
 
     it('should invalidate non-empty text', () => {
-      const rule = new EmptyRule(RuleConfigSeverity.Error, 'always');
+      const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'always');
       assert.strictEqual(rule.validate('Hello'), false);
     });
   });
@@ -28,12 +28,12 @@ describe('EmptyRule', () => {
   // Test fixing
   describe('fix', () => {
     it('should fix non-empty text when applicable is always', () => {
-      const rule = new EmptyRule(RuleConfigSeverity.Error, 'always');
+      const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'always');
       assert.strictEqual(rule.fix('Hello'), '');
     });
 
     it('should return null when applicable is never', () => {
-      const rule = new EmptyRule(RuleConfigSeverity.Error, 'never');
+      const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'never');
       assert.strictEqual(rule.fix(''), null);
     });
   });
@@ -41,7 +41,7 @@ describe('EmptyRule', () => {
   // Test error message
   describe('errorMessage', () => {
     it('should return correct error message', () => {
-      const rule = new EmptyRule(RuleConfigSeverity.Error, 'always');
+      const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'always');
       assert.strictEqual(rule.errorMessage(), 'Must always be empty');
     });
   });
@@ -49,13 +49,13 @@ describe('EmptyRule', () => {
   // Test check method (integration)
   describe('check', () => {
     it('should return empty string when applicable is always', () => {
-      const rule = new EmptyRule(RuleConfigSeverity.Error, 'always');
+      const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'always');
       const result = rule.check('Hello');
       assert.strictEqual(result, '');
     });
 
     it('should handle never applicable correctly', () => {
-      const rule = new EmptyRule(RuleConfigSeverity.Error, 'never');
+      const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'never');
 
       // Empty text should fail with 'never'
       assert.throws(() => {
@@ -68,7 +68,7 @@ describe('EmptyRule', () => {
     });
 
     it('should return error object when level is WARNING and cannot fix', () => {
-      const rule = new EmptyRule(RuleConfigSeverity.Warning, 'never');
+      const rule = new EmptyRule('subject', RuleConfigSeverity.Warning, 'never');
       const result = rule.check('');
 
       assert.ok(result instanceof Error);
@@ -76,7 +76,7 @@ describe('EmptyRule', () => {
     });
 
     it('should throw error when level is ERROR and cannot fix', () => {
-      const rule = new EmptyRule(RuleConfigSeverity.Error, 'never');
+      const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'never');
 
       assert.throws(() => {
         rule.check('');

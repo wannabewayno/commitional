@@ -1,14 +1,20 @@
 import { expect } from 'chai';
-import sinon from 'sinon';
-import fs from 'node:fs';
 import BasePrompt from './BasePrompt.js';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import type { CommitMessage } from './index.js';
+import type Diff from '../services/Git/Diff.js';
 
 // Create a test subclass that exposes the protected method
 class TestBasePrompt extends BasePrompt {
   public testCommitStandard(): string {
     return this.commitStandard();
+  }
+
+  prompt(_initialValue?: string): Promise<string> {
+    return Promise.resolve('');
+  }
+
+  generate(_diff: Diff, _commit: Partial<CommitMessage>): Promise<string> {
+    return Promise.resolve('');
   }
 }
 

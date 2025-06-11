@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import BasePrompt from './BasePrompt.js';
+import type { CommitMessage } from './index.js';
+import type Diff from '../services/Git/Diff.js';
 
 const CUSTOM = 'custom';
 export default class BodyPrompt extends BasePrompt {
@@ -59,7 +61,7 @@ export default class BodyPrompt extends BasePrompt {
     return null;
   }
 
-  async generate(scope: string, diff: string, type: string, title: string) {
+  async generate(diff: Diff, { type, subject, scope }: Partial<CommitMessage>) {
     const ai = this.AI.byPreference();
 
     const res = await ai
@@ -76,10 +78,10 @@ export default class BodyPrompt extends BasePrompt {
         'Generate an appropriate commit body for the provided staged files to be committed',
         'The commit subject has been provided for context',
         '## Subject',
-        `${scope ? `${type}(${scope}): ${title}` : `${type}: ${title}`}`,
+        `${scope ? `${type}(${scope}): ${subject}` : `${type}: ${subject}`}`,
         '## Git Diff',
         '```txt',
-        diff,
+        diff.toString(),
         '```',
       )
       // Force the output to be in JSON.

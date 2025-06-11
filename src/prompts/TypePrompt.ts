@@ -2,13 +2,14 @@ import { input, select } from '@inquirer/prompts';
 import type RulesEngine from '../rules/index.js';
 import toEnum from '../lib/toEnum.js';
 import BasePrompt from './BasePrompt.js';
+import type Diff from '../services/Git/Diff.js';
 
 export default class TypePrompt extends BasePrompt {
   constructor(rules: RulesEngine) {
     super(rules, 'type');
   }
 
-  async generate(scope: string, diff: string) {
+  async generate(diff: Diff) {
     const ai = this.AI.byPreference();
 
     const [enumRule] = this.rules.getRulesOfType('enum');
@@ -26,28 +27,25 @@ export default class TypePrompt extends BasePrompt {
     const res = await (enumRule
       ? completion
           .prompt(
-            'From the list of provided commit types, select the appropriate commit type for the git diff of staged files and the provided scope',
-            '## Scope',
-            scope,
+            'From the list of provided commit types, select the appropriate commit type for the provided git diff of currently staged files to commit',
             '',
             '## Commit types',
             `${enumRule.value.join('\n')}`,
             '',
             '## Git Diff',
             '```txt',
-            diff,
+            diff.toString(),
             '```',
           )
           // Force the output to be in JSON.
           .json('commit_type', { type: toEnum(enumRule.value) })
       : completion
           .prompt(
-            'Generate an appropriate commit type for the provided staged files and user provided scope.',
-            '## Scope',
-            scope,
+            'From the list of provided commit types, select the appropriate commit type for the provided git diff of currently staged files to commit',
+            '',
             '## Git Diff',
             '```txt',
-            diff,
+            diff.toString(),
             '```',
           )
           // Force the output to be in JSON.
@@ -63,6 +61,7 @@ export default class TypePrompt extends BasePrompt {
     if (this.rules.validate(initialValue)) answer = initialValue as string;
     else {
       const [enumRule] = this.rules.getRulesOfType('enum');
+      console.log('Type enum rule:', enumRule);
 
       answer = enumRule
         ? await select({ message: "Select the type of change that you're committing:", choices: enumRule.value })

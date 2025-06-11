@@ -1,13 +1,15 @@
 import { input, select } from '@inquirer/prompts';
 import type RulesEngine from '../rules/index.js';
 import BasePrompt from './BasePrompt.js';
+import type { CommitMessage } from './index.js';
+import type Diff from '../services/Git/Diff.js';
 
-export default class TitlePrompt extends BasePrompt {
+export default class SubjectPrompt extends BasePrompt {
   constructor(rules: RulesEngine) {
     super(rules, 'subject');
   }
 
-  async generate(scope: string, diff: string, type: string) {
+  async generate(diff: Diff, { type, scope }: Partial<CommitMessage>) {
     const ai = this.AI.byPreference();
 
     const res = await ai
@@ -28,7 +30,7 @@ export default class TitlePrompt extends BasePrompt {
         '## Git Diff',
         'Use the following git diff to determine a sensible title',
         '```txt',
-        diff,
+        diff.toString(),
         '```',
       )
       // Force the output to be in JSON.

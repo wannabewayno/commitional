@@ -9,7 +9,7 @@ describe('AllowMultipleRule', () => {
     let rule: AllowMultipleRule;
 
     beforeEach(() => {
-      rule = new AllowMultipleRule(RuleConfigSeverity.Error, 'always', delimiter);
+      rule = new AllowMultipleRule('subject', RuleConfigSeverity.Error, 'always', delimiter);
     });
 
     it('should always validate with always condition', () => {
@@ -27,7 +27,7 @@ describe('AllowMultipleRule', () => {
     let rule: AllowMultipleRule;
 
     beforeEach(() => {
-      rule = new AllowMultipleRule(RuleConfigSeverity.Error, 'never', delimiter);
+      rule = new AllowMultipleRule('subject', RuleConfigSeverity.Error, 'never', delimiter);
     });
 
     it('should validate when input contains only one item', () => {
@@ -42,13 +42,13 @@ describe('AllowMultipleRule', () => {
 
   describe('fix', () => {
     it('should return input as-is for always condition', () => {
-      const rule = new AllowMultipleRule(RuleConfigSeverity.Error, 'always', delimiter);
+      const rule = new AllowMultipleRule('subject', RuleConfigSeverity.Error, 'always', delimiter);
       expect(rule.fix('item1')).to.equal('item1');
       expect(rule.fix('item1,item2')).to.equal('item1,item2');
     });
 
     it('should return only the first item for never condition', () => {
-      const rule = new AllowMultipleRule(RuleConfigSeverity.Error, 'never', delimiter);
+      const rule = new AllowMultipleRule('subject', RuleConfigSeverity.Error, 'never', delimiter);
       expect(rule.fix('item1,item2')).to.equal('item1');
       expect(rule.fix('item1,item2,item3')).to.equal('item1');
     });
@@ -56,25 +56,25 @@ describe('AllowMultipleRule', () => {
 
   describe('errorMessage', () => {
     it('should provide a helpful error message', () => {
-      const rule = new AllowMultipleRule(RuleConfigSeverity.Error, 'never', delimiter);
+      const rule = new AllowMultipleRule('subject', RuleConfigSeverity.Error, 'never', delimiter);
       expect(rule.errorMessage()).to.equal("Multiple aren't allowed");
     });
   });
 
   describe('check', () => {
     it('should return valid input as-is for always condition', () => {
-      const rule = new AllowMultipleRule(RuleConfigSeverity.Error, 'always', delimiter);
+      const rule = new AllowMultipleRule('subject', RuleConfigSeverity.Error, 'always', delimiter);
       expect(rule.check('item1,item2')).to.equal('item1,item2');
       expect(rule.check('item1')).to.equal('item1');
     });
 
     it('should return valid input as-is for never condition', () => {
-      const rule = new AllowMultipleRule(RuleConfigSeverity.Error, 'never', delimiter);
+      const rule = new AllowMultipleRule('subject', RuleConfigSeverity.Error, 'never', delimiter);
       expect(rule.check('item1')).to.equal('item1');
     });
 
     it('should heal lists with multiple items by reducing them to one for never condition', () => {
-      const rule = new AllowMultipleRule(RuleConfigSeverity.Error, 'never', delimiter);
+      const rule = new AllowMultipleRule('subject', RuleConfigSeverity.Error, 'never', delimiter);
       const result = rule.check('item1,item2');
       expect(rule.check('item1,item2')).to.equal('item1');
     });

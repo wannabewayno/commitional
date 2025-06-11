@@ -7,7 +7,7 @@ describe('MinLengthRule', () => {
   let rule: MinLengthRule;
 
   beforeEach(() => {
-    rule = new MinLengthRule(RuleConfigSeverity.Error, 'always', minLength);
+    rule = new MinLengthRule('subject', RuleConfigSeverity.Error, 'always', minLength);
   });
 
   describe('validate', () => {

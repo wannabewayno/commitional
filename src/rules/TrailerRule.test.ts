@@ -7,7 +7,7 @@ describe('TrailerRule', () => {
   let rule: TrailerRule;
 
   beforeEach(() => {
-    rule = new TrailerRule(RuleConfigSeverity.Error, 'always', trailer);
+    rule = new TrailerRule('subject', RuleConfigSeverity.Error, 'always', trailer);
   });
 
   describe('validate', () => {
@@ -43,7 +43,7 @@ describe('TrailerRule', () => {
     });
 
     it('should return null when applicable is never', () => {
-      const neverRule = new TrailerRule(RuleConfigSeverity.Error, 'never', trailer);
+      const neverRule = new TrailerRule('subject', RuleConfigSeverity.Error, 'never', trailer);
       expect(neverRule.fix('Some commit message')).to.be.null;
     });
   });
