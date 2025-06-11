@@ -19,10 +19,10 @@ use the `--help` flag to see a list of allowed subcommands and options.
 | Bun           | `bun install commitional -g` | `bun add -d commitional`             |
 | Node          | `npm install commitional -g` | `npm i --save-dev commitional`       |
 
-### Configuration
+### --auto Flag
 
-When using the `--auto` flag, Commitional can leverage configured AI APIs to help generate commit messages.
-The following environment variables can be configured to use these services:
+When using the `--auto` flag, Commitional can leverage configured AIs to help generate commit messages.
+The following environment variables can be configured to tell commitional how to access an AI Service
 
 | Env Variable                       | Description                                                                                        | Default                        | 
 | ---------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------ |
