@@ -61,7 +61,6 @@ export default class TypePrompt extends BasePrompt {
     if (this.rules.validate(initialValue)) answer = initialValue as string;
     else {
       const [enumRule] = this.rules.getRulesOfType('enum');
-      console.log('Type enum rule:', enumRule);
 
       answer = enumRule
         ? await select({ message: "Select the type of change that you're committing:", choices: enumRule.value })

@@ -5,7 +5,7 @@ import Git from './services/Git/index.js';
 import RulesEngine from './rules/index.js';
 import { ScopeDeducer } from './services/ScopeDeducer/index.js';
 import loadConfig from './config/index.js';
-import { CommitMessage, CommitPartFactory, PromptFlow } from './prompts/index.js';
+import { CommitMessage, CommitPartFactory, PromptFactory, PromptFlow } from './prompts/index.js';
 import { confirm } from '@inquirer/prompts';
 import { blue, green, red } from 'yoctocolors';
 import ora, { oraPromise } from 'ora';
@@ -97,11 +97,19 @@ program
         return `${red('>')}${value ? green(value) : blue(`Add ${part}?`)}${red('<')}`;
       };
 
+      const promptFactory = PromptFactory(rulesEngine);
+
       await new PromptFlow(
         'Commit or Edit',
         {
           Commit: PromptFlow.Break,
-          type: () => console.log('type!'),
+          type: () =>
+            promptFactory('type')
+              .prompt()
+              .then(type => {
+                commit.type = type;
+                return;
+              }),
           scope: () => console.log('scope!'),
           subject: () => console.log('subject!'),
           body: () => console.log('body!'),
