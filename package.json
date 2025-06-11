@@ -2,10 +2,13 @@
   "name": "commitional",
   "version": "1.0.0",
   "description": "CLI tool for crafting commit messages - compatible with commitlint",
-  "main": "src/index.ts",
+  "main": "bin/commitional.js",
   "bin": {
     "commitional": "./bin/commitional.js"
   },
+  "files": [
+    "bin"
+  ],
   "type": "module",
   "scripts": {
     "prepare": "husky",
@@ -20,7 +23,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/commitional.git"
+    "url": "git+https://github.com/wannabewayno/commitional.git"
   },
   "keywords": [
     "commit",
@@ -36,12 +39,15 @@
       "npm run lint --"
     ]
   },
-  "author": "",
+  "author": {
+    "name": "Wayne Griffiths",
+    "email": "wayne.c.griffiths@gmail.com"
+  },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yourusername/commitional/issues"
+    "url": "https://github.com/wannabewayno/commitional/issues"
   },
-  "homepage": "https://github.com/yourusername/commitional#readme",
+  "homepage": "https://github.com/wannabewayno/commitional#readme",
   "dependencies": {
     "@commitlint/load": "^19.8.1",
     "@inquirer/prompts": "~7.5.2",
