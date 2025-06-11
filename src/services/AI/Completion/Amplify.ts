@@ -1,4 +1,4 @@
-import { ArkErrors, type, type Type } from 'arktype';
+import { ArkErrors, type } from 'arktype';
 import type { Completion } from './index.js';
 
 interface SystemMessage extends BaseMessage {
@@ -160,9 +160,9 @@ export default function Provider(Completion: Completion) {
       // Appened an important rule that tells the agent to always use JSON.
       this._system.content += [
         '**IMPORTANT**',
-        'You **always** provide responses as valid json according to the following json schema',
-        '```',
-        schema.toJsonSchema(),
+        'You **always** provide responses as valid json that conform to the following json schema',
+        '```json',
+        JSON.stringify({ name, schema: schema.toJsonSchema() }),
         '```',
       ].join('\n');
 

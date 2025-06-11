@@ -76,7 +76,7 @@ describe('AllowMultipleRule', () => {
     it('should heal lists with multiple items by reducing them to one for never condition', () => {
       const rule = new AllowMultipleRule('subject', RuleConfigSeverity.Error, 'never', delimiter);
       const result = rule.check('item1,item2');
-      expect(rule.check('item1,item2')).to.equal('item1');
+      expect(result).to.equal('item1');
     });
   });
 });

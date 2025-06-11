@@ -20,6 +20,13 @@ const context = await esbuild.context({
   sourcemap: prod ? false : 'inline',
   treeShaking: true,
   outfile: `bin/${info.name}.js`,
+  minify: prod,
+  minifySyntax: prod,
+  minifyIdentifiers: prod,
+  minifyWhitespace: prod,
+  define: {
+    'process.env.VERSION': `'${info.version}'`,
+  },
   packages: 'external', // This will make esbuild treat all packages in node_modules as external
 });
 

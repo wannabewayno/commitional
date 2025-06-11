@@ -10,7 +10,7 @@ export class EmptyRule extends BaseRule {
     return this.applicable === 'always' ? isEmpty : !isEmpty;
   }
 
-  fix(input: string): string | null {
+  fix(_input: string): string | null {
     // If applicable is 'always', we can fix by returning empty string
     if (this.applicable === 'always') return '';
 

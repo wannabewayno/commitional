@@ -1,4 +1,4 @@
-import type { type, Type } from 'arktype';
+import type { type } from 'arktype';
 
 interface HttpClient {
   post: <T>(url: string, data: unknown) => Promise<{ status: number; headers: Record<string, string>; data: T }>;

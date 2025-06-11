@@ -1,17 +1,12 @@
 import { Command } from 'commander';
-import packageJSON from '../package.json' with { type: 'json' };
 import { formatCommitMessage } from './lib/formatCommitMessage.js';
 import Git from './services/Git/index.js';
 import RulesEngine from './rules/index.js';
-import { ScopeDeducer } from './services/ScopeDeducer/index.js';
 import loadConfig from './config/index.js';
-import { CommitMessage, CommitPartFactory, PromptFactory, PromptFlow } from './prompts/index.js';
+import { CommitPartFactory, PromptFactory, PromptFlow } from './prompts/index.js';
 import { confirm } from '@inquirer/prompts';
 import { blue, green, red } from 'yoctocolors';
-import ora, { oraPromise } from 'ora';
-import { commitHeader } from './lib/formatCommitHeader.js';
-import { select, type SelectWithBannerConfig, Separator } from 'inquirer-select-with-banner';
-import { truncate } from './lib/truncate.js';
+import ora from 'ora';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
@@ -27,7 +22,7 @@ const program = new Command();
 program
   .name('commitional')
   .description('CLI tool for crafting commit messages - compatible with commitlint')
-  .version(packageJSON.version, '-v, --version', 'Output the current version')
+  .version(process.env.VERSION ?? 'dev', '-v, --version', 'Output the current version')
   .option('-t, --type <type>', 'Commit type; feat, fix, test ...')
   .option('-S, --scope <scope>', 'Commit scope (if any)')
   .option('-s, --subject <subject>', 'Commit subject')

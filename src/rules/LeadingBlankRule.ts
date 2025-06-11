@@ -7,7 +7,7 @@ export class LeadingBlankRule extends BaseRule {
 
   validate(input: string): boolean {
     const lines = input.split('\n');
-    const hasLeadingBlank = lines.length > 0 && lines[0].trim() === '';
+    const hasLeadingBlank = lines.length > 0 && lines[0]?.trim() === '';
     return this.applicable === 'always' ? hasLeadingBlank : !hasLeadingBlank;
   }
 

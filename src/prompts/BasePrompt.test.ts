@@ -21,7 +21,6 @@ class TestBasePrompt extends BasePrompt {
 describe('BasePrompt', () => {
   describe('commitStandard', () => {
     let basePrompt: TestBasePrompt;
-    const mockContent = '# Commit Message Standard\n\nThis is a test standard.';
 
     beforeEach(() => {
       // Create stub for fs.readFileSync

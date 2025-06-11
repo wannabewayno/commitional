@@ -54,7 +54,7 @@ export class ScopeDeducer {
       normalizedPath.startsWith(`${wildcardDir}/`);
       if (normalizedPath.startsWith(`${wildcardDir}/`)) {
         const [scope] = normalizedPath.replace(`${wildcardDir}/`, '').split('/');
-        return scope; // The scope is the subdirectory name under the wildcarded (parent) dir
+        return scope ?? null; // The scope is the subdirectory name under the wildcarded (parent) dir
       }
     }
 

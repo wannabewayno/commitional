@@ -1,4 +1,3 @@
-import { formatCommitMessage } from '../lib/formatCommitMessage.js';
 import type RulesEngine from '../rules/index.js';
 import type { CommitPart } from '../rules/index.js';
 import AIProvider from '../services/AI/index.js';

@@ -172,10 +172,11 @@ export default function Provider(Completion: Completion) {
       const payload = scope.completion_response(res.data);
 
       if (payload instanceof ArkErrors) return formatArkErrors(payload);
-      const message = payload.choices[0].message.content;
+      const choice = payload.choices[0];
+      if (!choice) throw new Error('Agent response is empty');
 
       // Extract the response
-      return message;
+      return choice.message.content;
     }
 
     async json<const SchemaDefinition extends object>(
@@ -207,10 +208,12 @@ export default function Provider(Completion: Completion) {
 
       // Success, however payload differs from expected payload.
       if (payload instanceof ArkErrors) return formatArkErrors(payload);
-      const message = payload.choices[0].message.content;
+
+      const choice = payload.choices[0];
+      if (!choice) throw new Error('Agent response is empty');
 
       // Check to see if it's valid JSON
-      const json = this.parseJSON(message);
+      const json = this.parseJSON(choice.message.content);
       if (json instanceof Error) return json;
 
       // Check if the JSON matches our schema.

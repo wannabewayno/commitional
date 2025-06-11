@@ -5,6 +5,14 @@ import PerplexityCompletionProvider from './Completion/Perplexity.js';
 import xAICompletionProvider from './Completion/xAI.js';
 import axios from 'axios';
 
+interface AIVar {
+  name: string;
+  apiKey: string;
+  url?: string;
+  model?: string;
+  preference: number;
+}
+
 /**
  * Creates and configures an AI provider with completion capabilities
  * @returns A configured AI class that can create completion instances
@@ -67,7 +75,7 @@ export default function Provider() {
       // Sort them by their preference.
       availableServices.sort((a, b) => a.preference - b.preference);
 
-      const [{ name, url, apiKey, model }] = availableServices;
+      const [{ name, url, apiKey, model }] = availableServices as [AIVar];
 
       const service = AI.loadNamedService(name, url, apiKey, model);
       if (service instanceof Error) throw service;
@@ -102,9 +110,7 @@ export default function Provider() {
      * @returns An object with service configuration or an error if required variables are missing
      * @private
      */
-    private static loadEnvForNamedService(
-      name: string,
-    ): { name: string; apiKey: string; url?: string; model?: string; preference: number } | Error {
+    private static loadEnvForNamedService(name: string): AIVar | Error {
       name = name.toUpperCase();
       const [apiKey, url, preference, model] = ['KEY', 'URL', 'PREFERENCE', 'MODEL'].map(
         suffix => process.env[`COMMITIONAL_${name}_${suffix}`],

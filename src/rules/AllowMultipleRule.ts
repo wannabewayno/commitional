@@ -23,7 +23,7 @@ export class AllowMultipleRule extends BaseRuleWithValue<string> {
 
     const [firstItem] = _input.split(this.value);
 
-    return firstItem;
+    return firstItem ?? null;
   }
 
   errorMessage(): string {

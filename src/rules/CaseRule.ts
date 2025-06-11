@@ -39,7 +39,7 @@ export class CaseRule extends BaseRuleWithValue<CaseType[]> {
 
   fix(input: string): string | null {
     // Use the first case type if multiple are provided
-    const [caseType] = this.value;
+    const [caseType] = this.value as [CaseType, ...CaseType[]];
 
     return this._fix(input, caseType);
   }
@@ -59,7 +59,7 @@ export class CaseRule extends BaseRuleWithValue<CaseType[]> {
           .map(word => capitalize(word.toLowerCase()))
           .join(' ');
       case 'camel-case': {
-        const [first, ...rest] = splitByWord(input);
+        const [first, ...rest] = splitByWord(input) as [string, ...string[]];
         return [first.toLowerCase()]
           .concat(rest.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()))
           .join('');
@@ -83,7 +83,7 @@ export class CaseRule extends BaseRuleWithValue<CaseType[]> {
 
   errorMessage(): string {
     if (this.value.length === 1) return `Must be in ${this.value[0]}`;
-    const [last, ...rest] = this.value;
+    const [last, ...rest] = this.value as [CaseType, ...CaseType[]];
 
     // convert cases to their own representations for readability.
     const restStr = rest.map(v => this._fix(v, v)).join(', ');
@@ -111,7 +111,7 @@ export class CaseRule extends BaseRuleWithValue<CaseType[]> {
       case 'snake-case':
         return /^[a-z][a-z0-9]*(_[a-z0-9]+)*$/.test(input);
       case 'start-case':
-        return input.split(' ').every(word => word && word[0] === word[0].toUpperCase());
+        return input.split(' ').every(word => word && word[0] === word[0]?.toUpperCase());
       default:
         return false;
     }
