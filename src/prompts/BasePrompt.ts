@@ -18,10 +18,18 @@ export default abstract class BasePrompt {
   }
 
   /**
+   * Prompt the user to provide a value for the defined part of the commit message.
+   * @param initialValue
+   */
+  abstract prompt(): Promise<string>;
+
+  /**
    * Validate the initial value (if any) and if required prompt the user.
    * @param initialValue
    */
-  abstract prompt(initialValue?: string): Promise<string>;
+  async promptIfInvalid(initialValue?: string): Promise<string> {
+    return this.rules.validate(initialValue) ? this.rules.parse(initialValue ?? '') : await this.prompt();
+  }
 
   /**
    * Generate a part of the commit message based on the diff and the parts of the commit message that may be available so far.

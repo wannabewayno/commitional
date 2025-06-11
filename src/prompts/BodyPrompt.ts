@@ -92,68 +92,59 @@ export default class BodyPrompt extends BasePrompt {
   }
 
   async prompt(initialValue?: string): Promise<string> {
-    let answer: string;
+    // Ensure we have an editor command
+    await this.checkEditor();
 
-    // Body is optional unless required by user configured rules.
+    // Gather all the errors currently with the body and display them in the editor as a comment.
+    const answer = await editor({
+      message: '',
+      default: this.defaultMessage(initialValue),
+      waitForUseInput: false,
+      validate: value => {
+        // Trim comments
+        const content = value.replace(/^#.+$/gm, '').trim();
 
-    // If it's valid
-    if (this.rules.validate(initialValue)) {
-      answer = initialValue ?? '';
-      // if it's valid and empty, ask the user if they want to add one.
-      if (answer === '') {
-        const openEditor = await confirm({ message: 'Would you like to add a Commit body?' });
+        const valid = this.rules.validate(content);
 
-        // Default show the user an example. or the Good Commit guide.
-        if (openEditor) {
-          // Ensure we have an editor command
-          await this.checkEditor();
+        // Invalid, return a list of errors
+        if (!valid) return this.rules.check(content).join('\n');
 
-          answer = await editor({
-            waitForUseInput: false,
-            message: '',
-            default: this.defaultMessage(),
-          });
-        }
-      }
-    } else {
-      answer = initialValue ?? '';
-      // Ensure we have an editor command
-      await this.checkEditor();
-
-      // Make the default message be the Errors
-      const errors = this.rules.check(answer);
-
-      const defaultMessage = this.defaultMessage();
-
-      const errorMessage = this.comment(
-        'The following errors were found with the commit body',
-        ...errors.map(v => `- ${v}`),
-      );
-
-      // Gather all the errors currently with the body and display them in the editor as a comment.
-      answer = await editor({
-        message: '',
-        default: `${defaultMessage}\n${errorMessage}\n${answer}`,
-        waitForUseInput: false,
-        validate: value => {
-          const valid = this.rules.validate(value);
-          if (!valid) return this.rules.check(value).join('\n');
-          return true;
-        },
-      });
-    }
+        // otherwise must be valid
+        return true;
+      },
+    });
 
     // Remove any comments from the commit body
-    answer = answer.replace(/^#.+$/gm, '').trim();
+    const content = answer.replace(/^#.+$/gm, '').trim();
 
-    return this.rules.parse(answer);
+    return this.rules.parse(content);
   }
 
-  private defaultMessage() {
-    return this.comment(
+  private defaultMessage(initialValue?: string) {
+    const errors = this.rules.check(initialValue ?? '');
+
+    // If there are any errors construct an error message with list of errors
+    // The user's commit body is in breach of the rules and these show the user how to address it.
+    const errorMessage = errors.length
+      ? ['The following errors were found with the commit body'].concat(errors.map(v => `- ${v}`))
+      : [];
+
+    // Guidelines
+    // Get these from all rules and describe them.
+    // Place this under a few lines to write in
+
+    // Look for a maxLineLength rule.
+    // const [maxLineLengthRule] = this.rules.getRulesOfType('max-line-length');
+    // const maxLineLength = maxLineLengthRule?.value ?? null;
+    // TODO: Add a padding of '#' showing how long each line must be. above and below a text area or like #<------ max Length -------->|
+
+    const comments = this.comment(
       'Type your message below and close the editor to continue',
       "Lines starting with '#' will be ignored",
+      ...errorMessage,
     );
+
+    return [comments, initialValue ?? '', '# Rules and guidelines here'].join('\n\n');
   }
 
   private comment(...lines: string[]) {

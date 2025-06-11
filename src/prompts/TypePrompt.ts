@@ -3,6 +3,7 @@ import type RulesEngine from '../rules/index.js';
 import toEnum from '../lib/toEnum.js';
 import BasePrompt from './BasePrompt.js';
 import type Diff from '../services/Git/Diff.js';
+import { red } from 'yoctocolors';
 
 export default class TypePrompt extends BasePrompt {
   constructor(rules: RulesEngine) {
@@ -55,25 +56,24 @@ export default class TypePrompt extends BasePrompt {
     return res.type;
   }
 
-  async prompt(initialValue?: string): Promise<string> {
-    let answer: string;
+  async prompt(): Promise<string> {
+    const [enumRule] = this.rules.getRulesOfType('enum');
 
-    if (this.rules.validate(initialValue)) answer = initialValue as string;
-    else {
-      const [enumRule] = this.rules.getRulesOfType('enum');
-
-      answer = enumRule
-        ? await select({ message: "Select the type of change that you're committing:", choices: enumRule.value })
-        : await input({
-            message: "Type of change that you're committing:",
-            validate: value => {
-              const valid = this.rules.validate(value);
-              if (!valid) return this.rules.check(value).join('\n');
-              return true;
-            },
-            transformer: value => this.rules.parse(value),
-          });
-    }
+    const answer = enumRule
+      ? await select<string>({ message: "Select the type of change that you're committing:", choices: enumRule.value })
+      : await input({
+          message: "Type of change that you're committing:",
+          validate: value => {
+            const valid = this.rules.validate(value);
+            if (!valid) return this.rules.check(value).join('\n');
+            return true;
+          },
+          transformer: value => {
+            value = this.rules.parse(value);
+            if (!this.rules.validate(value)) value = red(value);
+            return value;
+          },
+        });
 
     return this.rules.parse(answer);
   }

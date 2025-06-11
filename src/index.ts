@@ -100,7 +100,7 @@ program
           Commit: PromptFlow.Break,
           type: () =>
             promptFactory('type')
-              .prompt()
+              .prompt(commit.type)
               .then(type => {
                 commit.type = type;
               }),
@@ -112,13 +112,13 @@ program
               }),
           subject: () =>
             promptFactory('subject')
-              .prompt()
+              .prompt(commit.subject)
               .then(subject => {
                 commit.subject = subject;
               }),
           body: () =>
             promptFactory('body')
-              .prompt()
+              .prompt(commit.body)
               .then(body => {
                 commit.body = body;
               }),

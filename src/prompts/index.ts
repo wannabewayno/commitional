@@ -120,7 +120,7 @@ export function CommitPartFactory(rules: RulesEngine, diff: Diff, auto = false) 
       : partialCommit[commitPart];
 
     // Present the prompt to the user with the initial value
-    return prompt.prompt(value);
+    return prompt.promptIfInvalid(value);
   };
 }
 
