@@ -4,6 +4,8 @@ import Git from './index.js';
 import { type SimpleGit, simpleGit } from 'simple-git';
 import fs from 'node:fs';
 import path from 'node:path';
+import { expect } from 'chai';
+import Diff from './Diff.js';
 
 describe('Git Utilities', () => {
   let git: Git;
@@ -30,7 +32,7 @@ describe('Git Utilities', () => {
   describe('getStagedDiff', () => {
     it('should return staged changes diff', async () => {
       const diff = await git.stagedDiff();
-      assert(typeof diff === 'string');
+      expect(diff).to.be.an.instanceOf(Diff);
     });
   });
 });

@@ -5,7 +5,7 @@ describe('Commit Message Formatting', () => {
   it('should format a basic commit message', () => {
     const commit = {
       type: 'feat',
-      title: 'Add new feature',
+      subject: 'Add new feature',
       body: '',
       breaking: false,
     };
@@ -17,7 +17,7 @@ describe('Commit Message Formatting', () => {
   it('should format a commit message with breaking change', () => {
     const commit = {
       type: 'feat',
-      title: 'Add breaking feature',
+      subject: 'Add breaking feature',
       body: '',
       breaking: true,
     };
@@ -29,7 +29,7 @@ describe('Commit Message Formatting', () => {
   it('should format a commit message with body', () => {
     const commit = {
       type: 'fix',
-      title: 'Fix critical bug',
+      subject: 'Fix critical bug',
       body: 'This fixes a critical issue\nThat was causing problems',
       breaking: false,
     };
