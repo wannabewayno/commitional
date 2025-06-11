@@ -108,12 +108,28 @@ program
               .prompt()
               .then(type => {
                 commit.type = type;
-                return;
               }),
-          scope: () => console.log('scope!'),
-          subject: () => console.log('subject!'),
-          body: () => console.log('body!'),
-          breaking: () => console.log('breaking!'),
+          scope: () =>
+            promptFactory('scope')
+              .prompt()
+              .then(scope => {
+                commit.scope = scope;
+              }),
+          subject: () =>
+            promptFactory('subject')
+              .prompt()
+              .then(subject => {
+                commit.subject = subject;
+              }),
+          body: () =>
+            promptFactory('body')
+              .prompt()
+              .then(body => {
+                commit.body = body;
+              }),
+          breaking: () => {
+            commit.breaking = !commit.breaking;
+          },
         },
         {
           banner: choice => {
@@ -121,7 +137,7 @@ program
               type: formatpart('type', choice.name),
               subject: formatpart('subject', choice.name),
               body: formatpart('body', choice.name),
-              breaking,
+              breaking: commit.breaking,
               scope: formatpart('scope', choice.name),
             });
 
