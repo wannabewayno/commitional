@@ -9,6 +9,8 @@
   "type": "module",
   "scripts": {
     "prepare": "husky",
+    "preversion": "npm test",
+    "postversion": "git push origin --follow-tags",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "dev": "node esbuild.config.mjs",
     "test": "npm run build && mocha",
