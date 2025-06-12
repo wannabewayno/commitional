@@ -41,12 +41,12 @@ describe('LeadingBlankRule', () => {
   describe('errorMessage()', () => {
     it('should provide a helpful error message for always condition', () => {
       const alwaysRule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'always');
-      expect(alwaysRule.errorMessage()).to.equal('must always begin with a blank line');
+      expect(alwaysRule.errorMessage()).to.equal('the subject must always begin with a blank line');
     });
 
     it('should provide a helpful error message for never condition', () => {
       const neverRule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'never');
-      expect(neverRule.errorMessage()).to.equal('must never begin with a blank line');
+      expect(neverRule.errorMessage()).to.equal('the subject must never begin with a blank line');
     });
   });
 

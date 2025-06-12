@@ -25,6 +25,6 @@ export class LeadingBlankRule extends BaseRule {
   }
 
   errorMessage(): string {
-    return `must ${this.applicable} begin with a blank line`;
+    return `the ${this.name} must ${this.applicable} begin with a blank line`;
   }
 }
