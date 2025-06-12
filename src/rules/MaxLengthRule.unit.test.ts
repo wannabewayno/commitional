@@ -50,7 +50,7 @@ describe('MaxLengthRule', () => {
   describe('errorMessage', () => {
     it('should return correct error message', () => {
       const rule = new MaxLengthRule('subject', RuleConfigSeverity.Error, 'always', 10);
-      assert.strictEqual(rule.errorMessage(), 'exceed 10 characters');
+      assert.strictEqual(rule.errorMessage(), 'the subject must not exceed 10 characters');
     });
   });
 

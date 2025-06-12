@@ -12,6 +12,6 @@ export class MaxLengthRule extends BaseRuleWithValue<number> {
   }
 
   errorMessage(): string {
-    return `exceed ${this.value} characters`;
+    return `the ${this.name} must not exceed ${this.value} characters`;
   }
 }

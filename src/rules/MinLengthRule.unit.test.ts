@@ -31,7 +31,7 @@ describe('MinLengthRule', () => {
 
   describe('errorMessage', () => {
     it('should provide a helpful error message', () => {
-      expect(rule.errorMessage()).to.equal(`be at least ${minLength} characters`);
+      expect(rule.errorMessage()).to.equal(`the subject must be at least ${minLength} characters`);
     });
   });
 

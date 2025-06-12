@@ -12,6 +12,6 @@ export class MinLengthRule extends BaseRuleWithValue<number> {
   }
 
   errorMessage(): string {
-    return `be at least ${this.value} characters`;
+    return `the subject must be at least ${this.value} characters`;
   }
 }
