@@ -23,6 +23,7 @@ export class ExclamationMarkRule extends BaseRule {
   }
 
   errorMessage(): string {
-    return 'have an exclamation mark before the colon';
+    const modifier = this.applicable === 'always' ? 'must' : 'must not';
+    return `the subject ${modifier} have an exclamation mark before the colon`;
   }
 }

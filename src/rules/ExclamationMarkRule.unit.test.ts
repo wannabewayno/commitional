@@ -28,9 +28,14 @@ describe('ExclamationMarkRule', () => {
     expect(rule.fix('no colon here')).to.be.null;
   });
 
-  it('should provide a helpful error message', () => {
+  it('should provide a helpful error message - applicable: never', () => {
+    const rule = new ExclamationMarkRule('subject', RuleConfigSeverity.Error, 'never');
+    expect(rule.errorMessage()).to.equal('the subject must not have an exclamation mark before the colon');
+  });
+
+  it('should provide a helpful error message - applicable: always', () => {
     const rule = new ExclamationMarkRule('subject', RuleConfigSeverity.Error, 'always');
-    expect(rule.errorMessage()).to.match(/have an exclamation mark before the colon/);
+    expect(rule.errorMessage()).to.equal('the subject must have an exclamation mark before the colon');
   });
 
   it('should handle check method correctly', () => {
