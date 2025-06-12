@@ -40,13 +40,12 @@ export class CaseRule extends BaseRuleWithValue<CaseType[]> {
   fix(input: string): string | null {
     // Use the first case type if multiple are provided
     const [caseType] = this.value as [CaseType, ...CaseType[]];
+    if (!input || this.applicable === 'never') return null;
 
     return this._fix(input, caseType);
   }
 
   private _fix(input: string, caseType: CaseType) {
-    if (!input || this.applicable === 'never') return null;
-
     switch (caseType) {
       case 'lower-case':
         return input.toLowerCase();
@@ -77,19 +76,26 @@ export class CaseRule extends BaseRuleWithValue<CaseType[]> {
           .map(word => capitalize(word.toLowerCase()))
           .join('');
       default:
-        return null;
+        throw new Error(`unrecognised case ${caseType}`);
     }
   }
 
   errorMessage(): string {
-    if (this.value.length === 1) return `Must be in ${this.value[0]}`;
-    const [last, ...rest] = this.value as [CaseType, ...CaseType[]];
+    const message = ['The', this.name, 'must', this.applicable, 'be in'];
+    if (this.value.length === 1) {
+      const caseStr = this.value[0] as CaseType;
+      message.push(this._fix(caseStr, caseStr));
+    } else {
+      const [last, ...rest] = this.value as [CaseType, ...CaseType[]];
 
-    // convert cases to their own representations for readability.
-    const restStr = rest.map(v => this._fix(v, v)).join(', ');
-    const lastStr = this._fix(last, last);
+      // convert cases to their own representations for readability.
+      const restStr = rest.map(v => this._fix(v, v)).join(', ');
+      const lastStr = this._fix(last, last);
 
-    return `Must be in either ${restStr} or ${lastStr}`;
+      message.push(`either ${restStr} or ${lastStr}`);
+    }
+
+    return message.join(' ');
   }
 
   private matchesCase(input: string, caseType: CaseType): boolean {
