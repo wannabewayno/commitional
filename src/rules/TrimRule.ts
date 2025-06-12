@@ -15,6 +15,7 @@ export class TrimRule extends BaseRule {
   }
 
   errorMessage(): string {
-    return 'not have leading or trailing whitespace';
+    const modifier = this.applicable === 'always' ? 'must' : 'must not';
+    return `the ${this.name} ${modifier} have leading or trailing whitespace`;
   }
 }

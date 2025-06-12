@@ -40,7 +40,13 @@ describe('TrimRule', () => {
 
   describe('errorMessage', () => {
     it('should provide a helpful error message', () => {
-      expect(rule.errorMessage()).to.equal('not have leading or trailing whitespace');
+      rule = new TrimRule('subject', RuleConfigSeverity.Error, 'always');
+      expect(rule.errorMessage()).to.equal('the subject must have leading or trailing whitespace');
+    });
+
+    it('should provide a helpful error message', () => {
+      rule = new TrimRule('subject', RuleConfigSeverity.Error, 'never');
+      expect(rule.errorMessage()).to.equal('the subject must not have leading or trailing whitespace');
     });
   });
 
