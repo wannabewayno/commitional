@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { FullStopRule } from './FullStopRule.js';
 import { RuleConfigSeverity } from './BaseRule.js';
+import { expect } from 'chai';
 
 describe('FullStopRule', () => {
   // Test construction
@@ -51,7 +52,12 @@ describe('FullStopRule', () => {
   describe('errorMessage', () => {
     it('should return correct error message', () => {
       const rule = new FullStopRule('subject', RuleConfigSeverity.Error, 'always', '.');
-      assert.strictEqual(rule.errorMessage(), 'end with "."');
+      assert.strictEqual(rule.errorMessage(), 'the subject must end with a full stop');
+    });
+
+    it('should return correct error message', () => {
+      const rule = new FullStopRule('subject', RuleConfigSeverity.Error, 'never', '!');
+      assert.strictEqual(rule.errorMessage(), 'the subject must not end with an exclamation mark');
     });
   });
 
@@ -90,7 +96,7 @@ describe('FullStopRule', () => {
       const result = mockRule.check('Hello');
 
       assert.ok(result instanceof Error);
-      assert.strictEqual(result.message, 'end with "."');
+      assert.strictEqual(result.message, 'the subject must end with a full stop');
     });
 
     it('should throw error when level is ERROR and cannot fix', () => {
@@ -98,9 +104,7 @@ describe('FullStopRule', () => {
       const mockRule = new FullStopRule('subject', RuleConfigSeverity.Error, 'always', '.');
       mockRule.fix = () => null; // Override fix to return null
 
-      assert.throws(() => {
-        mockRule.check('Hello');
-      }, /end with "."/);
+      expect(() => mockRule.check('Hello')).throws('the subject must end with a full stop');
     });
   });
 });
