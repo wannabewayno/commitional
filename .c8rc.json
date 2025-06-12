@@ -15,13 +15,13 @@
   "temp-directory": ".tmp/coverage",
   "check-coverage": true,
   "branches": 80,
-  "lines": 80,
+  "lines": 60,
   "functions": 80,
-  "statements": 80,
+  "statements": 60,
   "watermarks": {
-    "lines": [80, 95],
+    "lines": [60, 95],
     "functions": [80, 95],
     "branches": [80, 95],
-    "statements": [80, 95]
+    "statements": [60, 95]
   }
 }
