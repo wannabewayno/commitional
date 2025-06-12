@@ -22,6 +22,7 @@ export class TrailerRule extends BaseRuleWithValue<string> {
   }
 
   errorMessage(): string {
-    return `include the trailer "${this.value}"`;
+    const modifier = this.applicable === 'always' ? 'must' : 'must not';
+    return `the ${this.name} ${modifier} include the trailer "${this.value}"`;
   }
 }

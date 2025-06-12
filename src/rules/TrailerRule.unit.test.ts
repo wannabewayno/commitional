@@ -49,8 +49,14 @@ describe('TrailerRule', () => {
   });
 
   describe('errorMessage', () => {
-    it('should provide a helpful error message', () => {
-      expect(rule.errorMessage()).to.equal(`include the trailer "${trailer}"`);
+    it('should provide a helpful error message - applicable: always', () => {
+      const rule = new TrailerRule('subject', RuleConfigSeverity.Error, 'never', trailer);
+      expect(rule.errorMessage()).to.equal(`the subject must include the trailer "${trailer}"`);
+    });
+
+    it('should provide a helpful error message - applicable: never', () => {
+      const rule = new TrailerRule('subject', RuleConfigSeverity.Error, 'always', trailer);
+      expect(rule.errorMessage()).to.equal(`the subject must not include the trailer "${trailer}"`);
     });
   });
 
