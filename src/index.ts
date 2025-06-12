@@ -52,7 +52,7 @@ program
       // if there's no staged files, there's nothing to commit, return early without throwing an error. Just let the user know.
       if (!diff.files.length) return console.log(red('No files staged to commit'));
 
-      // Create our rules engine from the parsed in commitlint config.
+      // Create a rules engine from the parsed in commitlint config.
       const rulesEngine = RulesEngine.fromConfig(config.rules);
 
       const { auto, ...partialCommit } = opts;
@@ -77,13 +77,7 @@ program
           ? opts.breaking
           : await confirm({ message: 'Does this change introduce any breaking changes?' });
 
-      const commit = {
-        type,
-        subject,
-        body,
-        breaking,
-        scope,
-      };
+      const commit = { type, subject, body, breaking, scope };
 
       const formatpart = (part: keyof typeof commit, selection: string) => {
         if (part === 'breaking') return '';
