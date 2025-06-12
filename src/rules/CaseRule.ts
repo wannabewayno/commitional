@@ -81,7 +81,7 @@ export class CaseRule extends BaseRuleWithValue<CaseType[]> {
   }
 
   errorMessage(): string {
-    const message = ['The', this.name, 'must', this.applicable, 'be in'];
+    const message = ['the', this.name, 'must', this.applicable, 'be in'];
     if (this.value.length === 1) {
       const caseStr = this.value[0] as CaseType;
       message.push(this._fix(caseStr, caseStr));
