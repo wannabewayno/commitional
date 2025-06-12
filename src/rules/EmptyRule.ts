@@ -19,6 +19,6 @@ export class EmptyRule extends BaseRule {
   }
 
   errorMessage(): string {
-    return `Must ${this.applicable} be empty`;
+    return `the ${this.name} must ${this.applicable} be empty`;
   }
 }
