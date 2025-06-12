@@ -16,6 +16,16 @@ export class EnumRule extends BaseRuleWithValue<string[]> {
   }
 
   errorMessage(): string {
-    return `be one of: ${this.value.join(', ')}`;
+    const value = [...this.value];
+    const last = value.pop();
+    const message = ['the', this.name];
+
+    if (this.applicable === 'never') message.push("can't be any of:");
+    else message.push('can only be one of:');
+
+    message.push(value.map(v => `'${v}'`).join(', '));
+    if (last) message.push(`or '${last}'`);
+
+    return message.join(' ');
   }
 }

@@ -22,11 +22,16 @@ describe('EnumRule', () => {
     expect(rule.fix('build')).to.be.null;
   });
 
-  it('should provide a helpful error message', () => {
+  it('should provide a helpful error message - applicable: never', () => {
+    const rule = new EnumRule('subject', RuleConfigSeverity.Error, 'never', allowedValues);
+    const error = rule.errorMessage();
+    expect(error).to.equal(`the subject can\'t be any of: 'feat', 'fix', 'docs', 'style' or 'refactor'`);
+  });
+
+  it('should provide a helpful error message - applicable: always', () => {
     const rule = new EnumRule('subject', RuleConfigSeverity.Error, 'always', allowedValues);
-    expect(rule.errorMessage()).to.include('feat');
-    expect(rule.errorMessage()).to.include('fix');
-    expect(rule.errorMessage()).to.match(/be one of:/);
+    const error = rule.errorMessage();
+    expect(error).to.equal(`the subject can only be one of: 'feat', 'fix', 'docs', 'style' or 'refactor'`);
   });
 
   it('should handle check method correctly', () => {
