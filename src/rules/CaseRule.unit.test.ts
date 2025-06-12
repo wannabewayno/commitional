@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { CaseRule } from '../../src/rules/CaseRule.js';
-import { RuleConfigSeverity } from '../../src/rules/BaseRule.js';
+import { CaseRule } from './CaseRule.js';
+import { RuleConfigSeverity } from './BaseRule.js';
 
 describe('CaseRule', () => {
   // Test construction

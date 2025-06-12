@@ -16,7 +16,10 @@
     "postversion": "git push origin --follow-tags",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "dev": "node esbuild.config.mjs",
-    "test": "npm run build && mocha",
+    "test": "npm run build && mocha **/*.test.ts",
+    "test:unit": "mocha **/*.unit.test.ts",
+    "test:e2e": "mocha ./test/*.test.ts",
+    "test:int": "mocha **/*.int.test.ts",
     "format": "biome format --write",
     "lint": "biome lint --write",
     "check": "tsc -noEmit -skipLibCheck"

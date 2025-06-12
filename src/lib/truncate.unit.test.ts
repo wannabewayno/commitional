@@ -1,5 +1,5 @@
-import { expect } from "chai";
-import { truncate } from "./truncate.js";
+import { expect } from 'chai';
+import { truncate } from './truncate.js';
 
 describe('[lib] - truncate', () => {
   it('should return empty string', () => {

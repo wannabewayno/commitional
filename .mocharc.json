@@ -3,6 +3,5 @@
   "retries": 0,
   "exit": true,
   "timeout": 15000,
-  "require": ["tsx"],
-  "spec": "./**/*.test.ts"
+  "require": ["tsx"]
 }
