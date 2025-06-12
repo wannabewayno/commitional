@@ -37,4 +37,15 @@ describe('Commit Message Formatting', () => {
     assert.strictEqual(subject, 'fix: Fix critical bug');
     assert.strictEqual(body, 'This fixes a critical issue\nThat was causing problems');
   });
+
+  it('should format a commit message with body', () => {
+    const commit = {
+      subject: 'Fix critical bug',
+      body: 'This fixes a critical issue\nThat was causing problems',
+      breaking: true,
+    };
+    const [subject, body] = formatCommitMessage(commit);
+    assert.strictEqual(subject, 'Fix critical bug ⚠️');
+    assert.strictEqual(body, 'This fixes a critical issue\nThat was causing problems');
+  });
 });
