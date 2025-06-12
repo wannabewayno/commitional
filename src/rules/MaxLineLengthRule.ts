@@ -23,6 +23,6 @@ export class MaxLineLengthRule extends BaseRuleWithValue<number> {
   }
 
   errorMessage(): string {
-    return `have lines shorter than ${this.value} characters`;
+    return `the ${this.name} must have lines shorter than ${this.value} characters`;
   }
 }

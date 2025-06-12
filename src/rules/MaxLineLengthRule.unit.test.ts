@@ -38,7 +38,7 @@ describe('MaxLineLengthRule', () => {
 
   describe('errorMessage', () => {
     it('should provide a helpful error message', () => {
-      expect(rule.errorMessage()).to.equal(`have lines shorter than ${maxLength} characters`);
+      expect(rule.errorMessage()).to.equal(`the subject must have lines shorter than ${maxLength} characters`);
     });
   });
 
