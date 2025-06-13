@@ -82,7 +82,7 @@ export class FullStopRule extends BaseRuleWithValue<string> {
   }
 
   private indefiniteArticle(text: string): string {
-    const article = /^[aeiou]/.test(text) ? 'an' : 'a';
+    const article = /^[aeiou]/i.test(text) ? 'an' : 'a';
     return `${article} ${text}`;
   }
 

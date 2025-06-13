@@ -50,14 +50,80 @@ describe('FullStopRule', () => {
 
   // Test error message
   describe('errorMessage', () => {
-    it('should return correct error message', () => {
-      const rule = new FullStopRule('subject', RuleConfigSeverity.Error, 'always', '.');
-      assert.strictEqual(rule.errorMessage(), 'the subject must end with a full stop');
+    const symbolsAn = Object.entries({
+      '!': 'exclamation mark',
+      '*': 'asterix',
+      '@': 'At sign',
+      '&': 'ampersand',
+      '=': 'equals sign',
+      _: 'underscore',
+      '[': 'opening square bracket',
+      '(': 'opening paranthesis',
+      "'": 'apostrophe',
     });
 
-    it('should return correct error message', () => {
-      const rule = new FullStopRule('subject', RuleConfigSeverity.Error, 'never', '!');
-      assert.strictEqual(rule.errorMessage(), 'the subject must not end with an exclamation mark');
+    const symbolsA = Object.entries({
+      '.': 'full stop',
+      '|': 'vertical bar',
+      $: 'dollar sign',
+      '^': 'carrot',
+      '#': 'hash',
+      '+': 'plus sign',
+      '-': 'hyphen',
+      ':': 'colon',
+      ';': 'semicolon',
+      '?': 'question mark',
+      ',': 'comma',
+      '/': 'slash',
+      '\\': 'backslash',
+      ']': 'closing square bracket',
+      ')': 'closing paranthesis',
+      '"': 'quotation mark',
+      '%': 'percent sign',
+      '~': 'tilde',
+      '`': 'backtick',
+    });
+
+    describe('applicable: always', () => {
+      symbolsAn.forEach(([symbol, symbolName]) => {
+        it(`should return helpful error message with plain english name of symbol for '${symbol}'`, () => {
+          const rule = new FullStopRule('subject', RuleConfigSeverity.Error, 'always', symbol);
+          assert.strictEqual(rule.errorMessage(), `the subject must end with an ${symbolName}`);
+        });
+      });
+
+      symbolsA.forEach(([symbol, symbolName]) => {
+        it(`should return helpful error message with plain english name of symbol for '${symbol}'`, () => {
+          const rule = new FullStopRule('subject', RuleConfigSeverity.Error, 'always', symbol);
+          assert.strictEqual(rule.errorMessage(), `the subject must end with a ${symbolName}`);
+        });
+      });
+
+      it('should return helpful error message with symbol when no symbol name has been mapped', () => {
+        const rule = new FullStopRule('subject', RuleConfigSeverity.Error, 'always', '<');
+        assert.strictEqual(rule.errorMessage(), "the subject must end with a '<'");
+      });
+    });
+
+    describe('applicable: never', () => {
+      symbolsAn.forEach(([symbol, symbolName]) => {
+        it(`should return helpful error message with plain english name of symbol for '${symbol}'`, () => {
+          const rule = new FullStopRule('subject', RuleConfigSeverity.Error, 'never', symbol);
+          assert.strictEqual(rule.errorMessage(), `the subject must not end with an ${symbolName}`);
+        });
+      });
+
+      symbolsA.forEach(([symbol, symbolName]) => {
+        it(`should return helpful error message with plain english name of symbol for '${symbol}'`, () => {
+          const rule = new FullStopRule('subject', RuleConfigSeverity.Error, 'never', symbol);
+          assert.strictEqual(rule.errorMessage(), `the subject must not end with a ${symbolName}`);
+        });
+      });
+
+      it('should return helpful error message with symbol when no symbol name has been mapped', () => {
+        const rule = new FullStopRule('subject', RuleConfigSeverity.Error, 'never', '<');
+        assert.strictEqual(rule.errorMessage(), "the subject must not end with a '<'");
+      });
     });
   });
 
