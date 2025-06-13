@@ -1,9 +1,6 @@
 import { BaseRuleWithValue, type RuleConfigCondition, type RuleConfigSeverity } from './BaseRule.js';
 import type { CommitPart } from '../index.js';
-
-function capitalize(input: string) {
-  return input.charAt(0).toUpperCase() + input.slice(1);
-}
+import capitalize from '../../lib/capitalize.js';
 
 function delimiter(string: string, delimiter = ' ') {
   // target all common delimiter types and replace with the new delimter
