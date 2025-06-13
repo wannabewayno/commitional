@@ -1,23 +1,29 @@
 # commitional
-CLI for crafting commit messages that adhere to any linting rules defined.
-Compatible out-of-the-box with commitlint.
-Hook up your favourite AI API to autogenerate commit messages based on the changes being made.
+CLI for crafting commit messages that adhere to configured linting rules.
 
-## Usage
-**help**
-use the `--help` flag to see a list of allowed subcommands and options.
+> Compatible out-of-the-box with commitlint.
+Use your existing commitlint config without any changes; the cli will guide and auto fix according to the rules.
 
-| Runtime       | Global                     | Workspace                   |
-| ------------- | -------------------------- | --------------------------- |
-| Bun           | `commitional`              | `bunx commitional`          |
-| Node          | `commitional`              | `npx commitional`           |
-
+> Batteries included, but removable
+Hook up your favourite Gen AI Service to autogenerate commit messages based on the changes being made.
+Lowers the barrier to entry for frequent, descriptive and lintable commits
 
 ## Installation
 | Runtime       | Global                       | Workspace                            |
 | ------------- | ---------------------------- | ------------------------------------ |
 | Bun           | `bun install commitional -g` | `bun add -d commitional`             |
 | Node          | `npm install commitional -g` | `npm i --save-dev commitional`       |
+
+
+## Usage
+| Runtime       | Global                     | Workspace                   |
+| ------------- | -------------------------- | --------------------------- |
+| Bun           | `commitional`              | `bunx commitional`          |
+| Node          | `commitional`              | `npx commitional`           |
+
+### CLI
+**help**
+use the `--help` flag to see a list of allowed subcommands and options.
 
 ### --auto Flag
 
