@@ -1,5 +1,5 @@
 import { RuleConfigSeverity, type RuleConfigCondition, type RuleConfigTuple } from '@commitlint/types';
-import type { CommitPart } from './index.js';
+import type { CommitPart } from '../index.js';
 export { RuleConfigSeverity };
 export type { RuleConfigCondition, RuleConfigTuple };
 

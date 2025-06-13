@@ -1,5 +1,5 @@
 import { BaseRuleWithValue, type RuleConfigCondition, type RuleConfigSeverity } from './BaseRule.js';
-import type { CommitPart } from './index.js';
+import type { CommitPart } from '../index.js';
 
 function capitalize(input: string) {
   return input.charAt(0).toUpperCase() + input.slice(1);

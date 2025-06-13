@@ -1,15 +1,15 @@
-import type { BaseRule } from './BaseRule.js';
-import { MaxLengthRule } from './MaxLengthRule.js';
-import { MinLengthRule } from './MinLengthRule.js';
-import { EmptyRule } from './EmptyRule.js';
-import { CaseRule } from './CaseRule.js';
-import { EnumRule } from './EnumRule.js';
-import { FullStopRule } from './FullStopRule.js';
-import { LeadingBlankRule } from './LeadingBlankRule.js';
-import { MaxLineLengthRule } from './MaxLineLengthRule.js';
-import { TrimRule } from './TrimRule.js';
-import { ExclamationMarkRule } from './ExclamationMarkRule.js';
-import { AllowMultipleRule } from './AllowMultipleRule.js';
+import type { BaseRule } from './rules/BaseRule.js';
+import { MaxLengthRule } from './rules/MaxLengthRule.js';
+import { MinLengthRule } from './rules/MinLengthRule.js';
+import { EmptyRule } from './rules/EmptyRule.js';
+import { CaseRule } from './rules/CaseRule.js';
+import { EnumRule } from './rules/EnumRule.js';
+import { FullStopRule } from './rules/FullStopRule.js';
+import { LeadingBlankRule } from './rules/LeadingBlankRule.js';
+import { MaxLineLengthRule } from './rules/MaxLineLengthRule.js';
+import { TrimRule } from './rules/TrimRule.js';
+import { ExclamationMarkRule } from './rules/ExclamationMarkRule.js';
+import { AllowMultipleRule } from './rules/AllowMultipleRule.js';
 import { type RuleConfigCondition, RuleConfigSeverity } from '@commitlint/types';
 import type { CommitlintConfig } from '../config/index.js';
 
