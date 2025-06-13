@@ -12,6 +12,8 @@ import { ExclamationMarkRule } from './rules/ExclamationMarkRule.js';
 import { AllowMultipleRule } from './rules/AllowMultipleRule.js';
 import { type RuleConfigCondition, RuleConfigSeverity } from '@commitlint/types';
 import type { CommitlintConfig } from '../config/index.js';
+import capitalize from '../lib/capitalize.js';
+import separate from '../lib/separate.js';
 
 export type RulesConfig = CommitlintConfig['rules'];
 export type CommitPart = 'body' | 'footer' | 'header' | 'scope' | 'type' | 'subject' | 'trailer';
@@ -144,8 +146,50 @@ export default class RulesEngine<Config extends Rules = Rules> {
    * @returns
    */
   describe(): string {
+    const description: string[] = ['## General Rules'];
     const rules = this.listRules();
-    return ['## General Rules'].concat(rules.map(v => `- ${v.errorMessage()}`)).join('\n');
+
+    const requiredList = new Intl.ListFormat('en-au', { type: 'conjunction', style: 'long', localeMatcher: 'best fit' });
+    const optionalList = new Intl.ListFormat('en-au', { type: 'disjunction', style: 'long', localeMatcher: 'best fit' });
+
+    // Separate out Empty rules
+    const [emptyRules, otherRules] = separate(rules, rule => rule instanceof EmptyRule);
+
+    const optional = new Set<CommitPart>(['type', 'subject', 'scope', 'body', 'footer', 'header', 'trailer']);
+    // Separate out required and forbidden empty rules, removing from the 'optional' set, so what's left are optional.
+    const [required, forbidden] = separate(emptyRules, rule => {
+      optional.delete(rule.name);
+      return rule.applicable === 'never';
+    });
+
+    const structure = [];
+    // Required
+    if (required.length) structure.push(`must have a ${requiredList.format(required.map(v => v.name))}`);
+    // Optional
+    if (optional.size) structure.push(`may have a ${optionalList.format(optional)}`);
+    // Forbidden
+    if (forbidden.length) structure.push(`must not contain a ${optionalList.format(forbidden.map(v => v.name))}`);
+    if (structure[0]) structure[0] = `Commit messages ${structure[0]}`;
+    description.push(requiredList.format(structure));
+
+    (['type', 'scope', 'subject', 'header', 'body', 'footer', 'trailer'] as CommitPart[]).reduce((rules, part) => {
+      // find all rules for the type.
+      const [applicableRules, otherRules] = separate(rules, rule => rule.name.startsWith(part));
+
+      if (applicableRules.length) {
+        description.push(`### ${capitalize(part)}`);
+        description.push(...applicableRules.map(v => `- ${capitalize(v.errorMessage())}`));
+      }
+
+      // There's no "rule" for this, so it's a begrudging special case
+      if (part === 'subject')
+        description.push('- The subject must be written in imperative mood (Fix, not Fixed / Fixes etc.)');
+
+      // return the other rules to continue
+      return otherRules;
+    }, otherRules);
+
+    return description.join('\n');
   }
 
   /**
