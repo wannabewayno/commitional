@@ -1,5 +1,5 @@
 import { confirm, editor, select, input } from '@inquirer/prompts';
-import type RulesEngine from '../rules/index.js';
+import type RulesEngine from '../RulesEngine/index.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';

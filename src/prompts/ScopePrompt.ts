@@ -1,6 +1,6 @@
 import { input, select } from '@inquirer/prompts';
 import { red } from 'yoctocolors';
-import type RulesEngine from '../rules/index.js';
+import type RulesEngine from '../RulesEngine/index.js';
 import BasePrompt from './BasePrompt.js';
 import type { CommitMessage } from './index.js';
 import { ScopeDeducer } from '../services/ScopeDeducer/index.js';

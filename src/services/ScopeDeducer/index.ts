@@ -1,4 +1,4 @@
-import type RulesEngine from '../../rules/index.js';
+import type RulesEngine from '../../RulesEngine/index.js';
 
 export class ScopeDeducer {
   private scopeDirectories: Set<string> = new Set();

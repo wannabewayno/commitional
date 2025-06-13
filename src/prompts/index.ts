@@ -1,11 +1,11 @@
-import type RulesEngine from '../rules/index.js';
+import type RulesEngine from '../RulesEngine/index.js';
 
 import ScopePrompt from './ScopePrompt.js';
 import TypePrompt from './TypePrompt.js';
 import SubjectPrompt from './SubjectPrompt.js';
 import BodyPrompt from './BodyPrompt.js';
 import { oraPromise } from 'ora';
-import type { CommitPart } from '../rules/index.js';
+import type { CommitPart } from '../RulesEngine/index.js';
 import { formatCommitMessage } from '../lib/formatCommitMessage.js';
 import { green } from 'yoctocolors';
 import type Diff from '../services/Git/Diff.js';

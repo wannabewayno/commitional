@@ -1,5 +1,5 @@
 import { input, select } from '@inquirer/prompts';
-import type RulesEngine from '../rules/index.js';
+import type RulesEngine from '../RulesEngine/index.js';
 import BasePrompt from './BasePrompt.js';
 import type { CommitMessage } from './index.js';
 import type Diff from '../services/Git/Diff.js';

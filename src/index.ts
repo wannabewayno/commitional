@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { formatCommitMessage } from './lib/formatCommitMessage.js';
 import Git from './services/Git/index.js';
-import RulesEngine from './rules/index.js';
+import RulesEngine from './RulesEngine/index.js';
 import loadConfig from './config/index.js';
 import { CommitPartFactory, PromptFactory, PromptFlow } from './prompts/index.js';
 import { confirm } from '@inquirer/prompts';

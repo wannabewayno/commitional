@@ -140,6 +140,15 @@ export default class RulesEngine<Config extends Rules = Rules> {
   }
 
   /**
+   * Returns a human readable string that describes all rules that this engine enforces.
+   * @returns
+   */
+  describe(): string {
+    const rules = this.listRules();
+    return ['## General Rules'].concat(rules.map(v => `- ${v.errorMessage()}`)).join('\n');
+  }
+
+  /**
    * Parses the raw user input one by one through our rules and attempts to fix them if they fail validation.
    * The output will be a string that complies with all rules as much as possible without human intervention.
    *

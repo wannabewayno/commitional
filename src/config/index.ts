@@ -1,5 +1,5 @@
 import load from '@commitlint/load';
-import type { RuleConfigTuple } from '../rules/BaseRule.js';
+import type { RuleConfigTuple } from '../RulesEngine/rules/BaseRule.js';
 
 export type QualifiedConfig = Awaited<ReturnType<typeof load>>;
 export type CommitlintConfig = QualifiedConfig & {

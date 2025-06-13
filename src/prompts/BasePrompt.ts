@@ -1,5 +1,5 @@
-import type RulesEngine from '../rules/index.js';
-import type { CommitPart } from '../rules/index.js';
+import type RulesEngine from '../RulesEngine/index.js';
+import type { CommitPart } from '../RulesEngine/index.js';
 import AIProvider from '../services/AI/index.js';
 import type Diff from '../services/Git/Diff.js';
 import commitMessageStandard from './commit-message-standard.js';
