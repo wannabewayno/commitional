@@ -1,5 +1,7 @@
 import { expect } from 'chai';
 import { ScopeDeducer } from './index.js';
+import sinon from 'sinon';
+import type RulesEngine from '../../RulesEngine/index.js';
 
 describe('ScopeDeducer', () => {
   describe('constructor', () => {
@@ -47,6 +49,17 @@ describe('ScopeDeducer', () => {
       const deducer = new ScopeDeducer(['api', 'packages/*']);
       expect(deducer.deduceScope(['api/file.txt'])).to.deep.equal(['api']);
       expect(deducer.deduceScope(['packages/math-helper/file.txt'])).to.deep.equal(['math-helper']);
+    });
+  });
+
+  describe('fromRulesEngine', () => {
+    const mockRulesEngine = {
+      narrow: sinon.stub().returns({ getRulesOfType: sinon.stub().returns([]) }),
+    };
+
+    it('Should return scope deducer loaded with rules from RulesEngine', () => {
+      const scopeDeducer = ScopeDeducer.fromRulesEngine(mockRulesEngine as unknown as RulesEngine);
+      expect(scopeDeducer).to.be.an.instanceOf(ScopeDeducer);
     });
   });
 });
