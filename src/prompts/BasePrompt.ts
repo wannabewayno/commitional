@@ -2,7 +2,7 @@ import type RulesEngine from '../RulesEngine/index.js';
 import type { CommitPart } from '../RulesEngine/index.js';
 import AIProvider from '../services/AI/index.js';
 import type Diff from '../services/Git/Diff.js';
-import commitMessageStandard from './commit-message-standard.js';
+import { generalRules, bodyGuidelines, subjectAndBodyGuidelines, usingImperativeMood } from './commit-message-standard.js';
 import type { CommitMessage } from './index.js';
 
 export default abstract class BasePrompt {
@@ -14,7 +14,7 @@ export default abstract class BasePrompt {
   }
 
   protected commitStandard(): string {
-    return commitMessageStandard;
+    return [generalRules, subjectAndBodyGuidelines, usingImperativeMood, bodyGuidelines].join('\n\n');
   }
 
   /**

@@ -1,4 +1,4 @@
-export default `## General Rules
+export const generalRules = `## General Rules
 - Commit messages must have a subject line and may have body copy. These must be separated by a blank line.
 - The subject line must not exceed 50 characters
 - The subject line should be capitalized and must not end in a period
@@ -35,9 +35,9 @@ This is an example of a complete commit message that adheres to this standard. P
     like this:
 
     Resolves: #123
-    See also: #456, #789
+    See also: #456, #789`;
 
-## Subject and Body
+export const subjectAndBodyGuidelines = `## Subject and Body
 - A body copy is not required for commits that are overly simple. If you find yourself repeating the subject line in the body copy, it's a good sign that the body might be superfluous.
 
 To perform a *simple* commit, a single command if sufficient:
@@ -87,9 +87,9 @@ This provides an easy way to get a quick overview by means of reading the shortl
           Upgrade chess program
 
     Walter Gibbs (1):
-          Introduce protoype chess program
+          Introduce protoype chess program`;
 
-## Use the Imperative
+export const usingImperativeMood = `## Use the Imperative
 Inkeeping with the standard output of git itself, all commit subject lines must be written using the imperative:
 
 **Good**
@@ -110,9 +110,9 @@ Inkeeping with the standard output of git itself, all commit subject lines must 
 Your commit subject line must be able to complete the sentence
 > If applied, this commit will ...
 
-If it doesn't, it's non-conformant. The body may use any style you want.
+If it doesn't, it's non-conformant.`;
 
-## Use the Body to Explain the Background and Reasoning, not the Implementation
+export const bodyGuidelines = `## Use the Body to Explain the Background and Reasoning, not the Implementation
 Especially if the diff is rather large or extremely clustered, you can save all fellow developers some time by explaining why you did what.
 
 Here's a perfect example:
