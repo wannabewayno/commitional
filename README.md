@@ -14,9 +14,11 @@ CLI for crafting commit messages that adhere to configured linting rules.
 
 
 > Compatible out-of-the-box with commitlint.
+
 Use your existing commitlint config without any changes; the cli will guide and auto fix according to the rules.
 
 > Batteries included, but removable
+
 Hook up your favourite Gen AI Service to autogenerate commit messages based on the changes being made.
 Lowers the barrier to entry for frequent, descriptive and lintable commits
 
