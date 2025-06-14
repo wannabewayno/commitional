@@ -72,7 +72,7 @@ You can view a shorter log, by restricting the output to the subject lines:
     $ git log --oneline
     42e769 Derezz the master control program
 
-This provied an easy way to get a quick overview by means of reading the shortlog:
+This provides an easy way to get a quick overview by means of reading the shortlog:
 
     $ git shortlog
     Kevin Flynn (1):
