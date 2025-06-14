@@ -1,5 +1,17 @@
-# commitional
+<div align="center">
+  <h1>commitional</h1>
+  <p>
+    <a alt="NPM Version"><img src="https://img.shields.io/npm/v/commitional?style=social&logo=npm" /></a>
+    <a alt="NPM Downloads"><img src="https://img.shields.io/npm/dw/commitional?style=social&logo=npm" /></a>
+    <a alt="NPM Last Update"><img src="https://img.shields.io/npm/last-update/commitional?style=social&logo=npm" /></a>
+  </p>
+    <p>
+    <a alt="Libraries.io dependency status for GitHub repo"><img src="https://img.shields.io/librariesio/github/wannabewayno/commitional?style=plastic" /></a>
+    <a alt="GitHub Issues or Pull Requests"><img src="https://img.shields.io/github/issues/wannabewayno/commitional?style=plastic&logo=github" /></a>
+  </p>
+</div>
 CLI for crafting commit messages that adhere to configured linting rules.
+
 
 > Compatible out-of-the-box with commitlint.
 Use your existing commitlint config without any changes; the cli will guide and auto fix according to the rules.
