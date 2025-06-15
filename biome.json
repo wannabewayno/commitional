@@ -5,6 +5,7 @@
   "linter": {
     "enabled": true,
     "ignore": ["bin/**", "node_modules/**"],
+    "include": ["src/**", "test/**"],
     "rules": {
       "recommended": true,
       "complexity": {
@@ -29,7 +30,8 @@
     "indentStyle": "space",
     "indentWidth": 2,
     "lineWidth": 124,
-    "ignore": ["bin/**"]
+    "ignore": ["bin/**"],
+    "include": ["src/**", "test/**"]
   },
   "javascript": {
     "formatter": {
