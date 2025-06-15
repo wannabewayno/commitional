@@ -14,9 +14,10 @@ import { type RuleConfigCondition, RuleConfigSeverity } from '@commitlint/types'
 import type { CommitlintConfig } from '../config/index.js';
 import capitalize from '../lib/capitalize.js';
 import separate from '../lib/separate.js';
+import CommitMessage, { type CommitParts } from '../CommitMessage/index.js';
 
 export type RulesConfig = CommitlintConfig['rules'];
-export type CommitPart = 'body' | 'footer' | 'header' | 'scope' | 'type' | 'subject' | 'trailer';
+export type CommitPart = 'type' | 'subject' | 'scope' | 'body'; //| 'footer';
 
 export type RuleTypeWithoutValue = 'leading-blank' | 'empty' | 'trim' | 'exclamation-mark';
 export type RuleTypeWithValue =
@@ -142,35 +143,74 @@ export default class RulesEngine<Config extends Rules = Rules> {
   }
 
   /**
+   * Returns an object containing arrays of required, optional, and forbidden commit properties based on the configured rules.
+   *
+   * @returns {Object} An object containing:
+   *   - required: string[] - Array of commit parts that must be present
+   *   - optional: string[] - Array of commit parts that may be included
+   *   - forbidden: string[] - Array of commit parts that must not be included
+   */
+  allowedCommitProps(): { required: CommitPart[]; optional: CommitPart[]; forbidden: CommitPart[] } {
+    const rules = this.listRules();
+
+    // Filter out Empty rules
+    const emptyRules = rules.filter(rule => rule instanceof EmptyRule);
+
+    // Assume everything is optional unless otherwise required or forbidden
+    const optional = new Set<CommitPart>(['type', 'subject', 'scope', 'body']);
+
+    const ruleToString = (rule: BaseRule) => {
+      const name = rule.name;
+      optional.delete(name);
+      return name;
+    };
+
+    // Separate out required and forbidden empty rules, removing from the 'optional' set
+    // what's left over are optional properties and the rest are either required or forbidden from the configured rules.
+    const [required, forbidden] = separate(emptyRules, rule => rule.applicable === 'never', {
+      onPass: ruleToString,
+      onFail: ruleToString,
+    });
+
+    return { required, optional: [...optional], forbidden };
+  }
+
+  /**
    * Returns a human readable string that describes all rules that this engine enforces.
    * @returns
    */
   describe(): string {
     const description: string[] = ['## General Rules'];
+
     const rules = this.listRules();
 
     const requiredList = new Intl.ListFormat('en-au', { type: 'conjunction', style: 'long', localeMatcher: 'best fit' });
     const optionalList = new Intl.ListFormat('en-au', { type: 'disjunction', style: 'long', localeMatcher: 'best fit' });
 
     // Separate out Empty rules
-    const [emptyRules, otherRules] = separate(rules, rule => rule instanceof EmptyRule);
+    const nonEmptyRules = rules.filter(rule => !(rule instanceof EmptyRule));
 
-    const optional = new Set<CommitPart>(['type', 'subject', 'scope', 'body', 'footer', 'header', 'trailer']);
-    // Separate out required and forbidden empty rules, removing from the 'optional' set, so what's left are optional.
-    const [required, forbidden] = separate(emptyRules, rule => {
-      optional.delete(rule.name);
-      return rule.applicable === 'never';
-    });
+    const { required, optional, forbidden } = this.allowedCommitProps();
 
+    const commitStructure: Omit<CommitParts, 'footer'> = {};
     const structure = [];
     // Required
-    if (required.length) structure.push(`must have a ${requiredList.format(required.map(v => v.name))}`);
+    if (required.length) {
+      required.forEach(rule => (commitStructure[rule] = `<${rule}>`));
+      structure.push(`must have a ${requiredList.format(required)}`);
+    }
     // Optional
-    if (optional.size) structure.push(`may have a ${optionalList.format(optional)}`);
+    if (optional.length) {
+      optional.forEach(rule => (commitStructure[rule] = `[optional ${rule}]`));
+      structure.push(`may have a ${optionalList.format(optional)}`);
+    }
     // Forbidden
-    if (forbidden.length) structure.push(`must not contain a ${optionalList.format(forbidden.map(v => v.name))}`);
+    if (forbidden.length) structure.push(`must not contain a ${optionalList.format(forbidden)}`);
     if (structure[0]) structure[0] = `Commit messages ${structure[0]}`;
     description.push(requiredList.format(structure));
+
+    // Show what the stucture looks like.
+    description.push(CommitMessage.fromParts(commitStructure).toString());
 
     (['type', 'scope', 'subject', 'header', 'body', 'footer', 'trailer'] as CommitPart[]).reduce((rules, part) => {
       // find all rules for the type.
@@ -187,7 +227,7 @@ export default class RulesEngine<Config extends Rules = Rules> {
 
       // return the other rules to continue
       return otherRules;
-    }, otherRules);
+    }, nonEmptyRules);
 
     return description.join('\n');
   }
