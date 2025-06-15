@@ -107,42 +107,54 @@ program
 
     const promptFactory = PromptFactory(rulesEngine);
 
+    const scope = promptFactory('scope');
+    const type = promptFactory('type');
+    const subject = promptFactory('subject');
+    const body = promptFactory('body');
+
     await new PromptFlow(
       'Commit or Edit',
-      {
-        Commit: PromptFlow.Break,
-        // TODO: Refactor this to provide a way to set Separators
-        type: () =>
-          promptFactory('type')
-            .prompt(commit.type)
-            .then(type => {
+      [
+        ['Commit', PromptFlow.Break],
+        PromptFlow.Separator(),
+        [
+          'type',
+          () =>
+            type.prompt(commit.type).then(type => {
               commit.type = type;
             }),
-        scope: () =>
-          // Check to see if multiple scopes are allowed. If So allow the user add or remove scopes
-          // Otherwise simply show a list to choose from or free form input that will be used to override the current scope
-          promptFactory('scope')
-            .prompt()
-            .then(scope => {
+        ],
+        // Check to see if multiple scopes are allowed. If So allow the user add or remove scopes
+        // Otherwise simply show a list to choose from or free form input that will be used to override the current scope
+        [
+          'scope',
+          () =>
+            scope.prompt().then(scope => {
               commit.scope = scope;
             }),
-        subject: () =>
-          promptFactory('subject')
-            .prompt(commit.subject)
-            .then(subject => {
+        ],
+        [
+          'subject',
+          () =>
+            subject.prompt(commit.subject).then(subject => {
               commit.subject = subject;
             }),
-        body: () =>
-          promptFactory('body')
-            .prompt(commit.body)
-            .then(body => {
+        ],
+        [
+          'body',
+          () =>
+            body.prompt(commit.body).then(body => {
               commit.body = body;
             }),
+        ],
         // TODO: Ask why it's breaking
-        breaking: () => {
-          commit.breaking();
-        },
-      },
+        [
+          'breaking',
+          () => {
+            commit.breaking();
+          },
+        ],
+      ],
       {
         banner: choice => renderText(commit, choice.value as CommitPart),
       },
