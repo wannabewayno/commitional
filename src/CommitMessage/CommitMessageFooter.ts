@@ -1,0 +1,49 @@
+import sentaceKebabCase from '../lib/sentenceKebabCase.js';
+
+export default class CommitMessageFooter {
+  constructor(
+    private _token: string,
+    private _text: string,
+  ) {}
+
+  get token(): string {
+    return this._token;
+  }
+
+  set token(value: string) {
+    let trimmedValue = value.trim();
+    if (!trimmedValue) return;
+    // Force Sentance-kebab-case except for 'BREAKING CHANGE' and 'BREAKING-CHANGE' [1][2][3]
+    if (!['BREAKING CHANGE', 'BREAKING-CHANGE'].includes(trimmedValue)) trimmedValue = sentaceKebabCase(trimmedValue);
+    this._token = value;
+  }
+
+  get text(): string {
+    return this._text;
+  }
+
+  set text(value: string) {
+    const trimmedValue = value.trim();
+    if (!trimmedValue) return;
+    this._text = value;
+  }
+
+  toString() {
+    return `${this.token}: ${this.text}`;
+  }
+
+  static fromString(footer: string): CommitMessageFooter | Error {
+    const match = footer.match(/^(?<token>[\w+-]+): (?<text>.*)$/i);
+    if (!match || !match.groups?.token || !match.groups?.text)
+      return new Error(`[Invalid footer] '${footer}' is does not conform to "<Some-token>: <text content>"`);
+
+    return new CommitMessageFooter(match.groups.token, match.groups.text);
+  }
+}
+
+/*
+  References:
+  [1] 'BREAKING CHANGE' in footer: Conventional Commits v1.0.0 > Specification > rule 12; Available: https://www.conventionalcommits.org/en/v1.0.0/
+  [2] 'BREAKING CHANGE' must be synonymous with 'BREAKING-CHANGE': Conventional Commits v1.0.0 > Specification > rule 16; Available: https://www.conventionalcommits.org/en/v1.0.0/
+  [3] 'BREAKING CHANGE' must be uppercase: Conventional Commits v1.0.0 > Specification > rule 15; Available: https://www.conventionalcommits.org/en/v1.0.0/
+*/
