@@ -24,10 +24,8 @@ const defaultConfig: CommitlintConfig = {
   extends: [],
   formatter: '',
   plugins: {},
-  helpUrl: '', // TODO: will be the npm url once this is published
+  helpUrl: '',
   prompt: {
-    questions: {},
-    messages: {},
     settings: {
       enableMultipleScopes: false,
       scopeEnumSeparator: ',',
