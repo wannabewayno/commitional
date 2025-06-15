@@ -1,15 +1,8 @@
 import { BaseRuleWithValue, type RuleConfigCondition, type RuleConfigSeverity } from './BaseRule.js';
 import type { CommitPart } from '../index.js';
 import capitalize from '../../lib/capitalize.js';
-
-function delimiter(string: string, delimiter = ' ') {
-  // target all common delimiter types and replace with the new delimter
-  return string.replace(/[a-z][A-Z]|[a-z]\d|\d[a-z]]/g, v => `${v[0]}${delimiter}${v[1]}`).replace(/[\s-_]/g, delimiter);
-}
-
-function splitByWord(string: string) {
-  return delimiter(string, ' ').split(' ');
-}
+import kebabCase from '../../lib/kebabCase.js';
+import splitByWord from '../../lib/splitByWord.js';
 
 export type CaseType =
   | 'lower-case'
@@ -61,9 +54,7 @@ export class CaseRule extends BaseRuleWithValue<CaseType[]> {
           .join('');
       }
       case 'kebab-case':
-        return splitByWord(input)
-          .map(word => word.toLowerCase())
-          .join('-');
+        return kebabCase(input);
       case 'snake-case':
         return splitByWord(input)
           .map(word => word.toLowerCase())
