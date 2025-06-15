@@ -2,12 +2,15 @@
 # extends:
 #   - '@commitlint/config-conventional'
 rules:
-    # scope-enum: [2, always, [project]]
-    scope-case: [2, always, lower-case]
-    type-case: [2, always, kebab-case]
-    type-empty: [2, never]
-    subject-empty: [2, never]
-    subject-case: [2, always, sentence-case]
+  scope-allow-multiple: [2, 'never', ',']
+  subject-case: [2, 'always', 'sentence-case']
+  subject-empty: [2, 'never']
+  subject-full-stop: [2, 'never', '.']
+  subject-min-length: [2, 'always', 5]
+  subject-max-length: [2, 'always', 60]
+  body-max-line-length: [2, 'always', 72]
+  type-enum: [2, 'always', ['feat', 'fix', 'chore', 'docs', 'style', 'refactor', 'perf', 'test', 'build', 'ci', 'revert']]
+  type-empty: [2, 'never']
 prompt:
   messages:
     skip: ':skip'
