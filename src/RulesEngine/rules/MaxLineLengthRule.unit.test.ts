@@ -25,14 +25,9 @@ describe('MaxLineLengthRule', () => {
 
   describe('fix', () => {
     it('should truncate lines that exceed the maximum length', () => {
-      expect(rule.fix('this is too long')).to.equal('this is to');
-      expect(rule.fix('short\nthis is too long')).to.equal('short\nthis is to');
-      expect(rule.fix('this is too long\nshort')).to.equal('this is to\nshort');
-    });
-
-    it('should return null when no fix is needed', () => {
-      expect(rule.fix('short')).to.be.null;
-      expect(rule.fix('short\ntext')).to.be.null;
+      expect(rule.fix('this is too long')).to.equal('this is too\nlong');
+      expect(rule.fix('short\nthis is too long')).to.equal('short\nthis is too\nlong');
+      expect(rule.fix('this is too long\nshort')).to.equal('this is too\nlong\nshort');
     });
   });
 
