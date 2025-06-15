@@ -4,13 +4,14 @@ import toEnum from '../lib/toEnum.js';
 import BasePrompt from './BasePrompt.js';
 import type Diff from '../services/Git/Diff.js';
 import { red } from 'yoctocolors';
+import type CommitMessage from '../CommitMessage/index.js';
 
 export default class TypePrompt extends BasePrompt {
   constructor(rules: RulesEngine) {
     super(rules, 'type');
   }
 
-  async generate(diff: Diff) {
+  async generate(diff: Diff, _commit: CommitMessage) {
     const ai = this.AI.byPreference();
 
     const [enumRule] = this.rules.getRulesOfType('enum');
@@ -22,7 +23,7 @@ export default class TypePrompt extends BasePrompt {
         'You will be provided with the git diff of the currenty staged files to be committed asked to either generate a commit type, scope, title, or body.',
         'If previous parts of the commit message are known, these will also be provided for you.',
         'The following rules and guidelines must be adhered to.\n',
-        this.commitStandard(),
+        await this.commitStandard(),
       );
 
     const res = await (enumRule

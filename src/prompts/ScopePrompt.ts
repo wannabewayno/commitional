@@ -2,18 +2,19 @@ import { input, select } from '@inquirer/prompts';
 import { red } from 'yoctocolors';
 import type RulesEngine from '../RulesEngine/index.js';
 import BasePrompt from './BasePrompt.js';
-import type { CommitMessage } from './index.js';
 import { ScopeDeducer } from '../services/ScopeDeducer/index.js';
 import type Diff from '../services/Git/Diff.js';
+import type CommitMessage from '../CommitMessage/index.js';
 
 export default class ScopePrompt extends BasePrompt {
   constructor(rules: RulesEngine) {
     super(rules, 'scope');
   }
 
-  async generate(diff: Diff, _commit: Partial<CommitMessage>): Promise<string> {
+  async generate(diff: Diff, _commit: CommitMessage): Promise<string> {
     const scopeDeducer = ScopeDeducer.fromRulesEngine(this.rules);
     const scope = scopeDeducer.deduceScope(diff.files) ?? [];
+
     return scope.join(',');
   }
 

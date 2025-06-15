@@ -1,9 +1,9 @@
+import type CommitMessage from '../CommitMessage/index.js';
 import type RulesEngine from '../RulesEngine/index.js';
 import type { CommitPart } from '../RulesEngine/index.js';
 import AIProvider from '../services/AI/index.js';
 import type Diff from '../services/Git/Diff.js';
 import { generalRules, bodyGuidelines, subjectAndBodyGuidelines, usingImperativeMood } from './commit-message-standard.js';
-import type { CommitMessage } from './index.js';
 
 export default abstract class BasePrompt {
   protected AI = AIProvider();
@@ -36,5 +36,5 @@ export default abstract class BasePrompt {
    * @param diff
    * @param commit
    */
-  abstract generate(diff: Diff, commit: Partial<CommitMessage>): Promise<string>;
+  abstract generate(diff: Diff, commit: CommitMessage): Promise<string>;
 }

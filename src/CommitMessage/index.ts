@@ -73,6 +73,14 @@ export default class CommitMessage {
     this._header.subject = subject;
   }
 
+  get subject() {
+    return this._header.subject;
+  }
+
+  get type() {
+    return this._header.type;
+  }
+
   set type(type: string) {
     this._header.type = type;
   }

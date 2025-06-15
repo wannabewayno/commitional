@@ -20,7 +20,7 @@ export default class CommitMessageHeader {
     this.scopeDelimiter = opts.scopeDelimiter ?? ',';
     this._scope = Array.isArray(opts.scope)
       ? new Set(opts.scope)
-      : opts.scope !== undefined
+      : opts.scope
         ? new Set(opts.scope.split(this.scopeDelimiter))
         : new Set();
   }
@@ -41,19 +41,22 @@ export default class CommitMessageHeader {
     return this._subject;
   }
 
-  addScope(scope: string) {
-    const trimmed = scope.trim();
-    this._scope.add(trimmed);
+  addScope(...scopes: string[]) {
+    scopes.forEach(scope => {
+      const trimmed = scope.trim();
+      if (!trimmed) return;
+      this._scope.add(trimmed);
+    });
   }
 
   set scope(scope: string) {
     this._scope.clear();
     const scopes = scope.split(this.scopeDelimiter);
-    scopes.forEach(scope => this.addScope(scope));
+    this.addScope(...scopes);
   }
 
   get scope(): string {
-    return [...this.scope].join(this.scopeDelimiter);
+    return [...this._scope].join(this.scopeDelimiter);
   }
 
   delScope(scope: string) {
@@ -70,8 +73,8 @@ export default class CommitMessageHeader {
 
     // If the user has set a breaking change emoji toggle this. (this is personal preference from the package author)
     if (this.breakingEmoji) {
-      if (this._subject?.endsWith('⚠️')) this._subject = this._subject.slice(0, -2);
-      else this._subject = `${this._subject ?? ''} ⚠️`;
+      if (this._subject?.endsWith(this.breakingEmoji)) this.subject = this._subject.replace(this.breakingEmoji, '');
+      else this.subject = `${this._subject ?? ''} ${this.breakingEmoji}`;
     }
   }
 

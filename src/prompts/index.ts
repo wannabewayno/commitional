@@ -6,33 +6,10 @@ import SubjectPrompt from './SubjectPrompt.js';
 import BodyPrompt from './BodyPrompt.js';
 import { oraPromise } from 'ora';
 import type { CommitPart } from '../RulesEngine/index.js';
-import { formatCommitMessage } from '../lib/formatCommitMessage.js';
+import CommitMessage from '../CommitMessage/index.js';
 import { green } from 'yoctocolors';
 import type Diff from '../services/Git/Diff.js';
 import { select, type SelectWithBannerConfig } from 'inquirer-select-with-banner';
-
-/**
- * Interface representing the structure of a commit message
- * with all possible parts that can be included
- */
-export interface CommitMessage {
-  /** The type of commit (e.g., feat, fix, docs) */
-  type?: string;
-  /** The subject/title of the commit */
-  subject?: string;
-  /** The scope of the changes (e.g., component name) */
-  scope?: string;
-  /** The detailed body text of the commit */
-  body?: string;
-  /** Indicates if this is a breaking change */
-  breaking?: boolean; // breaking is a style... it augments the commit mesage?
-  /** Footer information like "Closes #123" */
-  footer?: string;
-  /** The header line (type+scope+subject combined) */
-  header?: string;
-  /** Additional trailer information */
-  trailer?: string;
-}
 
 /**
  * Factory function that creates appropriate prompt instances based on commit part
@@ -58,12 +35,6 @@ export function PromptFactory(rules: RulesEngine) {
 }
 
 /**
- * Type definition for required parts of a commit message
- * Maps each commit part to a placeholder string
- */
-type RequiredParts = { [K in CommitPart]?: `<${K}>` };
-
-/**
  * Factory function that creates a function to prompt for commit parts
  * @param rules - The rules engine containing validation rules
  * @param diff - The diff object containing staged changes
@@ -71,15 +42,28 @@ type RequiredParts = { [K in CommitPart]?: `<${K}>` };
  * @returns A function that prompts for a specific commit part
  */
 export function CommitPartFactory(rules: RulesEngine, diff: Diff, auto = false) {
-  // Determine which parts are required based on 'empty' rules
-  const requiredParts = rules.getRulesOfType('empty').reduce(
-    (requiredParts, rule) => {
-      // If the rule requires the part to never be empty, mark it as required
-      if (rule.applicable === 'never') requiredParts[rule.name] = `<${rule.name}>`;
-      return requiredParts;
-    },
-    {} as Record<string, string>,
-  ) as RequiredParts;
+  const { required } = rules.allowedCommitProps();
+  const requiredProps = Object.fromEntries(required.map(name => [name, `<${name}>`])) as Record<CommitPart, string>;
+
+  /**
+   * Renders a preview of the commit message with the current part highlighted
+   * @param emphasis - The part to emphasize in the preview
+   * @param value - The value to show for the emphasized part
+   * @returns Formatted commit message text
+   */
+  function renderText(commit: CommitMessage, emphasis: CommitPart, value = `<${emphasis}>`) {
+    const commitJsonWithEmphasis = {
+      type: commit.type || requiredProps.type,
+      scope: commit.scope || requiredProps.scope,
+      subject: commit.subject || requiredProps.subject,
+      body: commit.body || requiredProps.body,
+      // footer: merged.footer ?? requiredProps.,
+      [emphasis]: value ? green(value) : '',
+    };
+
+    // Format the commit message with all parts
+    return CommitMessage.fromParts(commitJsonWithEmphasis).toString();
+  }
 
   // Create a prompt factory to get the appropriate prompt for each part
   const promptFactory = PromptFactory(rules);
@@ -90,37 +74,20 @@ export function CommitPartFactory(rules: RulesEngine, diff: Diff, auto = false) 
    * @param partialCommit - Partial commit message with any already-provided parts
    * @returns Promise resolving to the value for the requested commit part
    */
-  return async (commitPart: CommitPart, partialCommit: Partial<CommitMessage> = {}): Promise<string> => {
-    /**
-     * Renders a preview of the commit message with the current part highlighted
-     * @param emphasis - The part to emphasize in the preview
-     * @param value - The value to show for the emphasized part
-     * @returns Formatted commit message text
-     */
-    function renderText(emphasis: CommitPart, value = `<${emphasis}>`) {
-      // Merge required parts with provided parts and highlight the current part
-      const merged = { ...requiredParts, ...partialCommit, [emphasis]: value ? green(value) : '' };
-
-      // Format the commit message with all parts
-      const commit = formatCommitMessage(merged);
-      return commit.join('\n\n');
-    }
-
+  return async (commitPart: Exclude<CommitPart, 'footer'>, commit: CommitMessage): Promise<string> => {
     // Get the appropriate prompt for this commit part
     const prompt = promptFactory(commitPart);
 
     // Either auto-generate the value or use the provided value
-    const value = auto
-      ? await oraPromise(prompt.generate(diff, partialCommit), {
-          // Show loading spinner with preview while generating
-          text: `Generating ${renderText(commitPart)}`,
-          // Show final preview when generation completes
-          successText: value => `${renderText(commitPart, value)}`,
+    return auto
+      ? await oraPromise(prompt.generate(diff, commit), {
+          // Show loading spinner with preview text while generating
+          text: `Generating ${renderText(commit, commitPart)}`,
+          // Text to show on the command line history when generation completes
+          successText: value => renderText(commit, commitPart, value),
         })
-      : partialCommit[commitPart];
-
-    // Present the prompt to the user with the initial value
-    return prompt.promptIfInvalid(value);
+      : // Present the prompt to the user with the initial value
+        prompt.promptIfInvalid(commit[commitPart]);
   };
 }
 
@@ -159,7 +126,7 @@ export class PromptFlow {
    */
   constructor(
     private readonly message: string,
-    private readonly options: ChainOptions,
+    private readonly options: ChainOptions, // TODO: a function that can update itself on every loop incase this creates or removes options.
     private readonly config?: Omit<SelectWithBannerConfig<string | number>, 'message' | 'choices'>,
   ) {
     // Verify that at least one option contains a break condition
@@ -184,11 +151,13 @@ export class PromptFlow {
 
     // Get the handler for the selected option
     const handler = this.options[answer];
+
     // Execute the handler if it's a function, otherwise use the direct value
     const value = typeof handler === 'function' ? await Promise.resolve(handler()) : handler;
 
     // Break the chain if Break symbol is returned
     if (value === PromptFlow.Break) return;
+
     // Otherwise continue the chain recursively
     return this.prompt();
   }

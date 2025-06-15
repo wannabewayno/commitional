@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import BasePrompt from './BasePrompt.js';
-import type { CommitMessage } from './index.js';
 import type Diff from '../services/Git/Diff.js';
+import type CommitMessage from '../CommitMessage/index.js';
 
 // Create a test subclass that exposes the protected method
 class TestBasePrompt extends BasePrompt {
@@ -13,7 +13,7 @@ class TestBasePrompt extends BasePrompt {
     return Promise.resolve('');
   }
 
-  generate(_diff: Diff, _commit: Partial<CommitMessage>): Promise<string> {
+  generate(_diff: Diff, _commit: CommitMessage): Promise<string> {
     return Promise.resolve('');
   }
 }

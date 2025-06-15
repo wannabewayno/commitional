@@ -4,8 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import BasePrompt from './BasePrompt.js';
-import type { CommitMessage } from './index.js';
 import type Diff from '../services/Git/Diff.js';
+import type CommitMessage from '../CommitMessage/index.js';
 
 const CUSTOM = 'custom';
 export default class BodyPrompt extends BasePrompt {
@@ -28,7 +28,7 @@ export default class BodyPrompt extends BasePrompt {
       { name: 'Other', value: CUSTOM },
     ];
 
-    const selectedEditor = await select({
+    const selectedEditor = await select<string>({
       message: 'No editor found. Please select your preferred editor:',
       choices: editorOptions,
     });
@@ -61,7 +61,7 @@ export default class BodyPrompt extends BasePrompt {
     return null;
   }
 
-  async generate(diff: Diff, { type, subject, scope }: Partial<CommitMessage>) {
+  async generate(diff: Diff, commit: CommitMessage) {
     const ai = this.AI.byPreference();
 
     const res = await ai
@@ -72,13 +72,13 @@ export default class BodyPrompt extends BasePrompt {
         'You will be provided with the git diff of the currenty staged files to be committed asked to either generate a commit type, scope, title, or body.',
         'If previous parts of the commit message are known, these will also be provided for you.',
         'The following rules and guidelines must be adhered to.\n',
-        this.commitStandard(),
+        await this.commitStandard(),
       )
       .prompt(
         'Generate an appropriate commit body for the provided staged files to be committed',
-        'The commit subject has been provided for context',
-        '## Subject',
-        `${scope ? `${type}(${scope}): ${subject}` : `${type}: ${subject}`}`,
+        'The partially constructed commit has been provided for context',
+        '## Partial Commit',
+        commit.toString(),
         '## Git Diff',
         '```txt',
         diff.toString(),
