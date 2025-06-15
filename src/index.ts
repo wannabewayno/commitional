@@ -3,10 +3,11 @@ import CommitMessage from './CommitMessage/index.js';
 import Git from './services/Git/index.js';
 import RulesEngine, { type CommitPart } from './RulesEngine/index.js';
 import loadConfig from './config/index.js';
-import { CommitPartFactory, PromptFactory, PromptFlow } from './prompts/index.js';
+import { CommitPartFactory, PromptFactory } from './prompts/index.js';
 import { confirm } from '@inquirer/prompts';
 import { blue, green, red } from 'yoctocolors';
 import ora from 'ora';
+import PromptFlow from './PromptFlow/index.js';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
