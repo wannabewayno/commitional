@@ -101,6 +101,16 @@ export default class CommitMessage {
     return this._header.delScope;
   }
 
+  toJSON(): CommitJSON {
+    return {
+      type: this.type,
+      scope: this.scope,
+      subject: this.subject,
+      body: this.body,
+      footer: this.footers.map(v => ({ token: v.token, text: v.text })),
+    };
+  }
+
   static fromJSON({ type, scope, body, footer, subject }: CommitJSON) {
     const header = new CommitMessageHeader({ type, scope, subject });
     const footers = footer ? footer.map(({ token, text }) => new CommitMessageFooter(token, text)) : [];
