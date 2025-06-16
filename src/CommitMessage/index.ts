@@ -8,7 +8,7 @@ export interface CommitMessageHeaderOpts {
   scopeDelimiter?: string;
 }
 
-export interface CommitParts {
+export interface CommitJSON {
   type?: string;
   subject?: string;
   scope?: string | string[];
@@ -101,7 +101,7 @@ export default class CommitMessage {
     return this._header.delScope;
   }
 
-  static fromParts({ type, scope, body, footer, subject }: CommitParts) {
+  static fromJSON({ type, scope, body, footer, subject }: CommitJSON) {
     const header = new CommitMessageHeader({ type, scope, subject });
     const footers = footer ? footer.map(({ token, text }) => new CommitMessageFooter(token, text)) : [];
     return new CommitMessage(header, body, ...footers);

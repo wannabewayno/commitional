@@ -61,7 +61,7 @@ export function CommitPartFactory(rules: RulesEngine, diff: Diff, auto = false) 
     };
 
     // Format the commit message with all parts
-    return CommitMessage.fromParts(commitJsonWithEmphasis).toString();
+    return CommitMessage.fromJSON(commitJsonWithEmphasis).toString();
   }
 
   // Create a prompt factory to get the appropriate prompt for each part

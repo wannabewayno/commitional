@@ -14,7 +14,7 @@ import { type RuleConfigCondition, RuleConfigSeverity } from '@commitlint/types'
 import type { CommitlintConfig } from '../config/index.js';
 import capitalize from '../lib/capitalize.js';
 import separate from '../lib/separate.js';
-import CommitMessage, { type CommitParts } from '../CommitMessage/index.js';
+import CommitMessage, { type CommitJSON } from '../CommitMessage/index.js';
 
 export type RulesConfig = CommitlintConfig['rules'];
 export type CommitPart = 'type' | 'subject' | 'scope' | 'body'; //| 'footer';
@@ -192,7 +192,7 @@ export default class RulesEngine<Config extends Rules = Rules> {
 
     const { required, optional, forbidden } = this.allowedCommitProps();
 
-    const commitStructure: Omit<CommitParts, 'footer'> = {};
+    const commitStructure: Omit<CommitJSON, 'footer'> = {};
     const structure = [];
     // Required
     if (required.length) {
@@ -210,7 +210,7 @@ export default class RulesEngine<Config extends Rules = Rules> {
     description.push(requiredList.format(structure));
 
     // Show what the stucture looks like.
-    description.push(CommitMessage.fromParts(commitStructure).toString());
+    description.push(CommitMessage.fromJSON(commitStructure).toString());
 
     (['type', 'scope', 'subject', 'header', 'body', 'footer', 'trailer'] as CommitPart[]).reduce((rules, part) => {
       // find all rules for the type.

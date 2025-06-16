@@ -63,7 +63,7 @@ program
 
     const commitFactory = CommitPartFactory(rulesEngine, diff, auto);
 
-    const commit = CommitMessage.fromParts(partialCommit);
+    const commit = CommitMessage.fromJSON(partialCommit);
 
     commit.scope = await commitFactory('scope', commit);
     commit.type = await commitFactory('type', commit);
@@ -102,7 +102,7 @@ program
       };
 
       // Format the commit message with all parts
-      return CommitMessage.fromParts(commitJsonWithEmphasis).toString();
+      return CommitMessage.fromJSON(commitJsonWithEmphasis).toString();
     }
 
     const promptFactory = PromptFactory(rulesEngine);

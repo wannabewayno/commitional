@@ -8,7 +8,7 @@ describe('Commit Message Formatting', () => {
       subject: 'Add new feature',
       body: '',
     };
-    const message = CommitMessage.fromParts(commit).toString();
+    const message = CommitMessage.fromJSON(commit).toString();
     expect(message, 'feat: Add new feature');
   });
 
@@ -19,7 +19,7 @@ describe('Commit Message Formatting', () => {
       body: '',
       breaking: true,
     };
-    const message = CommitMessage.fromParts(commit).breaking().toString();
+    const message = CommitMessage.fromJSON(commit).breaking().toString();
     expect(message).to.equal('feat!: Add breaking feature ⚠️');
   });
 
@@ -31,7 +31,7 @@ describe('Commit Message Formatting', () => {
       breaking: false,
     };
 
-    const message = CommitMessage.fromParts(commit).toString();
+    const message = CommitMessage.fromJSON(commit).toString();
     expect(message, 'fix: Fix critical bug\nThis fixes a critical issue\nThat was causing problems');
   });
 
@@ -40,7 +40,7 @@ describe('Commit Message Formatting', () => {
       subject: 'Fix critical bug',
       body: 'This fixes a critical issue\nThat was causing problems',
     };
-    const message = CommitMessage.fromParts(commit).breaking().toString();
+    const message = CommitMessage.fromJSON(commit).breaking().toString();
     expect(message, 'Fix critical bug ⚠️\nThis fixes a critical issue\nThat was causing problems');
   });
 });
