@@ -8,6 +8,7 @@ import { confirm } from '@inquirer/prompts';
 import { blue, green, red } from 'yoctocolors';
 import ora from 'ora';
 import PromptFlow from './PromptFlow/index.js';
+import Highlighter from './lib/highlighter.js';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
@@ -17,6 +18,12 @@ process.on('uncaughtException', error => {
     throw error;
   }
 });
+
+const target = (value: string) => `${red('>')}${value}${red('<')}`;
+const highlighter = Highlighter(
+  value => target(green(value)),
+  value => target(blue(`Add ${value}`)),
+);
 
 const program = new Command();
 
@@ -81,10 +88,6 @@ program
       commit.breaking();
     }
 
-    const emphasis = (name: string, value?: string) => {
-      return `${red('>')}${value ? green(value) : blue(`Add ${name}?`)}${red('<')}`;
-    };
-
     /**
      * Renders a preview of the commit message with the current part highlighted
      * @param emphasis - The part to emphasize in the preview
@@ -98,7 +101,7 @@ program
         subject: commit.subject,
         body: commit.body,
         // footer: merged.footer ?? requiredProps.,
-        [toHighlight]: emphasis(toHighlight, commit[toHighlight]),
+        [toHighlight]: highlighter(toHighlight, commit[toHighlight]),
       };
 
       // Format the commit message with all parts

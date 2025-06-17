@@ -9,6 +9,12 @@ import type { CommitPart } from '../RulesEngine/index.js';
 import CommitMessage from '../CommitMessage/index.js';
 import { green } from 'yoctocolors';
 import type Diff from '../services/Git/Diff.js';
+import Highlighter from '../lib/highlighter.js';
+
+const highlighter = Highlighter(
+  value => green(value),
+  () => '',
+);
 
 /**
  * Factory function that creates appropriate prompt instances based on commit part
@@ -57,7 +63,7 @@ export function CommitPartFactory(rules: RulesEngine, diff: Diff, auto = false) 
       subject: commit.subject || requiredProps.subject,
       body: commit.body || requiredProps.body,
       // footer: merged.footer ?? requiredProps.,
-      [emphasis]: value ? green(value) : '',
+      [emphasis]: highlighter(value),
     };
 
     // Format the commit message with all parts
