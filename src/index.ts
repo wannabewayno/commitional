@@ -150,10 +150,10 @@ program
               commit.body = body;
             }),
         ],
-        // TODO: Ask why it's breaking
         [
           'breaking',
           () => {
+            // TODO: Ask why it's breaking (but only if the message has changed from last time)
             commit.breaking();
           },
         ],
