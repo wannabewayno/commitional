@@ -79,7 +79,7 @@ export function CommitPartFactory(rules: RulesEngine, diff: Diff, auto = false) 
    * @param partialCommit - Partial commit message with any already-provided parts
    * @returns Promise resolving to the value for the requested commit part
    */
-  return async (commitPart: Exclude<CommitPart, 'footer'>, commit: CommitMessage): Promise<string> => {
+  return async (commitPart: Exclude<CommitPart, 'footer'>, commit: CommitMessage) => {
     // Get the appropriate prompt for this commit part
     const prompt = promptFactory(commitPart);
 
@@ -89,9 +89,10 @@ export function CommitPartFactory(rules: RulesEngine, diff: Diff, auto = false) 
           // Show loading spinner with preview text while generating
           text: `Generating ${renderText(commit, commitPart)}`,
           // Text to show on the command line history when generation completes
-          successText: value => renderText(commit, commitPart, value),
+          successText: () => renderText(commit, commitPart, commit[commitPart]),
         })
-      : // Present the prompt to the user with the initial value
-        prompt.promptIfInvalid(commit[commitPart]);
+      : prompt.promptIfInvalid(commit[commitPart]).then(value => {
+          commit[commitPart] = value;
+        }); // Present the prompt to the user with the initial value
   };
 }

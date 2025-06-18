@@ -11,11 +11,12 @@ export default class ScopePrompt extends BasePrompt {
     super(rules, 'scope');
   }
 
-  async generate(diff: Diff, _commit: CommitMessage): Promise<string> {
+  async generate(diff: Diff, commit: CommitMessage) {
     const scopeDeducer = ScopeDeducer.fromRulesEngine(this.rules);
-    const scope = scopeDeducer.deduceScope(diff.files) ?? [];
+    const scopes = scopeDeducer.deduceScope(diff.files) ?? [];
 
-    return scope.join(',');
+    // set the commit's scope
+    commit.addScope(...scopes);
   }
 
   async prompt(initialValue?: string): Promise<string> {

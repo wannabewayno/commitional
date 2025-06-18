@@ -36,5 +36,5 @@ export default abstract class BasePrompt {
    * @param diff
    * @param commit
    */
-  abstract generate(diff: Diff, commit: CommitMessage): Promise<string>;
+  abstract generate(diff: Diff, commit: CommitMessage): Promise<void>;
 }

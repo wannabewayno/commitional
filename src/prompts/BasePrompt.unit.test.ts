@@ -13,8 +13,8 @@ class TestBasePrompt extends BasePrompt {
     return Promise.resolve('');
   }
 
-  generate(_diff: Diff, _commit: CommitMessage): Promise<string> {
-    return Promise.resolve('');
+  generate(_diff: Diff, _commit: CommitMessage) {
+    return Promise.resolve();
   }
 }
 

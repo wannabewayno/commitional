@@ -88,7 +88,9 @@ export default class BodyPrompt extends BasePrompt {
       .json('commit_body', { body: 'string' });
 
     if (res instanceof Error) throw res;
-    return res.body;
+
+    // set the commit's body
+    commit.type = res.body;
   }
 
   async prompt(initialValue?: string): Promise<string> {

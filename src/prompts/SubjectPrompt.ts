@@ -38,7 +38,9 @@ export default class SubjectPrompt extends BasePrompt {
       .json('commit_subject', { subject: 'string' });
 
     if (res instanceof Error) throw res;
-    return res.subject;
+
+    // set the commit's subject
+    commit.subject = res.subject;
   }
 
   async prompt(): Promise<string> {

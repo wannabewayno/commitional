@@ -11,7 +11,7 @@ export default class TypePrompt extends BasePrompt {
     super(rules, 'type');
   }
 
-  async generate(diff: Diff, _commit: CommitMessage) {
+  async generate(diff: Diff, commit: CommitMessage) {
     const ai = this.AI.byPreference();
 
     const [enumRule] = this.rules.getRulesOfType('enum');
@@ -54,7 +54,9 @@ export default class TypePrompt extends BasePrompt {
           .json('commit_type', { type: 'string' }));
 
     if (res instanceof Error) throw res;
-    return res.type;
+
+    // set the commit's type
+    commit.type = res.type;
   }
 
   async prompt(): Promise<string> {

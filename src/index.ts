@@ -72,10 +72,10 @@ program
 
     const commit = CommitMessage.fromJSON(partialCommit);
 
-    commit.scope = await commitFactory('scope', commit);
-    commit.type = await commitFactory('type', commit);
-    commit.subject = await commitFactory('subject', commit);
-    commit.body = await commitFactory('body', commit);
+    await commitFactory('scope', commit);
+    await commitFactory('type', commit);
+    await commitFactory('subject', commit);
+    await commitFactory('body', commit);
 
     // Ask the user if this is a breaking change if not already known
     if (opts.breaking === undefined)
@@ -101,7 +101,7 @@ program
         subject: commit.subject,
         body: commit.body,
         // footer: merged.footer ?? requiredProps.,
-        [toHighlight]: highlighter(toHighlight, commit[toHighlight]),
+        [toHighlight]: highlighter(commit[toHighlight], toHighlight),
       };
 
       // Format the commit message with all parts
