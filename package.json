@@ -57,12 +57,16 @@
   "dependencies": {
     "@commitlint/load": "^19.8.1",
     "@inquirer/prompts": "~7.5.2",
+    "@xterm/headless": "^5.5.0",
+    "@xterm/xterm": "^5.6.0-beta.66",
     "arktype": "^2.1.20",
     "axios": "^1.9.0",
     "commander": "^11.1.0",
     "inquirer-select-with-banner": "^1.0.0",
+    "node-pty": "^1.0.0",
     "ora": "^8.2.0",
     "simple-git": "~3.27.0",
+    "strip-ansi-stream": "^2.0.1",
     "yoctocolors": "^2.1.1"
   },
   "devDependencies": {
