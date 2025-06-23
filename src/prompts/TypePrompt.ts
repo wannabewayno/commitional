@@ -59,13 +59,18 @@ export default class TypePrompt extends BasePrompt {
     commit.type = res.type;
   }
 
-  async prompt(): Promise<string> {
+  async prompt(initialValue?: string): Promise<string> {
     const [enumRule] = this.rules.getRulesOfType('enum');
 
     const answer = enumRule
-      ? await select<string>({ message: "Select the type of change that you're committing:", choices: enumRule.value })
+      ? await select<string>({
+          message: "Select the type of change that you're committing:",
+          choices: enumRule.value,
+          default: initialValue,
+        })
       : await input({
           message: "Type of change that you're committing:",
+          default: initialValue,
           validate: value => {
             const valid = this.rules.validate(value);
             if (!valid) return this.rules.check(value).join('\n');

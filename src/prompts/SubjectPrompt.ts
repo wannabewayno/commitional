@@ -43,13 +43,14 @@ export default class SubjectPrompt extends BasePrompt {
     commit.subject = res.subject;
   }
 
-  async prompt(): Promise<string> {
+  async prompt(initialValue?: string): Promise<string> {
     const [enumRule] = this.rules.getRulesOfType('enum');
 
     const answer = enumRule
-      ? await select<string>({ message: 'Choose a subject to commit as', choices: enumRule.value })
+      ? await select<string>({ message: 'Choose a subject to commit as', choices: enumRule.value, default: initialValue })
       : await input({
           message: 'If applied, this commit will...',
+          default: initialValue,
           validate: value => {
             const valid = this.rules.validate(value);
             if (!valid) return this.rules.check(value).join('\n');
