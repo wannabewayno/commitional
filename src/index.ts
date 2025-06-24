@@ -41,10 +41,10 @@ program
   .addHelpCommand('help [command]', 'Display help for command')
   .action(async (opts: Partial<Record<CommitPart, string>> & { breaking?: boolean; auto: boolean }) => {
     /*
-        If the user has configured commitlint in the current working directory, attempt to load commitlint's config.
-        We'll guide the user in creating a commit message that adheres to the commitlint config.
-        Otherwise it'll load a default config.
-      */
+      If the user has configured commitlint in the current working directory, attempt to load commitlint's config.
+      We'll guide the user in creating a commit message that adheres to the commitlint config.
+      Otherwise it'll load a default config.
+    */
     const config = await loadConfig();
 
     // Create a new *git* instance scoped to the cwd
@@ -54,6 +54,7 @@ program
     const isRepo = await git.isRepository();
     if (!isRepo) throw new Error('Not a git repository');
 
+    // Find the files currently staged to be committed
     const diff = await git.stagedDiff();
     if (diff instanceof Error) throw diff;
 
@@ -132,7 +133,7 @@ program
         [
           'scope',
           () =>
-            scope.prompt().then(scope => {
+            scope.prompt(commit.scope).then(scope => {
               commit.scope = scope;
             }),
         ],

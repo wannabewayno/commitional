@@ -21,7 +21,7 @@ export default abstract class BasePrompt {
    * Prompt the user to provide a value for the defined part of the commit message.
    * @param initialValue
    */
-  abstract prompt(): Promise<string>;
+  abstract prompt(initialValue?: string): Promise<string>;
 
   /**
    * Validate the initial value (if any) and if required prompt the user.
