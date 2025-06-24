@@ -47,6 +47,8 @@ const defaultConfig: CommitlintConfig = {
 export default async function loadConfig() {
   const commitlintConfig = await load().catch(() => defaultConfig);
 
+  if (!Object.keys(commitlintConfig.rules).length) commitlintConfig.rules = defaultConfig.rules;
+
   /*
     Commitlint doesn't have a rule for allowing multiple scopes.
     Instead it's controlled through prompt settings.
