@@ -74,10 +74,9 @@ program
 
     const commit = CommitMessage.fromJSON(partialCommit);
 
-    await commitFactory('scope', commit);
-    await commitFactory('type', commit);
-    await commitFactory('subject', commit);
-    await commitFactory('body', commit);
+    for (const commitPart of ['scope', 'type', 'subject', 'body'] as CommitPart[]) {
+      await commitFactory(commitPart, commit);
+    }
 
     // Ask the user if this is a breaking change if not already known
     if (opts.breaking === undefined)
