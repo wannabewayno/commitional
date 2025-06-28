@@ -10,6 +10,7 @@ import CommitMessage from '../CommitMessage/index.js';
 import { green } from 'yoctocolors';
 import type Diff from '../services/Git/Diff.js';
 import Highlighter from '../lib/highlighter.js';
+import FooterPrompt from './FooterPrompt.js';
 
 const highlighter = Highlighter(
   value => green(value),
@@ -33,6 +34,8 @@ export function PromptFactory(rules: RulesEngine) {
         return new SubjectPrompt(rules);
       case 'body':
         return new BodyPrompt(rules);
+      case 'footer':
+        return new FooterPrompt(rules);
       default:
         throw new Error(`Unknown commit part: ${commitPart}`);
     }
@@ -48,7 +51,7 @@ export function PromptFactory(rules: RulesEngine) {
  */
 export function CommitPartFactory(rules: RulesEngine, diff: Diff, auto = false) {
   const { required } = rules.allowedCommitProps();
-  const requiredProps = Object.fromEntries(required.map(name => [name, `<${name}>`])) as Record<CommitPart, string>;
+  const requiredProps = required.map(name => [name, `<${name}>`]) as [CommitPart, string][];
 
   /**
    * Renders a preview of the commit message with the current part highlighted
@@ -56,18 +59,27 @@ export function CommitPartFactory(rules: RulesEngine, diff: Diff, auto = false) 
    * @param value - The value to show for the emphasized part
    * @returns Formatted commit message text
    */
-  function renderText(commit: CommitMessage, emphasis: CommitPart, value = `<${emphasis}>`) {
-    const commitJsonWithEmphasis = {
-      type: commit.type || requiredProps.type,
-      scope: commit.scope || requiredProps.scope,
-      subject: commit.subject || requiredProps.subject,
-      body: commit.body || requiredProps.body,
-      // footer: merged.footer ?? requiredProps.,
-      [emphasis]: highlighter(value),
-    };
+  function renderText(commit: CommitMessage, toHighlight: CommitPart, filter?: string) {
+    // Make a copy of the commit in JSON
+    const commitJSON = commit.toJSON();
+    requiredProps.forEach(([key, value]) => {
+      if (commitJSON[key]) return;
+      if (key === 'footer') commitJSON[key] = [value];
+      else commitJSON[key] = value;
+    });
+
+    // either we have a string, or we an array of strings... how about we have an optional selector for the array item we want to highlight.
+    const itemToHighlight = commitJSON[toHighlight];
+
+    if (Array.isArray(itemToHighlight)) {
+      const highlightIndex = itemToHighlight.findIndex(v => v.startsWith(filter ?? ''));
+      itemToHighlight.splice(highlightIndex, 1, highlighter(itemToHighlight[highlightIndex], toHighlight));
+    } else {
+      (commitJSON[toHighlight] as string) = highlighter(itemToHighlight, toHighlight);
+    }
 
     // Format the commit message with all parts
-    return CommitMessage.fromJSON(commitJsonWithEmphasis).toString();
+    return CommitMessage.fromJSON(commitJSON).toString();
   }
 
   // Create a prompt factory to get the appropriate prompt for each part
@@ -79,7 +91,7 @@ export function CommitPartFactory(rules: RulesEngine, diff: Diff, auto = false) 
    * @param partialCommit - Partial commit message with any already-provided parts
    * @returns Promise resolving to the value for the requested commit part
    */
-  return async (commitPart: Exclude<CommitPart, 'footer'>, commit: CommitMessage) => {
+  return async (commitPart: CommitPart, commit: CommitMessage) => {
     // Get the appropriate prompt for this commit part
     const prompt = promptFactory(commitPart);
 
@@ -89,10 +101,16 @@ export function CommitPartFactory(rules: RulesEngine, diff: Diff, auto = false) 
           // Show loading spinner with preview text while generating
           text: `Generating ${renderText(commit, commitPart)}`,
           // Text to show on the command line history when generation completes
-          successText: () => renderText(commit, commitPart, commit[commitPart]),
+          successText: () => renderText(commit, commitPart),
         })
-      : prompt.promptIfInvalid(commit[commitPart]).then(value => {
-          commit[commitPart] = value;
+      : prompt.promptIfInvalid().then(value => {
+          if (commitPart === 'footer') {
+            // commit[commitPart] = value;
+            const [token = '', message] = value.split(':');
+            commit.footer(token, message);
+          } else {
+            commit[commitPart] = value;
+          }
         }); // Present the prompt to the user with the initial value
   };
 }
