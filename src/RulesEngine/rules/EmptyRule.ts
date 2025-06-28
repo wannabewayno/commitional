@@ -1,10 +1,6 @@
 import { BaseRule } from './BaseRule.js';
 
 export class EmptyRule extends BaseRule {
-  get value() {
-    return null;
-  }
-
   validate(input: string): boolean {
     const isEmpty = input.trim() === '';
     return this.applicable === 'always' ? isEmpty : !isEmpty;

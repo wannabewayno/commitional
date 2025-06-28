@@ -19,8 +19,8 @@ export default class ScopePrompt extends BasePrompt {
     commit.addScope(...scopes);
   }
 
-  async prompt(initialValue?: string): Promise<string> {
-    const scopes = (initialValue ?? '').split(',').filter(v => v.trim() !== '');
+  async prompt(commit: CommitMessage): Promise<void> {
+    const scopes = commit.scope.split(',').filter(v => v.trim() !== '');
 
     // TODO: default should be the initial value if there is one.
     // TODO: Scope is harder as it's technically a list, we'll need to go deeper here depending on the scope-allow-multiple rule.
@@ -42,6 +42,7 @@ export default class ScopePrompt extends BasePrompt {
             return value;
           },
         });
-    return this.rules.parse(answer);
+
+    commit.scope = this.rules.parse(answer);
   }
 }

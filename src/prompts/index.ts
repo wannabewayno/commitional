@@ -103,14 +103,6 @@ export function CommitPartFactory(rules: RulesEngine, diff: Diff, auto = false) 
           // Text to show on the command line history when generation completes
           successText: () => renderText(commit, commitPart),
         })
-      : prompt.promptIfInvalid().then(value => {
-          if (commitPart === 'footer') {
-            // commit[commitPart] = value;
-            const [token = '', message] = value.split(':');
-            commit.footer(token, message);
-          } else {
-            commit[commitPart] = value;
-          }
-        }); // Present the prompt to the user with the initial value
+      : prompt.promptIfInvalid(commit); // Present the prompt to the user with the initial value
   };
 }

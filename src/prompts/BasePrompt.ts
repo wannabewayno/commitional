@@ -9,7 +9,10 @@ export default abstract class BasePrompt {
   protected AI = AIProvider();
   protected rules: RulesEngine;
 
-  constructor(rules: RulesEngine, type: CommitPart) {
+  constructor(
+    rules: RulesEngine,
+    private readonly type: CommitPart,
+  ) {
     this.rules = rules.narrow(type);
   }
 
@@ -21,14 +24,25 @@ export default abstract class BasePrompt {
    * Prompt the user to provide a value for the defined part of the commit message.
    * @param initialValue
    */
-  abstract prompt(initialValue?: string): Promise<string>;
+  abstract prompt(commit: CommitMessage, filter?: string): Promise<void>;
 
   /**
    * Validate the initial value (if any) and if required prompt the user.
    * @param initialValue
    */
-  async promptIfInvalid(initialValue?: string): Promise<string> {
-    return this.rules.validate(initialValue) ? this.rules.parse(initialValue ?? '') : await this.prompt();
+  async promptIfInvalid(commit: CommitMessage): Promise<void> {
+    if (this.type === 'footer') {
+      // it gets harder for array types, especially since there's no good design pattern for this.
+      for (const footer of commit.footers) {
+        const [token = '', text = ''] = footer.split(':').map(v => v.trim());
+        if (this.rules.validate(footer)) commit.footer(token, text);
+        else await this.prompt(commit, token);
+      }
+    } else {
+      const initialValue = commit[this.type];
+      if (this.rules.validate(initialValue)) commit[this.type] = this.rules.parse(initialValue);
+      else await this.prompt(commit);
+    }
   }
 
   /**

@@ -45,46 +45,57 @@ export default class FooterPrompt extends BasePrompt {
     commit.footer(res.token, res.content);
   }
 
-  async prompt(initialValue?: string): Promise<string> {
-    const [initialToken, initialMessage] = (initialValue ? initialValue.split(':') : []).map(v => v.trim());
+  async prompt(commit: CommitMessage, filter?: string): Promise<void> {
+    const selectedFooter = commit.footer(filter ?? '') || { token: undefined, text: undefined };
 
+    const { token, text } = await this.footerPrompt(selectedFooter.token, selectedFooter.text);
+
+    commit.footer(token, text || null);
+  }
+
+  private async footerPrompt(token?: string, text?: string): Promise<{ token: string; text: string }> {
     // This shouldn't have an enum rule? or should it for the footer token
     const [enumRule] = this.rules.getRulesOfType('enum');
 
     // Footer Token
-    const token = initialToken
-      ? initialToken
-      : enumRule
-        ? await select<string>({ message: 'select token:', choices: enumRule.value, default: initialToken })
+    if (!token) {
+      token = enumRule
+        ? await select<string>({ message: 'select token:', choices: enumRule.value })
         : await input({
             message: 'footer token:',
-            default: initialToken,
             validate: value => {
-              const valid = this.rules.validate(value);
-              if (!valid) return this.rules.check(value).join('\n');
+              const footerText = `${value}:`;
+              const valid = this.rules.validate(footerText);
+              if (!valid) return this.rules.check(footerText).join('\n');
               return true;
             },
             transformer: value => {
-              value = this.rules.parse(value);
+              value = this.rules.parse(`${value}:`);
               if (!this.rules.validate(value)) value = red(value);
               return value;
             },
-          }).then(token => this.rules.parse(token));
+          }).then(value => this.rules.parse(value));
+    }
 
     // Footer Message
-    return input({
-      message: `${token}: `,
-      default: initialMessage,
+    const footerText = await input({
+      message: '',
+      default: text,
       validate: value => {
-        const valid = this.rules.validate(value);
-        if (!valid) return this.rules.check(value).join('\n');
+        const footerText = `${token}: ${value}`;
+        const valid = this.rules.validate(footerText);
+        if (!valid) return this.rules.check(footerText).join('\n');
         return true;
       },
       transformer: value => {
-        value = this.rules.parse(value);
+        value = this.rules.parse(`${token}: ${value}`);
         if (!this.rules.validate(value)) value = red(value);
         return value;
       },
-    }).then(footer => this.rules.parse(`${token}:${footer}`));
+    }).then(value => this.rules.parse(`${token}: ${value}`));
+
+    const [_token = '', _text = ''] = footerText.split(':').map(v => v.trim());
+
+    return { token: _token, text: _text };
   }
 }

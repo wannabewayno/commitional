@@ -26,8 +26,6 @@ const highlighter = Highlighter(
   value => add(blue(value)),
 );
 
-// const highlighter = (text: string) => text ? target(green(text)) : target(blue(`Add ${text}`));
-
 const program = new Command();
 
 program
@@ -109,46 +107,28 @@ program
 
     await PromptFlow.build()
       .addBreak('Commit')
-      .addHandler('type', () =>
-        type.prompt(commit.unstyle().type).then(type => {
-          commit.type = type;
-          return false;
-        }),
-      )
-      .addHandler('scope', () =>
-        scope.prompt(commit.unstyle().scope).then(scope => {
-          commit.scope = scope;
-          return false;
-        }),
-      )
-      .addHandler('subject', () =>
-        subject.prompt(commit.unstyle().subject).then(subject => {
-          commit.subject = subject;
-          return false;
-        }),
-      )
-      .addHandler('body', () =>
-        body.prompt(commit.unstyle().body).then(body => {
-          commit.body = body;
-          return false;
-        }),
-      )
+      .addHandler('type', () => type.prompt(commit.unstyle()).then(() => false))
+      .addHandler('scope', () => scope.prompt(commit.unstyle()).then(() => false))
+      .addHandler('subject', () => subject.prompt(commit.unstyle()).then(() => false))
+      .addHandler('body', () => body.prompt(commit.unstyle()).then(() => false))
       .addHandler('footer', async (choice, choices) => {
-        const selectedFooter = commit.unstyle().footer(choice.value ?? '');
-        if (selectedFooter) {
-          await footer.prompt(selectedFooter.toString()).then(footer => {
-            const [value = '', name] = footer.split(':').map(v => v.trim());
-            const editedFooter = commit.footer(value, name || null);
-            // if we removed a footer we need to splice it from our choices
-            if (!editedFooter) choices.splice(choice.index, 1);
-          });
-        } else {
-          await footer.prompt().then(footer => {
-            const [token = '', text] = footer.split(':');
-            const createdFooter = commit.footer(token, text);
-            if (createdFooter) createdFooter.setStyle(highlighter);
-            choices.splice(-1, 0, `footer:${token}`);
-          });
+        const footersBefore = commit.footers.length;
+
+        await footer.prompt(commit.unstyle(), choice.value);
+
+        const footersAfter = commit.footers.length;
+
+        if (footersAfter > footersBefore) {
+          // biome-ignore lint/style/noNonNullAssertion: We know there will at least one entry
+          const [token = ''] = commit.footers.at(-1)!.split(':');
+
+          // get our created footer
+          const createdFooter = commit.footer(token);
+          if (createdFooter) createdFooter.setStyle(highlighter);
+
+          choices.splice(-1, 0, `footer:${token}`);
+        } else if (footersAfter < footersBefore) {
+          choices.splice(choice.index, 1);
         }
 
         return false;
@@ -170,7 +150,7 @@ program
             if (part !== 'Commit') commit.style(part as CommitPart, filter);
 
             let commitStr = commit.toString();
-            if (filter === 'add footer') commitStr += `\n${highlighter('', 'footer')}`;
+            if (filter === 'add footer') commitStr += `\n\n${highlighter('', 'footer')}`;
 
             return commitStr;
           },

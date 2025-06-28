@@ -1,10 +1,6 @@
 import { BaseRule } from './BaseRule.js';
 
 export class ExclamationMarkRule extends BaseRule {
-  get value() {
-    return null;
-  }
-
   validate(input: string): boolean {
     const hasExclamationMarkBeforeTheColon = input.includes('!:');
     return this.applicable === 'always' ? hasExclamationMarkBeforeTheColon : !hasExclamationMarkBeforeTheColon;

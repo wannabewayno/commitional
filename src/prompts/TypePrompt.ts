@@ -59,8 +59,9 @@ export default class TypePrompt extends BasePrompt {
     commit.type = res.type;
   }
 
-  async prompt(initialValue?: string): Promise<string> {
+  async prompt(commit: CommitMessage): Promise<void> {
     const [enumRule] = this.rules.getRulesOfType('enum');
+    const initialValue = commit.type;
 
     const answer = enumRule
       ? await select<string>({
@@ -83,6 +84,6 @@ export default class TypePrompt extends BasePrompt {
           },
         });
 
-    return this.rules.parse(answer);
+    commit.type = this.rules.parse(answer);
   }
 }

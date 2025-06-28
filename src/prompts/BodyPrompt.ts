@@ -93,7 +93,9 @@ export default class BodyPrompt extends BasePrompt {
     commit.body = res.body;
   }
 
-  async prompt(initialValue?: string): Promise<string> {
+  async prompt(commit: CommitMessage): Promise<void> {
+    const initialValue = commit.body;
+
     // Ensure we have an editor command
     await this.checkEditor();
 
@@ -119,7 +121,7 @@ export default class BodyPrompt extends BasePrompt {
     // Remove any comments from the commit body
     const content = answer.replace(/^#.+$/gm, '').trim();
 
-    return this.rules.parse(content);
+    commit.body = this.rules.parse(content);
   }
 
   private defaultMessage(initialValue?: string) {

@@ -9,8 +9,8 @@ class TestBasePrompt extends BasePrompt {
     return this.commitStandard();
   }
 
-  prompt(_initialValue?: string): Promise<string> {
-    return Promise.resolve('');
+  async prompt(_initialValue?: CommitMessage): Promise<void> {
+    await Promise.resolve('');
   }
 
   generate(_diff: Diff, _commit: CommitMessage) {

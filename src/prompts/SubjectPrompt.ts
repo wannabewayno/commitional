@@ -43,8 +43,9 @@ export default class SubjectPrompt extends BasePrompt {
     commit.subject = res.subject;
   }
 
-  async prompt(initialValue?: string): Promise<string> {
+  async prompt(commit: CommitMessage): Promise<void> {
     const [enumRule] = this.rules.getRulesOfType('enum');
+    const initialValue = commit.subject;
 
     const answer = enumRule
       ? await select<string>({ message: 'Choose a subject to commit as', choices: enumRule.value, default: initialValue })
@@ -63,6 +64,6 @@ export default class SubjectPrompt extends BasePrompt {
           },
         });
 
-    return this.rules.parse(answer);
+    commit.subject = this.rules.parse(answer);
   }
 }
