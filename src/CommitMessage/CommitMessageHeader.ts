@@ -1,3 +1,6 @@
+import type { CommitPart } from '../RulesEngine/index.js';
+import Text, { type StyleFn } from './Text.js';
+
 export interface CommitMessageHeaderOpts {
   type?: string;
   subject?: string;
@@ -7,60 +10,109 @@ export interface CommitMessageHeaderOpts {
 
 // Type, scope and subject are all optional. validation is not the purpose of this class
 export default class CommitMessageHeader {
-  private _type: string;
-  private readonly _scope: Set<string>;
-  private _subject: string;
+  private _type: Text;
+  private _scopeText: Text = new Text();
+  private readonly _scope: string[] = [];
+  private _subject: Text;
   private scopeDelimiter: string;
   private separator = ': ';
   private breakingEmoji = '⚠️';
 
   constructor(opts: CommitMessageHeaderOpts) {
-    this._type = opts.type ?? '';
-    this._subject = opts.subject ?? '';
+    this._type = new Text(opts.type ?? '');
+    this._subject = new Text(opts.subject ?? '');
     this.scopeDelimiter = opts.scopeDelimiter ?? ',';
-    this._scope = Array.isArray(opts.scope)
-      ? new Set(opts.scope)
-      : opts.scope
-        ? new Set(opts.scope.split(this.scopeDelimiter))
-        : new Set();
+    this.addScope(...(Array.isArray(opts.scope) ? opts.scope : opts.scope ? opts.scope.split(this.scopeDelimiter) : []));
   }
 
   set type(value: string) {
-    this._type = value.trim();
+    this._type.value = value.trim();
   }
 
   get type() {
-    return this._type;
+    return this._type.toString();
   }
 
   set subject(value: string) {
-    this._subject = value.trim();
+    this._subject.value = value.trim();
   }
 
   get subject() {
-    return this._subject;
+    return this._subject.toString();
+  }
+
+  setStyle(style: StyleFn, commitPart?: Extract<CommitPart, 'type' | 'subject' | 'scope'>) {
+    switch (commitPart) {
+      case 'type':
+        this._type.setStyle(style);
+        break;
+      case 'scope':
+        this._scopeText.setStyle(style);
+        break;
+      case 'subject':
+        this._subject.setStyle(style);
+        break;
+    }
+    return this;
+  }
+
+  style(commitPart?: CommitPart) {
+    switch (commitPart) {
+      case 'type':
+        this._type.style();
+        break;
+      case 'scope':
+        this._scopeText.style();
+        break;
+      case 'subject':
+        this._subject.style();
+        break;
+    }
+    return this;
+  }
+
+  unstyle(commitPart?: CommitPart) {
+    switch (commitPart) {
+      case 'type':
+        this._type.unstyle();
+        break;
+      case 'scope':
+        this._scopeText.unstyle();
+        break;
+      case 'subject':
+        this._subject.unstyle();
+        break;
+    }
+    return this;
   }
 
   addScope(...scopes: string[]) {
     scopes.forEach(scope => {
       const trimmed = scope.trim();
       if (!trimmed) return;
-      this._scope.add(trimmed);
+      if (this._scope.some(text => text === scope)) return;
+      this._scope.push(trimmed);
+      this._scopeText = new Text(this._scope.join(this.scopeDelimiter));
     });
+
+    return this;
   }
 
   set scope(scope: string) {
-    this._scope.clear();
+    this._scope.length = 0;
     const scopes = scope.split(this.scopeDelimiter);
     this.addScope(...scopes);
   }
 
   get scope(): string {
-    return [...this._scope].join(this.scopeDelimiter);
+    return this._scopeText.toString();
   }
 
   delScope(scope: string) {
-    this._scope.delete(scope);
+    const index = this._scope.findIndex(text => text === scope);
+    if (index === -1) return this;
+    this._scope.splice(index, 1);
+    return this;
   }
 
   /**
@@ -76,15 +128,20 @@ export default class CommitMessageHeader {
       if (this._subject?.endsWith(this.breakingEmoji)) this.subject = this._subject.replace(this.breakingEmoji, '');
       else this.subject = `${this._subject ?? ''} ${this.breakingEmoji}`;
     }
+
+    return this;
   }
 
   toString(): string {
+    const subject = this.subject;
+    const scope = this.scope;
+    const type = this.type;
     const header: string[] = [];
-    if (this._subject) header.unshift(this._subject);
-    if (this._scope.size || this._type) {
+    if (subject) header.unshift(this.subject);
+    if (scope || type) {
       header.unshift(this.separator);
-      if (this._scope.size) header.unshift(`(${[...this._scope].join(this.scopeDelimiter)})`);
-      if (this._type) header.unshift(this._type);
+      if (scope) header.unshift(`(${scope})`);
+      if (type) header.unshift(type);
     }
 
     return header.join('');

@@ -1,11 +1,9 @@
 import { select, Separator, type SelectWithBannerConfig } from 'inquirer-select-with-banner';
 
-type Handler =
-  | typeof PromptFlow.Break
-  // biome-ignore lint/suspicious/noConfusingVoidType: Required for compatibility with void return types
-  | (() => typeof PromptFlow.Break | void)
-  // biome-ignore lint/suspicious/noConfusingVoidType: Required for compatibility with void return types
-  | (() => Promise<typeof PromptFlow.Break | void>);
+interface Choice {
+  index: number;
+  value?: string;
+}
 
 /**
  * Type definition for options in the prompt chain
@@ -14,20 +12,21 @@ type Handler =
  * - A function returning Break or void
  * - An async function returning Break or void
  */
-type ChainOptions = ([name: string, handler: Handler] | [Separator])[];
+type ChainOptions<T extends object> = (Extract<keyof T, string> | `${Extract<keyof T, string>}:${string}` | Separator)[];
+
+type Handler = (selected: Choice, choices: (string | Separator)[]) => boolean | Promise<boolean>;
 
 /**
  * Class that manages a flow of prompts with chainable options
  * Allows creating interactive command-line flows where users can select
  * from multiple options until choosing to break the chain
  */
-export default class PromptFlow {
+export default class PromptFlow<const HandlerMap extends { [name: string]: Handler }> {
   /**
    * Symbol used to break out of the prompt flow chain
    */
-  static Break = Symbol('break');
-  static Separator(separator?: string): [Separator] {
-    return [new Separator(separator)];
+  static Separator(separator?: string): Separator {
+    return new Separator(separator);
   }
   /**
    * Creates a new PromptFlow instance
@@ -38,8 +37,9 @@ export default class PromptFlow {
    */
   constructor(
     private readonly message: string,
-    private readonly options: ChainOptions | (() => ChainOptions),
-    private readonly config?: Omit<SelectWithBannerConfig<string | number>, 'message' | 'choices'>,
+    private readonly handlerMap: HandlerMap,
+    private readonly options?: ChainOptions<HandlerMap>,
+    private readonly config?: Omit<SelectWithBannerConfig<keyof HandlerMap>, 'message' | 'choices'>,
   ) {}
 
   /**
@@ -48,26 +48,55 @@ export default class PromptFlow {
    * @returns Promise that resolves when the flow is complete
    */
   async prompt(): Promise<void> {
-    const choices = typeof this.options === 'function' ? this.options() : this.options;
+    const choices = this.options ? this.options : Object.keys(this.handlerMap);
 
-    // handle separators separator [---]
     // Present options to user and get their selection
-    const answer = await select<string>({
+    const answer = await select<keyof HandlerMap>({
       message: this.message,
-      choices: choices.map(v => v[0]),
+      choices: choices.map(v => {
+        if (v instanceof Separator) return v;
+        const [value, name] = v.split(':');
+        return { value: v, name: (name ?? value)?.trim() } as { value: keyof HandlerMap; name: string | undefined };
+      }),
       ...this.config,
-    });
+    }).then(ans => ans as string);
 
-    // Get the handler for the selected option
-    const [, handler] = choices.find(handler => handler[0] === answer) as [string, Handler];
+    const [handlerKey, value] = answer.split(':');
 
-    // Execute the handler if it's a function, otherwise use the direct value
-    const value = typeof handler === 'function' ? await Promise.resolve(handler()) : handler;
+    const index = choices.findIndex(v => (v instanceof Separator ? false : v.startsWith(answer)));
 
-    // Break the chain if Break symbol is returned
-    if (value === PromptFlow.Break) return;
+    const handler = this.handlerMap[handlerKey as keyof HandlerMap];
+    const shouldBreak =
+      typeof handler === 'function' ? await Promise.resolve(handler({ index, value }, choices)) : undefined;
+
+    // Break the chain when returns true
+    if (shouldBreak) return;
 
     // Otherwise continue the chain recursively
     return this.prompt();
+  }
+
+  static build() {
+    return new PromptFlowBuilder({});
+  }
+}
+
+class PromptFlowBuilder<const HandlerMap extends { [name: string]: Handler }> {
+  constructor(private handlerMap: HandlerMap) {}
+
+  addHandler(name: string, handler: Handler) {
+    return new PromptFlowBuilder({ ...this.handlerMap, [name]: handler });
+  }
+
+  addBreak(name: string) {
+    return new PromptFlowBuilder({ ...this.handlerMap, [name]: () => true });
+  }
+
+  construct(
+    message: string,
+    options?: ChainOptions<HandlerMap>,
+    config?: Omit<SelectWithBannerConfig<string | number | symbol>, 'message' | 'choices'>,
+  ) {
+    return new PromptFlow(message, this.handlerMap, options, config);
   }
 }

@@ -1,6 +1,10 @@
 import sentaceKebabCase from '../lib/sentenceKebabCase.js';
+import type { StyleFn } from './Text.js';
 
 export default class CommitMessageFooter {
+  private _style: StyleFn = (text: string) => text;
+  private styled = false;
+
   constructor(
     private _token: string,
     private _text: string,
@@ -28,8 +32,24 @@ export default class CommitMessageFooter {
     this._text = value;
   }
 
+  setStyle(style: StyleFn) {
+    this._style = style;
+    return this;
+  }
+
+  style() {
+    this.styled = true;
+    return this;
+  }
+
+  unstyle() {
+    this.styled = false;
+    return this;
+  }
+
   toString() {
-    return `${this.token}: ${this.text}`;
+    const footer = `${this.token}: ${this.text}`;
+    return this.styled ? this._style(footer) : footer;
   }
 
   static fromString(footer: string): CommitMessageFooter | Error {

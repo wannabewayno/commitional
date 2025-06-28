@@ -17,7 +17,7 @@ import separate from '../lib/separate.js';
 import CommitMessage, { type CommitJSON } from '../CommitMessage/index.js';
 
 export type RulesConfig = CommitlintConfig['rules'];
-export type CommitPart = 'type' | 'subject' | 'scope' | 'body'; //| 'footer';
+export type CommitPart = 'type' | 'subject' | 'scope' | 'body' | 'footer';
 
 export type RuleTypeWithoutValue = 'leading-blank' | 'empty' | 'trim' | 'exclamation-mark';
 export type RuleTypeWithValue =
@@ -192,16 +192,28 @@ export default class RulesEngine<Config extends Rules = Rules> {
 
     const { required, optional, forbidden } = this.allowedCommitProps();
 
-    const commitStructure: Omit<CommitJSON, 'footer'> = {};
+    const commitStructure: CommitJSON = {};
     const structure = [];
     // Required
     if (required.length) {
-      required.forEach(rule => (commitStructure[rule] = `<${rule}>`));
+      required.forEach(rule => {
+        if (rule === 'footer') {
+          commitStructure[rule] = ['<Token>: <Message>', '[optional <Token>: <Message>]'];
+        } else {
+          commitStructure[rule] = `<${rule}>`;
+        }
+      });
       structure.push(`must have a ${requiredList.format(required)}`);
     }
     // Optional
     if (optional.length) {
-      optional.forEach(rule => (commitStructure[rule] = `[optional ${rule}]`));
+      optional.forEach(rule => {
+        if (rule === 'footer') {
+          commitStructure[rule] = ['[optional <Token>: <Message>]'];
+        } else {
+          commitStructure[rule] = `[optional ${rule}]`;
+        }
+      });
       structure.push(`may have a ${optionalList.format(optional)}`);
     }
     // Forbidden

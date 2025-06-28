@@ -1,5 +1,9 @@
+import fallbackOnErr from '../lib/fallbackOnError.js';
+import filterMap from '../lib/filterMap.js';
+import type { CommitPart } from '../RulesEngine/index.js';
 import CommitMessageFooter from './CommitMessageFooter.js';
 import CommitMessageHeader from './CommitMessageHeader.js';
+import Text, { type StyleFn } from './Text.js';
 
 export interface CommitMessageHeaderOpts {
   type?: string;
@@ -14,7 +18,7 @@ export interface CommitJSON {
   scope?: string | string[];
   scopeDelimiter?: string;
   body?: string;
-  footer?: { token: string; text: string }[];
+  footer?: string[];
 }
 /**
  * Simple class for formatting and parsing commit messages
@@ -22,14 +26,24 @@ export interface CommitJSON {
 export default class CommitMessage {
   private _breakingChangeMessage = '';
   private _isBreaking = false;
-  private readonly footers: CommitMessageFooter[];
+  private _body: Text = new Text();
+  private readonly _footers: CommitMessageFooter[];
 
   constructor(
     private readonly _header: CommitMessageHeader,
-    public body = '',
+    body = '',
     ...footers: CommitMessageFooter[]
   ) {
-    this.footers = footers;
+    this.body = body;
+    this._footers = footers;
+  }
+
+  get body() {
+    return this._body.toString();
+  }
+
+  set body(body: string) {
+    this._body.value = body.trim();
   }
 
   get isBreaking() {
@@ -47,22 +61,95 @@ export default class CommitMessage {
     return this;
   }
 
-  footer(token: string, message: string | null) {
+  footer(token: string, message?: string | null) {
     // find if the footer already exists
-    const footerIdx = this.footers.findIndex(footer => footer.token === token);
+    const footerIdx = this._footers.findIndex(footer => footer.token === token);
 
     if (message) {
-      const footer = this.footers[footerIdx];
       // If it doesn't exist, create one
-      if (!footer) this.footers.push(new CommitMessageFooter(token, message));
+      const footer = this._footers[footerIdx] ?? new CommitMessageFooter(token, message);
+      if (footerIdx === -1) this._footers.push(footer);
       // otherwise update it's text content
       else footer.text = message;
-    } else {
+
+      return footer;
+    }
+    if (message === null) {
       // remove it
-      this.footers.splice(footerIdx, 1);
+      this._footers.splice(footerIdx, 1);
+    } else {
+      return this._footers.find(footer => footer.token === token);
+    }
+  }
+
+  setStyle(style: StyleFn, commitPart?: CommitPart) {
+    switch (commitPart) {
+      case 'body':
+        this._body.setStyle(style);
+        break;
+      case 'footer':
+        this._footers.map(v => v.setStyle(style));
+        break;
+      case 'type':
+      case 'scope':
+      case 'subject':
+        this._header.setStyle(style, commitPart);
+        break;
+      default:
+        // Set all styles
+        (['body', 'footer', 'type', 'scope', 'subject'] as CommitPart[]).forEach(part => this.setStyle(style, part));
+    }
+  }
+
+  style(commitPart?: CommitPart, filter?: string) {
+    switch (commitPart) {
+      case 'body':
+        this._body.style();
+        break;
+      case 'footer':
+        if (filter) {
+          const footer = this.footer(filter);
+          if (footer) footer.style();
+        } else this._footers.map(v => v.style());
+        break;
+      case 'type':
+      case 'scope':
+      case 'subject':
+        this._header.style(commitPart);
+        break;
+      default:
+        // Set all styles
+        (['body', 'footer', 'type', 'scope', 'subject'] as CommitPart[]).forEach(part => this.style(part));
+    }
+    return this;
+  }
+
+  unstyle(commitPart?: CommitPart, filter?: string) {
+    switch (commitPart) {
+      case 'body':
+        this._body.unstyle();
+        break;
+      case 'footer':
+        if (filter) {
+          const footer = this.footer(filter);
+          if (footer) footer.unstyle();
+        } else this._footers.map(v => v.unstyle());
+        break;
+      case 'type':
+      case 'scope':
+      case 'subject':
+        this._header.unstyle(commitPart);
+        break;
+      default:
+        // unstyle all
+        (['body', 'footer', 'type', 'scope', 'subject'] as CommitPart[]).forEach(part => this.unstyle(part));
     }
 
     return this;
+  }
+
+  get footers() {
+    return this._footers.map(v => v.toString());
   }
 
   get header() {
@@ -107,13 +194,15 @@ export default class CommitMessage {
       scope: this.scope,
       subject: this.subject,
       body: this.body,
-      footer: this.footers.map(v => ({ token: v.token, text: v.text })),
+      footer: this.footers.map(v => v.toString()),
     };
   }
 
   static fromJSON({ type, scope, body, footer, subject }: CommitJSON) {
     const header = new CommitMessageHeader({ type, scope, subject });
-    const footers = footer ? footer.map(({ token, text }) => new CommitMessageFooter(token, text)) : [];
+    const footers = footer
+      ? filterMap(footer, footer => fallbackOnErr(CommitMessageFooter.fromString(footer), undefined))
+      : [];
     return new CommitMessage(header, body, ...footers);
   }
 

@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import CommitMessage from './CommitMessage/index.js';
+import CommitMessage, { type CommitJSON } from './CommitMessage/index.js';
 import Git from './services/Git/index.js';
 import RulesEngine, { type CommitPart } from './RulesEngine/index.js';
 import loadConfig from './config/index.js';
@@ -19,11 +19,14 @@ process.on('uncaughtException', error => {
   }
 });
 
-const target = (value: string) => `${red('>')}${value}${red('<')}`;
+const target = (value: string) => `${red('<')}${value}${red('>')}`;
+const add = (value: string) => `${red('>')}${value}${red('<')}`;
 const highlighter = Highlighter(
   value => target(green(value)),
-  value => target(blue(`Add ${value}`)),
+  value => add(blue(value)),
 );
+
+// const highlighter = (text: string) => text ? target(green(text)) : target(blue(`Add ${text}`));
 
 const program = new Command();
 
@@ -35,11 +38,11 @@ program
   .option('-S, --scope [scope]', 'Commit scope (if any)')
   .option('-s, --subject [subject]', 'Commit subject')
   .option('-b, --body [body]', 'Commit body')
-  .option('-f, --footer [footer[]]', 'Commit footer(s)')
+  .option('-f, --footer [footer...]', 'Commit footer(s)')
   .option('-B, --breaking', 'Is this a Breaking change?')
   .option('-A, --auto', 'Use Generative AI to pre-fill your commit message', false)
   .addHelpCommand('help [command]', 'Display help for command')
-  .action(async (opts: Partial<Record<CommitPart, string>> & { breaking?: boolean; auto: boolean }) => {
+  .action(async (opts: Partial<CommitJSON> & { breaking?: boolean; auto: boolean }) => {
     /*
       If the user has configured commitlint in the current working directory, attempt to load commitlint's config.
       We'll guide the user in creating a commit message that adheres to the commitlint config.
@@ -89,25 +92,12 @@ program
       commit.breaking();
     }
 
-    /**
-     * Renders a preview of the commit message with the current part highlighted
-     * @param emphasis - The part to emphasize in the preview
-     * @param value - The value to show for the emphasized part
-     * @returns Formatted commit message text
-     */
-    function renderText(commit: CommitMessage, toHighlight: CommitPart) {
-      const commitJsonWithEmphasis = {
-        type: commit.type,
-        scope: commit.scope,
-        subject: commit.subject,
-        body: commit.body,
-        // footer: merged.footer ?? requiredProps.,
-        [toHighlight]: highlighter(commit[toHighlight], toHighlight),
-      };
+    // go and set the style for each part
+    (['type', 'scope', 'subject', 'body', 'footer'] as CommitPart[]).forEach(commitPart =>
+      commit.setStyle((value: string) => highlighter(value, commitPart), commitPart),
+    );
 
-      // Format the commit message with all parts
-      return CommitMessage.fromJSON(commitJsonWithEmphasis).toString();
-    }
+    const footers = (commit.toJSON()?.footer ?? []).map(v => `footer:${v.replace(/:.+$/, '')}`);
 
     const promptFactory = PromptFactory(rulesEngine);
 
@@ -115,54 +105,79 @@ program
     const type = promptFactory('type');
     const subject = promptFactory('subject');
     const body = promptFactory('body');
+    const footer = promptFactory('footer');
 
-    await new PromptFlow(
-      'Commit or Edit',
-      [
-        ['Commit', PromptFlow.Break],
-        PromptFlow.Separator(),
-        [
-          'type',
-          () =>
-            type.prompt(commit.type).then(type => {
-              commit.type = type;
-            }),
-        ],
-        // Check to see if multiple scopes are allowed. If So allow the user add or remove scopes
-        // Otherwise simply show a list to choose from or free form input that will be used to override the current scope
-        [
-          'scope',
-          () =>
-            scope.prompt(commit.scope).then(scope => {
-              commit.scope = scope;
-            }),
-        ],
-        [
-          'subject',
-          () =>
-            subject.prompt(commit.subject).then(subject => {
-              commit.subject = subject;
-            }),
-        ],
-        [
-          'body',
-          () =>
-            body.prompt(commit.body).then(body => {
-              commit.body = body;
-            }),
-        ],
-        [
-          'breaking',
-          () => {
-            // TODO: Ask why it's breaking (but only if the message has changed from last time)
-            commit.breaking();
+    await PromptFlow.build()
+      .addBreak('Commit')
+      .addHandler('type', () =>
+        type.prompt(commit.unstyle().type).then(type => {
+          commit.type = type;
+          return false;
+        }),
+      )
+      .addHandler('scope', () =>
+        scope.prompt(commit.unstyle().scope).then(scope => {
+          commit.scope = scope;
+          return false;
+        }),
+      )
+      .addHandler('subject', () =>
+        subject.prompt(commit.unstyle().subject).then(subject => {
+          commit.subject = subject;
+          return false;
+        }),
+      )
+      .addHandler('body', () =>
+        body.prompt(commit.unstyle().body).then(body => {
+          commit.body = body;
+          return false;
+        }),
+      )
+      .addHandler('footer', async (choice, choices) => {
+        const selectedFooter = commit.unstyle().footer(choice.value ?? '');
+        if (selectedFooter) {
+          await footer.prompt(selectedFooter.toString()).then(footer => {
+            const [value = '', name] = footer.split(':').map(v => v.trim());
+            const editedFooter = commit.footer(value, name || null);
+            // if we removed a footer we need to splice it from our choices
+            if (!editedFooter) choices.splice(choice.index, 1);
+          });
+        } else {
+          await footer.prompt().then(footer => {
+            const [token = '', text] = footer.split(':');
+            const createdFooter = commit.footer(token, text);
+            if (createdFooter) createdFooter.setStyle(highlighter);
+            choices.splice(-1, 0, `footer:${token}`);
+          });
+        }
+
+        return false;
+      })
+      .addHandler('breaking', () => {
+        // TODO: Ask why it's breaking (but only if the message has changed from last time)
+        commit.breaking();
+        return false;
+      })
+      .construct(
+        'Commit or Edit',
+        ['Commit', PromptFlow.Separator(), 'type', 'scope', 'subject', 'body', ...footers, 'footer:add footer'].concat(),
+        {
+          banner: choice => {
+            // Reset previous styles
+            commit.unstyle();
+
+            const [part, filter] = (choice.value as string).split(':');
+            if (part !== 'Commit') commit.style(part as CommitPart, filter);
+
+            let commitStr = commit.toString();
+            if (filter === 'add footer') commitStr += `\n${highlighter('', 'footer')}`;
+
+            return commitStr;
           },
-        ],
-      ],
-      {
-        banner: choice => renderText(commit, choice.value as CommitPart),
-      },
-    ).prompt();
+          loop: false,
+        },
+      )
+      .prompt();
 
     const spinner = ora('Commiting...').start();
 
