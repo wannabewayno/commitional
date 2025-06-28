@@ -100,6 +100,7 @@ export default class CommitMessageHeader {
 
   set scope(scope: string) {
     this._scope.length = 0;
+    this._scopeText.value = '';
     const scopes = scope.split(this.scopeDelimiter);
     this.addScope(...scopes);
   }
