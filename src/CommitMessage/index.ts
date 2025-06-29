@@ -51,13 +51,21 @@ export default class CommitMessage {
   }
 
   breaking(message?: string) {
-    this._isBreaking = true;
-    this._header.breaking();
+    if (this._isBreaking) {
+      this._isBreaking = false;
+      this._header.breaking();
 
-    // If the user has provided a message for why it's a breaking change...
-    if (message) this._breakingChangeMessage = message;
-    if (this._breakingChangeMessage) this.footer('BREAKING CHANGE', this._breakingChangeMessage);
+      // [2]
+      this.footer('BREAKING CHANGE', null);
+      this.footer('BREAKING-CHANGE', null);
+    } else {
+      this._isBreaking = true;
+      this._header.breaking();
 
+      // If the user has provided a message for why it's a breaking change...
+      if (message) this._breakingChangeMessage = message;
+      if (this._breakingChangeMessage) this.footer('BREAKING CHANGE', this._breakingChangeMessage); // [1]
+    }
     return this;
   }
 
@@ -259,4 +267,5 @@ export default class CommitMessage {
 /*
   References:
   [1] 'BREAKING CHANGE' in footer: Conventional Commits v1.0.0 > Specification > rule 12; Available: https://www.conventionalcommits.org/en/v1.0.0/
+  [2] 'BREAKING CHANGE' must be synonymous with 'BREAKING-CHANGE': Conventional Commits v1.0.0 > Specification > rule 16; Available: https://www.conventionalcommits.org/en/v1.0.0/
 */

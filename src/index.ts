@@ -4,7 +4,7 @@ import Git from './services/Git/index.js';
 import RulesEngine, { type CommitPart } from './RulesEngine/index.js';
 import loadConfig from './config/index.js';
 import { CommitPartFactory, PromptFactory } from './prompts/index.js';
-import { confirm } from '@inquirer/prompts';
+import { confirm, input } from '@inquirer/prompts';
 import { blue, green, red } from 'yoctocolors';
 import ora from 'ora';
 import PromptFlow from './PromptFlow/index.js';
@@ -84,9 +84,14 @@ program
 
     // If it is a breaking change...
     if (opts.breaking) {
+      // Ask the user why it's a breaking change.
+      const breaking = await input({
+        message: 'Describe the breaking change:',
+        required: true,
+      });
+
       // Mark the commit as a breaking change.
-      // TODO: Ask the user why it's breaking and use this as the footer message.
-      commit.breaking();
+      commit.breaking(breaking);
     }
 
     // go and set the style for each part
@@ -94,7 +99,7 @@ program
       commit.setStyle((value: string) => highlighter(value, commitPart), commitPart),
     );
 
-    const footers = (commit.toJSON()?.footer ?? []).map(v => `footer:${v.replace(/:.+$/, '')}`);
+    const footers = commit.footers.filter(v => !/^BREAKING[\s-]CHANGE/.test(v)).map(v => `footer:${v.replace(/:.+$/, '')}`);
 
     const promptFactory = PromptFactory(rulesEngine);
 
@@ -123,7 +128,7 @@ program
 
           // get our created footer
           const createdFooter = commit.footer(token);
-          if (createdFooter) createdFooter.setStyle(highlighter);
+          if (createdFooter) createdFooter.setStyle(highlighter); // assign styles to emphaize it when selected
 
           choices.splice(-1, 0, `footer:${token}`);
         } else if (footersAfter < footersBefore) {
@@ -132,21 +137,50 @@ program
 
         return false;
       })
-      .addHandler('breaking', () => {
-        // TODO: Ask why it's breaking (but only if the message has changed from last time)
+      .addHandler('breaking', async () => {
+        commit.unstyle();
+
+        // Mark the commit as a breaking change.
         commit.breaking();
+
+        if (commit.isBreaking) {
+          const breakingDescription = commit.footer('BREAKING CHANGE');
+          if (!breakingDescription) {
+            // Ask the user why it's a breaking change.
+            const breaking = await input({
+              message: 'BREAKING CHANGE',
+              required: true,
+            });
+
+            commit.footer('BREAKING CHANGE:', breaking);
+          } else {
+            // Edit the breaking change
+            await footer.prompt(commit, 'BREAKING CHANGE');
+          }
+        }
+
         return false;
       })
       .construct(
         'Commit or Edit',
-        ['Commit', PromptFlow.Separator(), 'type', 'scope', 'subject', 'body', ...footers, 'footer:add footer'].concat(),
+        [
+          'Commit',
+          PromptFlow.Separator(),
+          'type',
+          'scope',
+          'subject',
+          'body',
+          ...footers,
+          'footer:add footer',
+          'breaking',
+        ].concat(),
         {
           banner: choice => {
             // Reset previous styles
             commit.unstyle();
 
-            const [part, filter] = (choice.value as string).split(':');
-            if (part !== 'Commit') commit.style(part as CommitPart, filter);
+            const [part = '', filter] = (choice.value as string).split(':');
+            if (!['Commit', 'breaking'].includes(part)) commit.style(part as CommitPart, filter);
 
             let commitStr = commit.toString();
             if (filter === 'add footer') commitStr += `\n\n${highlighter('', 'footer')}`;
