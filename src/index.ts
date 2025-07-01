@@ -70,9 +70,9 @@ program
     // Extract any cli options passed down from the user
     const { auto, breaking, ...partialCommit } = opts;
 
-    const commitFactory = CommitPartFactory(rulesEngine, diff, auto);
-
     const commit = CommitMessage.fromJSON(partialCommit);
+
+    const commitFactory = CommitPartFactory(rulesEngine, diff, commit, auto);
 
     for (const commitPart of ['scope', 'type', 'subject', 'body'] as CommitPart[]) {
       await commitFactory(commitPart, commit);
