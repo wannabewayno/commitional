@@ -182,10 +182,11 @@ program
             const [part = '', filter] = (choice.value as string).split(':');
             if (!['Commit', 'breaking'].includes(part)) commit.style(part as CommitPart, filter);
 
-            let commitStr = commit.toString();
-            if (filter === 'add footer') commitStr += `\n\n${highlighter('', 'footer')}`;
+            const presentation = ['\n------------', commit.toString()];
+            if (filter === 'add footer') presentation.push(`\n${highlighter('', 'footer')}`);
+            else presentation.push('\n');
 
-            return commitStr;
+            return presentation.join('\n');
           },
           loop: false,
         },
