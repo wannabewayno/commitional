@@ -2,7 +2,6 @@ import { Command } from 'commander';
 import CommitMessage, { type CommitJSON } from './CommitMessage/index.js';
 import Git from './services/Git/index.js';
 import RulesEngine, { type CommitPart } from './RulesEngine/index.js';
-import loadConfig from './config/index.js';
 import { CommitPartFactory, PromptFactory } from './prompts/index.js';
 import { confirm, input } from '@inquirer/prompts';
 import { blue, green, red } from 'yoctocolors';
@@ -41,13 +40,6 @@ program
   .option('-A, --auto', 'Use Generative AI to pre-fill your commit message', false)
   .addHelpCommand('help [command]', 'Display help for command')
   .action(async (opts: Partial<CommitJSON> & { breaking?: boolean; auto: boolean }) => {
-    /*
-      If the user has configured commitlint in the current working directory, attempt to load commitlint's config.
-      We'll guide the user in creating a commit message that adheres to the commitlint config.
-      Otherwise it'll load a default config.
-    */
-    const config = await loadConfig();
-
     // Create a new *git* instance scoped to the cwd
     const git = new Git();
 
@@ -65,7 +57,7 @@ program
     if (!diff.files.length) return console.log(red('No files staged to commit'));
 
     // Create a rules engine from the parsed in commitlint config.
-    const rulesEngine = RulesEngine.fromConfig(config.rules);
+    const rulesEngine = await RulesEngine.fromConfig();
 
     // Extract any cli options passed down from the user
     const { auto, breaking, ...partialCommit } = opts;

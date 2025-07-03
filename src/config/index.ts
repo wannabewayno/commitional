@@ -63,5 +63,5 @@ export default async function loadConfig() {
     commitlintConfig.rules['scope-allow-multiple'] = [2, applicable, delimiter];
   }
 
-  return commitlintConfig;
+  return commitlintConfig as CommitlintConfig;
 }

@@ -16,7 +16,7 @@ import { ExclamationMarkRule } from './rules/ExclamationMarkRule.js';
 
 describe('RulesEngine', () => {
   describe('description()', () => {
-    const rules = RulesEngine.fromConfig({
+    const rules = RulesEngine.fromRules({
       'body-max-line-length': [2, 'always', 72],
       'subject-case': [2, 'always', 'sentence-case'],
       'subject-empty': [2, 'never'],
@@ -247,7 +247,7 @@ describe('RulesEngine', () => {
         'subject-max-length': [RuleConfigSeverity.Error, 'always', 100],
       } as const;
 
-      const engine = RulesEngine.fromConfig(config);
+      const engine = RulesEngine.fromRules(config);
       expect(engine).to.be.instanceOf(RulesEngine);
 
       const emptyRules = engine.getRulesOfType('empty');
@@ -263,7 +263,7 @@ describe('RulesEngine', () => {
         'subject-max-length': [RuleConfigSeverity.Error, 'always', 100],
       } as const;
 
-      const engine = RulesEngine.fromConfig(config);
+      const engine = RulesEngine.fromRules(config);
       const emptyRules = engine.getRulesOfType('empty');
       expect(emptyRules).to.have.lengthOf(0);
     });
@@ -274,7 +274,7 @@ describe('RulesEngine', () => {
         'subject-max-length': [RuleConfigSeverity.Error, 'always', 100],
       } as const;
 
-      const engine = RulesEngine.fromConfig(config);
+      const engine = RulesEngine.fromRules(config);
       const emptyRules = engine.getRulesOfType('empty');
       expect(emptyRules).to.have.lengthOf(0);
     });

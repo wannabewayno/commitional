@@ -15,6 +15,7 @@ import type { CommitlintConfig } from '../config/index.js';
 import capitalize from '../lib/capitalize.js';
 import separate from '../lib/separate.js';
 import CommitMessage, { type CommitJSON } from '../CommitMessage/index.js';
+import loadConfig from '../config/index.js';
 
 export type RulesConfig = CommitlintConfig['rules'];
 export type CommitPart = 'type' | 'subject' | 'scope' | 'body' | 'footer';
@@ -270,7 +271,15 @@ export default class RulesEngine<Config extends Rules = Rules> {
   /**
    * Create an instance of RulesEngine from a commitlint config
    */
-  static fromConfig<const T extends Partial<RulesConfig>>(rulesConfig: T): RulesEngine<Rules<T>> {
+  static async fromConfig() {
+    const config = await loadConfig();
+    return RulesEngine.fromRules(config.rules);
+  }
+
+  /**
+   * Create an instance of RulesEngine from a commitlint config
+   */
+  static fromRules<const T extends Partial<RulesConfig>>(rulesConfig: T): RulesEngine<Rules<T>> {
     // It should be it's own object with set, get and list properties.
 
     const rules = Object.entries(rulesConfig).reduce(
