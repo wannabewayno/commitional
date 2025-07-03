@@ -93,9 +93,16 @@ export default class RulesEngine<Config extends Rules = Rules> {
   }
 
   /**
-   * Combination of parse() and validate()
+   * Processes the input through all rules, attempting to fix any issues while collecting errors and warnings.
+   * This method combines the functionality of parse() which attempts to fix issues, and validate() which checks for validity.
+   *
+   * @param input - The commit message string to check
+   * @returns An array of strings containing both errors and warnings:
+   *          - Errors indicate rule violations that could not be automatically fixed
+   *          - Warnings indicate rule violations that could not be automatically fixed but won't block/fail linting
+   *          - Empty array indicates the input passed all rules without issues
    */
-  check(input: string): string[] {
+  check(input: string): [errors: string[], warnings: string[]] {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -109,7 +116,7 @@ export default class RulesEngine<Config extends Rules = Rules> {
       }
     }
 
-    return errors.concat(warnings);
+    return [errors, warnings];
   }
 
   /**

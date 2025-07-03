@@ -66,7 +66,7 @@ export default class FooterPrompt extends BasePrompt {
             validate: value => {
               const footerText = `${value}:`;
               const valid = this.rules.validate(footerText);
-              if (!valid) return this.rules.check(footerText).join('\n');
+              if (!valid) return this.rules.check(footerText).flat().join('\n');
               return true;
             },
             transformer: value => {
@@ -85,7 +85,7 @@ export default class FooterPrompt extends BasePrompt {
       validate: value => {
         const footerText = `${token}: ${value}`;
         const valid = this.rules.validate(footerText);
-        if (!valid) return this.rules.check(footerText).join('\n');
+        if (!valid) return this.rules.check(footerText).flat().join('\n');
         return true;
       },
       transformer: value => {

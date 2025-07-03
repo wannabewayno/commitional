@@ -55,7 +55,7 @@ export default class SubjectPrompt extends BasePrompt {
           prefill: 'editable',
           validate: value => {
             const valid = this.rules.validate(value);
-            if (!valid) return this.rules.check(value).join('\n');
+            if (!valid) return this.rules.check(value).flat().join('\n');
             return true;
           },
           transformer: value => {

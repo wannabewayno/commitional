@@ -111,7 +111,7 @@ export default class BodyPrompt extends BasePrompt {
         const valid = this.rules.validate(content);
 
         // Invalid, return a list of errors
-        if (!valid) return this.rules.check(content).join('\n');
+        if (!valid) return this.rules.check(content).flat().join('\n');
 
         // otherwise must be valid
         return true;
@@ -125,7 +125,7 @@ export default class BodyPrompt extends BasePrompt {
   }
 
   private defaultMessage(initialValue?: string) {
-    const errors = this.rules.check(initialValue ?? '');
+    const [errors] = this.rules.check(initialValue ?? '');
 
     // If there are any errors construct an error message with list of errors
     // The user's commit body is in breach of the rules and these show the user how to address it.
