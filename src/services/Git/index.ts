@@ -1,5 +1,6 @@
 import { simpleGit, type SimpleGit } from 'simple-git';
 import Diff from './Diff.js';
+import type { ICommit } from './interfaces.js';
 
 /**
  * Interface for git commit result
@@ -70,6 +71,27 @@ export default class Git {
     } catch (error) {
       return false;
     }
+  }
+
+  async log(to: string | number, from = 'HEAD'): Promise<ICommit[]> {
+    const logArgs = typeof to === 'number' ? { [`-${to}`]: null, [from]: null } : { from, to };
+
+    // fetch git commit
+    const commits = await this.git.log(logArgs);
+
+    return commits.all.map(
+      logItem =>
+        ({
+          hash: logItem.hash,
+          short: logItem.hash.slice(0, 7),
+          date: new Date(logItem.date),
+          msg: [logItem.message, logItem.body].filter(v => v).join('\n\n'),
+          author: {
+            name: logItem.author_name,
+            email: logItem.author_email,
+          },
+        }) as ICommit,
+    );
   }
 
   /**

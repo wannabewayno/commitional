@@ -40,7 +40,7 @@ export default abstract class BasePrompt {
       }
     } else {
       const initialValue = commit[this.type];
-      if (this.rules.validate(initialValue)) commit[this.type] = this.rules.parse(initialValue);
+      if (this.rules.validate(initialValue)) commit[this.type] = this.rules.parse(initialValue)[0];
       else await this.prompt(commit);
     }
   }

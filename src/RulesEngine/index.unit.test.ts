@@ -93,46 +93,6 @@ describe('RulesEngine', () => {
     });
   });
 
-  describe('check', () => {
-    it('should return empty errors array and empty warnings array when input passes all rules', () => {
-      const mockRule = {
-        check: sinon.stub().returns('valid input'),
-      };
-      const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.check('valid input')).to.deep.equal([[], []]);
-    });
-
-    it('should return warnings when rules return errors', () => {
-      const mockRule = {
-        check: sinon.stub().returns(new Error('Warning message')),
-      };
-      const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.check('input')).to.deep.equal([[], ['Warning message']]);
-    });
-
-    it('should return errors when rules throw errors', () => {
-      const mockRule = {
-        check: sinon.stub().throws(new Error('Error message')),
-      };
-      const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.check('input')).to.deep.equal([['Error message'], []]);
-    });
-
-    it('should collect both errors and warnings', () => {
-      const mockRule1 = {
-        check: sinon.stub().returns(new Error('Warning message')),
-      };
-      const mockRule2 = {
-        check: sinon.stub().throws(new Error('Error message')),
-      };
-      const engine = new RulesEngine({
-        'type-empty': mockRule1 as unknown as EmptyRule,
-        'type-case': mockRule2 as unknown as CaseRule,
-      });
-      expect(engine.check('input')).to.deep.equal([['Error message'], ['Warning message']]);
-    });
-  });
-
   describe('getRulesOfType', () => {
     it('should return rules of the specified type', () => {
       const emptyRule = new EmptyRule('type', RuleConfigSeverity.Error, 'never');
@@ -195,7 +155,7 @@ describe('RulesEngine', () => {
         check: sinon.stub().returns('fixed input'),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.parse('input')).to.equal('fixed input');
+      expect(engine.parse('input')).to.deep.equal(['fixed input', [], []]);
     });
 
     it('should handle rules that throw errors', () => {
@@ -203,7 +163,7 @@ describe('RulesEngine', () => {
         check: sinon.stub().throws(new Error('Rule error')),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.parse('input')).to.equal('input');
+      expect(engine.parse('input')).to.deep.equal(['input', ['Rule error'], []]);
     });
 
     it('should apply multiple fixes in sequence', () => {
@@ -217,8 +177,46 @@ describe('RulesEngine', () => {
         'type-empty': mockRule1 as unknown as EmptyRule,
         'type-case': mockRule2 as unknown as CaseRule,
       });
-      expect(engine.parse('input')).to.equal('second fix');
+      expect(engine.parse('input')).to.deep.equal(['second fix', [], []]);
       expect(mockRule2.check.calledWith('first fix')).to.be.true;
+    });
+
+    it('should return empty errors array and empty warnings array when input passes all rules', () => {
+      const mockRule = {
+        check: sinon.stub().returns('valid input'),
+      };
+      const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
+      expect(engine.parse('valid input')).to.deep.equal(['valid input', [], []]);
+    });
+
+    it('should return warnings when rules return errors', () => {
+      const mockRule = {
+        check: sinon.stub().returns(new Error('Warning message')),
+      };
+      const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
+      expect(engine.parse('input')).to.deep.equal(['input', [], ['Warning message']]);
+    });
+
+    it('should return errors when rules throw errors', () => {
+      const mockRule = {
+        check: sinon.stub().throws(new Error('Error message')),
+      };
+      const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
+      expect(engine.parse('input')).to.deep.equal(['input', ['Error message'], []]);
+    });
+
+    it('should collect both errors and warnings', () => {
+      const mockRule1 = {
+        check: sinon.stub().returns(new Error('Warning message')),
+      };
+      const mockRule2 = {
+        check: sinon.stub().throws(new Error('Error message')),
+      };
+      const engine = new RulesEngine({
+        'type-empty': mockRule1 as unknown as EmptyRule,
+        'type-case': mockRule2 as unknown as CaseRule,
+      });
+      expect(engine.parse('input')).to.deep.equal(['input', ['Error message'], ['Warning message']]);
     });
   });
 

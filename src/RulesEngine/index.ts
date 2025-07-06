@@ -93,16 +93,20 @@ export default class RulesEngine<Config extends Rules = Rules> {
   }
 
   /**
-   * Processes the input through all rules, attempting to fix any issues while collecting errors and warnings.
-   * This method combines the functionality of parse() which attempts to fix issues, and validate() which checks for validity.
+   * Parses the raw user input one by one through our rules and attempts to fix them if they fail validation.
+   * The output will be a string that complies with all rules as much as possible without human intervention.
    *
-   * @param input - The commit message string to check
-   * @returns An array of strings containing both errors and warnings:
+   * A simple example would be a rule that requires all upper-case and maximum character limit.
+   * The output would always be upper-case trimmed to the character limit.
+   *
+   * The same can't be said for a minimum character limit as we don't know what to 'add' to bring it to the limit
+   * @param input - the raw user input
+   * @returns [output, errors, warnings] - The parsed input, any errors, any warnings:
    *          - Errors indicate rule violations that could not be automatically fixed
    *          - Warnings indicate rule violations that could not be automatically fixed but won't block/fail linting
    *          - Empty array indicates the input passed all rules without issues
    */
-  check(input: string): [errors: string[], warnings: string[]] {
+  parse(input: string): [output: string, errors: string[], warnings: string[]] {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -116,7 +120,7 @@ export default class RulesEngine<Config extends Rules = Rules> {
       }
     }
 
-    return [errors, warnings];
+    return [input, errors, warnings];
   }
 
   /**
@@ -250,29 +254,6 @@ export default class RulesEngine<Config extends Rules = Rules> {
     }, nonEmptyRules);
 
     return description.join('\n');
-  }
-
-  /**
-   * Parses the raw user input one by one through our rules and attempts to fix them if they fail validation.
-   * The output will be a string that complies with all rules as much as possible without human intervention.
-   *
-   * A simple example would be a rule that requires all upper-case and maximum character limit.
-   * The output would always be upper-case trimmed to the character limit.
-   *
-   * The same can't be said for a minimum character limit as we don't know what to 'add' to bring it to the limit
-   * @param input - the raw user input
-   * @returns {string} - the fixed / mended input, if it could be fixed by the imposing rules.
-   */
-  parse(input: string): string {
-    for (const rule of this.listRules()) {
-      try {
-        const result = rule.check(input);
-        if (typeof result === 'string') input = result;
-      } catch (error) {
-        // Catch the error. do nothing with it.
-      }
-    }
-    return input;
   }
 
   /**

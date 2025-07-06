@@ -31,16 +31,19 @@ export default class ScopePrompt extends BasePrompt {
       prefill: 'editable',
       validate: value => {
         const valid = this.rules.validate(value);
-        if (!valid) return this.rules.check(value).join('\n');
+        if (!valid) {
+          const [, errors] = this.rules.parse(value);
+          return errors.join('\n');
+        }
         return true;
       },
       transformer: value => {
-        value = this.rules.parse(value);
+        [value] = this.rules.parse(value);
         if (!this.rules.validate(value)) value = red(value);
         return value;
       },
     });
 
-    commit.scope = this.rules.parse(answer);
+    commit.scope = this.rules.parse(answer)[0];
   }
 }

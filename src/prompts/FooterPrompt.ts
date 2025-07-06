@@ -66,15 +66,18 @@ export default class FooterPrompt extends BasePrompt {
             validate: value => {
               const footerText = `${value}:`;
               const valid = this.rules.validate(footerText);
-              if (!valid) return this.rules.check(footerText).flat().join('\n');
+              if (!valid) {
+                const [, errors] = this.rules.parse(footerText);
+                return errors.join('\n');
+              }
               return true;
             },
             transformer: value => {
-              value = this.rules.parse(`${value}:`);
+              [value] = this.rules.parse(`${value}:`);
               if (!this.rules.validate(value)) value = red(value);
               return value;
             },
-          }).then(value => this.rules.parse(value));
+          }).then(value => this.rules.parse(value)[0]);
     }
 
     // Footer Message
@@ -85,15 +88,18 @@ export default class FooterPrompt extends BasePrompt {
       validate: value => {
         const footerText = `${token}: ${value}`;
         const valid = this.rules.validate(footerText);
-        if (!valid) return this.rules.check(footerText).flat().join('\n');
+        if (!valid) {
+          const [, errors] = this.rules.parse(footerText);
+          return errors.join('\n');
+        }
         return true;
       },
       transformer: value => {
-        value = this.rules.parse(`${token}: ${value}`);
+        [value] = this.rules.parse(`${token}: ${value}`);
         if (!this.rules.validate(value)) value = red(value);
         return value;
       },
-    }).then(value => this.rules.parse(`${token}: ${value}`));
+    }).then(value => this.rules.parse(`${token}: ${value}`)[0]);
 
     const [_token = '', _text = ''] = footerText.split(':').map(v => v.trim());
 

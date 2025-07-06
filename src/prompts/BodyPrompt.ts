@@ -111,7 +111,10 @@ export default class BodyPrompt extends BasePrompt {
         const valid = this.rules.validate(content);
 
         // Invalid, return a list of errors
-        if (!valid) return this.rules.check(content).flat().join('\n');
+        if (!valid) {
+          const [, errors] = this.rules.parse(content);
+          return errors.join('\n');
+        }
 
         // otherwise must be valid
         return true;
@@ -121,11 +124,11 @@ export default class BodyPrompt extends BasePrompt {
     // Remove any comments from the commit body
     const content = answer.replace(/^#.+$/gm, '').trim();
 
-    commit.body = this.rules.parse(content);
+    commit.body = this.rules.parse(content)[0];
   }
 
   private defaultMessage(initialValue?: string) {
-    const [errors] = this.rules.check(initialValue ?? '');
+    const [, errors] = this.rules.parse(initialValue ?? '');
 
     // If there are any errors construct an error message with list of errors
     // The user's commit body is in breach of the rules and these show the user how to address it.
