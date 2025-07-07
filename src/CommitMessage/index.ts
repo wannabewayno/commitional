@@ -4,12 +4,8 @@ import type { CommitPart } from '../RulesEngine/index.js';
 import type RulesEngine from '../RulesEngine/index.js';
 import CommitMessageFooter from './CommitMessageFooter.js';
 import CommitMessageHeader from './CommitMessageHeader.js';
+import type { ErrorsAndWarnings } from './interfaces.js';
 import Text, { type StyleFn } from './Text.js';
-
-interface ErrorsAndWarnings {
-  errors: string[];
-  warnings: string[];
-}
 
 export interface CommitMessageHeaderOpts {
   type?: string;
@@ -219,30 +215,34 @@ export default class CommitMessage {
    * @param rulesEngine
    * @returns A tuple of the [processed commit, if it's valid according to all rules, info object of field names and any errors and warnings]
    */
-  process(
-    rulesEngine: RulesEngine,
-  ): [processedCommit: CommitMessage, valid: boolean, info: { [property: string]: ErrorsAndWarnings }] {
-    const [header, headersValid, headerErrorsAndWarnings] = this._header.process(rulesEngine);
-    const [body, bodyErrors, bodyWarnings] = rulesEngine.narrow('body').parse(this.body);
+  process(rulesEngine: RulesEngine): [processedCommit: CommitMessage, valid: boolean, info: ErrorsAndWarnings[]] {
+    const errorsAndWarnings: ErrorsAndWarnings[] = [];
 
-    const {
-      footers,
-      valid: footersValid,
-      errorsAndWarnings: footerErrorsAndWarnings,
-    } = this._footers.reduce(
-      (info, footer, index) => {
-        const [parsedFooter, valid, errorsAndWarnings] = footer.process(rulesEngine);
+    // Header
+    const [header, headersValid, headerErrorsAndWarnings] = this._header.process(rulesEngine);
+    errorsAndWarnings.push(...headerErrorsAndWarnings);
+
+    // Body
+    const [body, bodyErrors, bodyWarnings] = rulesEngine.narrow('body').parse(this.body);
+    if (bodyErrors.length || bodyWarnings.length)
+      errorsAndWarnings.push({ type: 'body', errors: bodyErrors, warnings: bodyWarnings });
+
+    // Footers
+    const { footers, valid: footersValid } = this._footers.reduce(
+      (info, footer) => {
+        const [parsedFooter, footerErrorsAndWarnings] = footer.process(rulesEngine);
 
         info.footers.push(parsedFooter);
-        info.errorsAndWarnings[footer.token || `footer_${index + 1}`] = errorsAndWarnings;
-        info.valid = info.valid && valid;
+        if (footerErrorsAndWarnings) {
+          errorsAndWarnings.push(footerErrorsAndWarnings);
+          info.valid = false;
+        }
 
         return info;
       },
-      { footers: [], valid: true, errorsAndWarnings: {} } as {
+      { footers: [], valid: true } as {
         footers: CommitMessageFooter[];
         valid: boolean;
-        errorsAndWarnings: Record<string, ErrorsAndWarnings>;
       },
     );
 
@@ -250,11 +250,7 @@ export default class CommitMessage {
     return [
       new CommitMessage(header, body, ...footers),
       headersValid && !bodyErrors.length && footersValid,
-      {
-        ...headerErrorsAndWarnings,
-        body: { errors: bodyErrors, warnings: bodyWarnings },
-        ...footerErrorsAndWarnings,
-      },
+      errorsAndWarnings,
     ];
   }
 

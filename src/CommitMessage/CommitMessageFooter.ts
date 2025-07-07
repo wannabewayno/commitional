@@ -1,5 +1,6 @@
 import sentaceKebabCase from '../lib/sentenceKebabCase.js';
 import type RulesEngine from '../RulesEngine/index.js';
+import type { ErrorsAndWarnings } from './interfaces.js';
 import type { StyleFn } from './Text.js';
 
 export default class CommitMessageFooter {
@@ -33,9 +34,7 @@ export default class CommitMessageFooter {
     this._text = value;
   }
 
-  process(
-    rulesEngine: RulesEngine,
-  ): [footer: CommitMessageFooter, valid: boolean, info: { errors: string[]; warnings: string[] }] {
+  process(rulesEngine: RulesEngine): [footer: CommitMessageFooter, info?: ErrorsAndWarnings] {
     const [output, errors, warnings] = rulesEngine.narrow('footer').parse(this.toString());
     const footer = CommitMessageFooter.fromString(output);
 
@@ -45,10 +44,10 @@ export default class CommitMessageFooter {
       const validFooter = CommitMessageFooter.fromString(`Error: ${output}`);
       if (validFooter instanceof Error) throw validFooter;
 
-      return [validFooter, false, { errors, warnings }];
+      return [validFooter, { type: 'footer', filter: 'Error', errors, warnings }];
     }
 
-    return [footer, !errors.length, { errors, warnings }];
+    return [footer, !errors.length ? undefined : { type: 'footer', filter: footer.token, errors, warnings }];
   }
 
   setStyle(style: StyleFn) {

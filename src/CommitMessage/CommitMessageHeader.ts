@@ -1,11 +1,7 @@
 import type { CommitPart } from '../RulesEngine/index.js';
 import type RulesEngine from '../RulesEngine/index.js';
+import type { ErrorsAndWarnings } from './interfaces.js';
 import Text, { type StyleFn } from './Text.js';
-
-interface ErrorsAndWarnings {
-  errors: string[];
-  warnings: string[];
-}
 
 export interface CommitMessageHeaderOpts {
   type?: string;
@@ -50,25 +46,24 @@ export default class CommitMessageHeader {
   /**
    *
    */
-  process(
-    rulesEngine: RulesEngine,
-  ): [
-    header: CommitMessageHeader,
-    valid: boolean,
-    errorsAndWarnings: { subject: ErrorsAndWarnings; type: ErrorsAndWarnings; scope: ErrorsAndWarnings },
-  ] {
+  process(rulesEngine: RulesEngine): [header: CommitMessageHeader, valid: boolean, errorsAndWarnings: ErrorsAndWarnings[]] {
     const [subject, subjectErrors, subjectWarnings] = rulesEngine.narrow('subject').parse(this.subject);
     const [scope, scopeErrors, scopeWarnings] = rulesEngine.narrow('scope').parse(this.subject);
     const [type, typeErrors, typeWarnings] = rulesEngine.narrow('type').parse(this.subject);
 
+    const errorsAndWarnings: ErrorsAndWarnings[] = [];
+
+    if (subjectErrors.length || subjectWarnings.length)
+      errorsAndWarnings.push({ type: 'subject', errors: subjectErrors, warnings: subjectWarnings });
+    if (scopeErrors.length || scopeWarnings.length)
+      errorsAndWarnings.push({ type: 'scope', errors: scopeErrors, warnings: scopeWarnings });
+    if (typeErrors.length || typeWarnings.length)
+      errorsAndWarnings.push({ type: 'type', errors: typeErrors, warnings: typeWarnings });
+
     return [
       new CommitMessageHeader({ subject, scope, type }),
       !(subjectErrors.length + scopeErrors.length + typeErrors.length),
-      {
-        subject: { errors: subjectErrors, warnings: subjectWarnings },
-        scope: { errors: scopeErrors, warnings: scopeWarnings },
-        type: { errors: typeErrors, warnings: typeWarnings },
-      },
+      errorsAndWarnings,
     ];
   }
 

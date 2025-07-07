@@ -445,7 +445,6 @@ describe('CommitMessage', () => {
   });
 
   describe('process', () => {
-    const empty = { errors: [], warnings: [] };
     let mockRulesEngine: sinon.SinonStubbedInstance<RulesEngine>;
     let mockNarrowedEngine: sinon.SinonStubbedInstance<RulesEngine>;
 
@@ -464,20 +463,18 @@ describe('CommitMessage', () => {
     it('should process commit message with valid header, body, and footers', () => {
       // Setup header processing
       const processedHeader = new CommitMessageHeader({ type: 'feat', subject: 'processed subject' });
-      const headerProcessStub = sinon
-        .stub(header, 'process')
-        .returns([processedHeader, true, { type: empty, subject: empty, scope: empty }]);
+      const headerProcessStub = sinon.stub(header, 'process').returns([processedHeader, true, []]);
 
       // Setup footer processing
       const processedFooter = new CommitMessageFooter('Closes', '#456');
-      const footerProcessStub = sinon.stub(footer, 'process').returns([processedFooter, true, empty]);
+      const footerProcessStub = sinon.stub(footer, 'process').returns([processedFooter]);
 
       const commit = new CommitMessage(header, 'test body', footer);
-      const [processedCommit, valid, info] = commit.process(mockRulesEngine);
+      const [processedCommit, valid, errorsAndWarnings] = commit.process(mockRulesEngine);
 
       expect(processedCommit).to.be.instanceOf(CommitMessage);
       expect(valid).to.be.true;
-      expect(info.body).to.deep.equal(empty);
+      expect(errorsAndWarnings).to.be.empty;
       expect(headerProcessStub.calledOnce).to.be.true;
       expect(footerProcessStub.calledOnce).to.be.true;
     });
@@ -486,84 +483,87 @@ describe('CommitMessage', () => {
       const processedHeader = new CommitMessageHeader({ type: 'feat', subject: 'processed subject' });
       const headerProcessStub = sinon
         .stub(header, 'process')
-        .returns([
-          processedHeader,
-          false,
-          { type: { errors: ['Type error'], warnings: [] }, subject: empty, scope: empty },
-        ]);
+        .returns([processedHeader, false, [{ type: 'type', errors: ['Type error'], warnings: [] }]]);
 
       const commit = new CommitMessage(header, 'test body');
-      const [processedCommit, valid, info] = commit.process(mockRulesEngine);
+      const [processedCommit, valid, errorsAndWarnings] = commit.process(mockRulesEngine);
 
       expect(processedCommit).to.be.instanceOf(CommitMessage);
       expect(valid).to.be.false;
-      expect(info.type?.errors).to.deep.equal(['Type error']);
+      expect(errorsAndWarnings).to.deep.contain({ type: 'type', errors: ['Type error'], warnings: [] });
       expect(headerProcessStub.calledOnce).to.be.true;
     });
 
     it('should process commit message with body errors', () => {
       const processedHeader = new CommitMessageHeader({ type: 'feat', subject: 'processed subject' });
-      const headerProcessStub = sinon
-        .stub(header, 'process')
-        .returns([processedHeader, true, { type: empty, subject: empty, scope: empty }]);
+      const headerProcessStub = sinon.stub(header, 'process').returns([processedHeader, true, []]);
 
       mockNarrowedEngine.parse.returns(['parsed body', ['Body error'], ['Body warning']]);
 
       const commit = new CommitMessage(header, 'test body');
-      const [processedCommit, valid, info] = commit.process(mockRulesEngine);
+      const [processedCommit, valid, errorsAndWarnings] = commit.process(mockRulesEngine);
 
       expect(processedCommit).to.be.instanceOf(CommitMessage);
       expect(valid).to.be.false;
-      expect(info.body?.errors).to.deep.equal(['Body error']);
-      expect(info.body?.warnings).to.deep.equal(['Body warning']);
+      expect(errorsAndWarnings).to.deep.contain({ type: 'body', errors: ['Body error'], warnings: ['Body warning'] });
       expect(headerProcessStub.calledOnce).to.be.true;
     });
 
     it('should process commit message with footer errors', () => {
       const processedHeader = new CommitMessageHeader({ type: 'feat', subject: 'processed subject' });
-      const headerProcessStub = sinon
-        .stub(header, 'process')
-        .returns([processedHeader, true, { type: empty, subject: empty, scope: empty }]);
+      const headerProcessStub = sinon.stub(header, 'process').returns([processedHeader, true, []]);
 
       const processedFooter = new CommitMessageFooter('Closes', '#456');
       const footerProcessStub = sinon
         .stub(footer, 'process')
-        .returns([processedFooter, false, { errors: ['Footer error'], warnings: ['Footer warning'] }]);
+        .returns([
+          processedFooter,
+          { type: 'footer', filter: 'Closes', errors: ['issue not found'], warnings: ['invalid syntax'] },
+        ]);
 
       const commit = new CommitMessage(header, 'test body', footer);
-      const [processedCommit, valid, info] = commit.process(mockRulesEngine);
+      const [processedCommit, valid, errorsAndWarnings] = commit.process(mockRulesEngine);
 
       expect(processedCommit).to.be.instanceOf(CommitMessage);
       expect(valid).to.be.false;
-      expect(info[footer.token]?.errors).to.deep.equal(['Footer error']);
-      expect(info[footer.token]?.warnings).to.deep.equal(['Footer warning']);
+      expect(errorsAndWarnings).to.deep.contain({
+        type: 'footer',
+        filter: 'Closes',
+        errors: ['issue not found'],
+        warnings: ['invalid syntax'],
+      });
       expect(headerProcessStub.calledOnce).to.be.true;
       expect(footerProcessStub.calledOnce).to.be.true;
     });
 
     it('should process commit message with multiple footers', () => {
       const processedHeader = new CommitMessageHeader({ type: 'feat', subject: 'processed subject' });
-      const headerProcessStub = sinon
-        .stub(header, 'process')
-        .returns([processedHeader, true, { type: empty, subject: empty, scope: empty }]);
+      const headerProcessStub = sinon.stub(header, 'process').returns([processedHeader, true, []]);
 
       const footer2 = new CommitMessageFooter('See-also', '#789');
       const processedFooter1 = new CommitMessageFooter('Closes', '#456');
       const processedFooter2 = new CommitMessageFooter('See-also', '#999');
 
-      const footerProcessStub1 = sinon.stub(footer, 'process').returns([processedFooter1, true, empty]);
+      const footerProcessStub1 = sinon.stub(footer, 'process').returns([processedFooter1]);
 
       const footerProcessStub2 = sinon
         .stub(footer2, 'process')
-        .returns([processedFooter2, false, { errors: ['Footer2 error'], warnings: [] }]);
+        .returns([
+          processedFooter2,
+          { type: 'footer', filter: 'Signed-off-by', errors: ["you can't sign it off yourself!"], warnings: [] },
+        ]);
 
       const commit = new CommitMessage(header, 'test body', footer, footer2);
-      const [processedCommit, valid, info] = commit.process(mockRulesEngine);
+      const [processedCommit, valid, errorsAndWarnings] = commit.process(mockRulesEngine);
 
       expect(processedCommit).to.be.instanceOf(CommitMessage);
       expect(valid).to.be.false;
-      expect(info[footer.token]).to.deep.equal(empty);
-      expect(info[footer2.token]).to.deep.equal({ errors: ['Footer2 error'], warnings: [] });
+      expect(errorsAndWarnings).to.deep.contain({
+        type: 'footer',
+        filter: 'Signed-off-by',
+        errors: ["you can't sign it off yourself!"],
+        warnings: [],
+      });
       expect(headerProcessStub.calledOnce).to.be.true;
       expect(footerProcessStub1.calledOnce).to.be.true;
       expect(footerProcessStub2.calledOnce).to.be.true;
@@ -571,33 +571,31 @@ describe('CommitMessage', () => {
 
     it('should handle footers without tokens using index-based naming', () => {
       const processedHeader = new CommitMessageHeader({ type: 'feat', subject: 'processed subject' });
-      const headerProcessStub = sinon
-        .stub(header, 'process')
-        .returns([processedHeader, true, { type: empty, subject: empty, scope: empty }]);
+      const headerProcessStub = sinon.stub(header, 'process').returns([processedHeader, true, []]);
 
       const footerWithoutToken = new CommitMessageFooter('', 'some text');
       const processedFooter = new CommitMessageFooter('', 'processed text');
 
-      const footerProcessStub = sinon.stub(footerWithoutToken, 'process').returns([processedFooter, true, empty]);
+      const footerProcessStub = sinon
+        .stub(footerWithoutToken, 'process')
+        .returns([processedFooter, { type: 'footer', filter: 'Error', errors: ['No token!'], warnings: [] }]);
 
       const commit = new CommitMessage(header, 'test body', footerWithoutToken);
-      const [processedCommit, valid, info] = commit.process(mockRulesEngine);
+      const [processedCommit, valid, errorsAndWarnings] = commit.process(mockRulesEngine);
 
       expect(processedCommit).to.be.instanceOf(CommitMessage);
-      expect(valid).to.be.true;
-      expect(info.footer_1).to.deep.equal(empty);
+      expect(valid).to.be.false;
+      expect(errorsAndWarnings).to.deep.contain({ type: 'footer', filter: 'Error', errors: ['No token!'], warnings: [] });
       expect(headerProcessStub.calledOnce).to.be.true;
       expect(footerProcessStub.calledOnce).to.be.true;
     });
 
     it('should return processed commit with all components updated', () => {
       const processedHeader = new CommitMessageHeader({ type: 'fix', subject: 'updated subject' });
-      const headerProcessStub = sinon
-        .stub(header, 'process')
-        .returns([processedHeader, true, { type: empty, subject: empty, scope: empty }]);
+      const headerProcessStub = sinon.stub(header, 'process').returns([processedHeader, true, []]);
 
       const processedFooter = new CommitMessageFooter('Updated', '#999');
-      const footerProcessStub = sinon.stub(footer, 'process').returns([processedFooter, true, empty]);
+      const footerProcessStub = sinon.stub(footer, 'process').returns([processedFooter]);
 
       mockNarrowedEngine.parse.returns(['updated body', [], []]);
 
@@ -615,7 +613,7 @@ describe('CommitMessage', () => {
 
     it('should call narrow with body part', () => {
       const processedHeader = new CommitMessageHeader({ type: 'feat', subject: 'processed subject' });
-      sinon.stub(header, 'process').returns([processedHeader, true, { type: empty, subject: empty, scope: empty }]);
+      sinon.stub(header, 'process').returns([processedHeader, true, []]);
 
       const commit = new CommitMessage(header, 'test body');
       commit.process(mockRulesEngine);
