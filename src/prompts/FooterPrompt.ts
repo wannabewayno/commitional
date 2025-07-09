@@ -81,6 +81,7 @@ export default class FooterPrompt extends BasePrompt {
     const footerText = await input({
       message: '',
       default: text,
+      prefill: 'editable',
       validate: value => {
         const footerText = `${token}: ${value}`;
         const valid = this.rules.validate(footerText);

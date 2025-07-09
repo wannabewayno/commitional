@@ -52,6 +52,7 @@ export default class SubjectPrompt extends BasePrompt {
       : await input({
           message: 'If applied, this commit will...',
           default: initialValue,
+          prefill: 'editable',
           validate: value => {
             const valid = this.rules.validate(value);
             if (!valid) return this.rules.check(value).join('\n');

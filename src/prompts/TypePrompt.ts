@@ -72,6 +72,7 @@ export default class TypePrompt extends BasePrompt {
       : await input({
           message: "Type of change that you're committing:",
           default: initialValue,
+          prefill: 'editable',
           validate: value => {
             const valid = this.rules.validate(value);
             if (!valid) return this.rules.check(value).join('\n');
