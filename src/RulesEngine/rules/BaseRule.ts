@@ -34,7 +34,8 @@ export abstract class BaseRule {
   /**
    * Check if the input passes the rule
    * @param input The input to check against the rule
-   * @returns true if VALID or OFF, string message if WARNING, error if ERROR
+   * @returns original string or fixed string if valid, error if WARNING and cannot be fixed.
+   * @throws error if level is ERROR and cannont be fixed.
    */
   check(input: string): string | Error {
     if (this.level === RuleConfigSeverity.Disabled) return input;
