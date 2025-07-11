@@ -215,22 +215,25 @@ export default class CommitMessage {
    * @param rulesEngine
    * @returns A tuple of the [processed commit, if it's valid according to all rules, info object of field names and any errors and warnings]
    */
-  process(rulesEngine: RulesEngine): [processedCommit: CommitMessage, valid: boolean, info: ErrorsAndWarnings[]] {
+  process(
+    rulesEngine: RulesEngine,
+    behaviour: 'validate' | 'fix' = 'fix',
+  ): [processedCommit: CommitMessage, valid: boolean, info: ErrorsAndWarnings[]] {
     const errorsAndWarnings: ErrorsAndWarnings[] = [];
 
     // Header
-    const [header, headersValid, headerErrorsAndWarnings] = this._header.process(rulesEngine);
+    const [header, headersValid, headerErrorsAndWarnings] = this._header.process(rulesEngine, behaviour);
     errorsAndWarnings.push(...headerErrorsAndWarnings);
 
     // Body
-    const [body, bodyErrors, bodyWarnings] = rulesEngine.narrow('body').parse(this.body);
+    const [body, bodyErrors, bodyWarnings] = rulesEngine.narrow('body').parse(this.body, behaviour);
     if (bodyErrors.length || bodyWarnings.length)
       errorsAndWarnings.push({ type: 'body', errors: bodyErrors, warnings: bodyWarnings });
 
     // Footers
     const { footers, valid: footersValid } = this._footers.reduce(
       (info, footer) => {
-        const [parsedFooter, footerErrorsAndWarnings] = footer.process(rulesEngine);
+        const [parsedFooter, footerErrorsAndWarnings] = footer.process(rulesEngine, behaviour);
 
         info.footers.push(parsedFooter);
         if (footerErrorsAndWarnings) {

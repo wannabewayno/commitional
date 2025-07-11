@@ -46,10 +46,13 @@ export default class CommitMessageHeader {
   /**
    *
    */
-  process(rulesEngine: RulesEngine): [header: CommitMessageHeader, valid: boolean, errorsAndWarnings: ErrorsAndWarnings[]] {
-    const [subject, subjectErrors, subjectWarnings] = rulesEngine.narrow('subject').parse(this.subject);
-    const [scope, scopeErrors, scopeWarnings] = rulesEngine.narrow('scope').parse(this.subject);
-    const [type, typeErrors, typeWarnings] = rulesEngine.narrow('type').parse(this.subject);
+  process(
+    rulesEngine: RulesEngine,
+    behaviour: 'validate' | 'fix' = 'fix',
+  ): [header: CommitMessageHeader, valid: boolean, errorsAndWarnings: ErrorsAndWarnings[]] {
+    const [subject, subjectErrors, subjectWarnings] = rulesEngine.narrow('subject').parse(this.subject, behaviour);
+    const [scope, scopeErrors, scopeWarnings] = rulesEngine.narrow('scope').parse(this.subject, behaviour);
+    const [type, typeErrors, typeWarnings] = rulesEngine.narrow('type').parse(this.subject, behaviour);
 
     const errorsAndWarnings: ErrorsAndWarnings[] = [];
 

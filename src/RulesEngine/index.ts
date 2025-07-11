@@ -102,13 +102,14 @@ export default class RulesEngine<Config extends Rules = Rules> {
    *          - Warnings indicate rule violations that could not be automatically fixed but won't block/fail linting
    *          - Empty array indicates the input passed all rules without issues
    */
-  parse(input: string): [output: string, errors: string[], warnings: string[]] {
+  parse(input: string, behaviour: 'validate' | 'fix' = 'fix'): [output: string, errors: string[], warnings: string[]] {
     const errors: string[] = [];
     const warnings: string[] = [];
+    const shouldFix = behaviour === 'fix';
 
     for (const rule of this.listRules()) {
       try {
-        const result = rule.check(input);
+        const result = rule.check(input, shouldFix);
         if (typeof result === 'string') input = result;
         if (result instanceof Error) warnings.push(`${result.message}`);
       } catch (error) {

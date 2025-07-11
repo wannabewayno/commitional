@@ -34,8 +34,11 @@ export default class CommitMessageFooter {
     this._text = value;
   }
 
-  process(rulesEngine: RulesEngine): [footer: CommitMessageFooter, info?: ErrorsAndWarnings] {
-    const [output, errors, warnings] = rulesEngine.narrow('footer').parse(this.toString());
+  process(
+    rulesEngine: RulesEngine,
+    behaviour: 'validate' | 'fix' = 'fix',
+  ): [footer: CommitMessageFooter, info?: ErrorsAndWarnings] {
+    const [output, errors, warnings] = rulesEngine.narrow('footer').parse(this.toString(), behaviour);
     const footer = CommitMessageFooter.fromString(output);
 
     if (footer instanceof Error) {
