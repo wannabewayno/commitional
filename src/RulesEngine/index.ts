@@ -82,12 +82,8 @@ export default class RulesEngine<Config extends Rules = Rules> {
    */
   validate(input = ''): boolean {
     for (const rule of this.listRules()) {
-      try {
-        const result = rule.check(input);
-        if (result instanceof Error) return false;
-      } catch (error) {
-        return false;
-      }
+      const result = rule.validate(input);
+      if (!result) return false;
     }
     return true;
   }

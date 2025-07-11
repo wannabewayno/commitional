@@ -62,7 +62,7 @@ describe('RulesEngine', () => {
   describe('validate', () => {
     it('should return true when input passes all rules', () => {
       const mockRule = {
-        check: sinon.stub().returns('valid input'),
+        validate: sinon.stub().returns(true),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
       expect(engine.validate('valid input')).to.be.true;
@@ -70,7 +70,7 @@ describe('RulesEngine', () => {
 
     it('should return false when input fails a rule', () => {
       const mockRule = {
-        check: sinon.stub().returns(new Error('Invalid input')),
+        validate: sinon.stub().returns(false),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
       expect(engine.validate('invalid input')).to.be.false;
@@ -78,7 +78,7 @@ describe('RulesEngine', () => {
 
     it('should return false when a rule throws an error', () => {
       const mockRule = {
-        check: sinon.stub().throws(new Error('Rule error')),
+        validate: sinon.stub().returns(false),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
       expect(engine.validate('input')).to.be.false;
@@ -86,7 +86,7 @@ describe('RulesEngine', () => {
 
     it('should handle empty input', () => {
       const mockRule = {
-        check: sinon.stub().returns(''),
+        validate: sinon.stub().returns(true),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
       expect(engine.validate()).to.be.true;

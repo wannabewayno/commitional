@@ -30,17 +30,13 @@ export default class ScopePrompt extends BasePrompt {
       default: commit.scope,
       prefill: 'editable',
       validate: value => {
-        const valid = this.rules.validate(value);
-        if (!valid) {
-          const [, errors] = this.rules.parse(value);
-          return errors.join('\n');
-        }
+        const [, errors] = this.rules.parse(value);
+        if (errors.length) return errors.join('\n');
         return true;
       },
       transformer: value => {
-        [value] = this.rules.parse(value);
-        if (!this.rules.validate(value)) value = red(value);
-        return value;
+        const [parsed, errors] = this.rules.parse(value);
+        return errors.length ? red(value) : parsed;
       },
     });
 

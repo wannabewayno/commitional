@@ -108,13 +108,10 @@ export default class BodyPrompt extends BasePrompt {
         // Trim comments
         const content = value.replace(/^#.+$/gm, '').trim();
 
-        const valid = this.rules.validate(content);
+        const [, errors] = this.rules.parse(content);
 
         // Invalid, return a list of errors
-        if (!valid) {
-          const [, errors] = this.rules.parse(content);
-          return errors.join('\n');
-        }
+        if (errors.length) return errors.join('\n');
 
         // otherwise must be valid
         return true;

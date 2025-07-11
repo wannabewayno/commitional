@@ -64,18 +64,13 @@ export default class FooterPrompt extends BasePrompt {
         : await input({
             message: 'footer token:',
             validate: value => {
-              const footerText = `${value}:`;
-              const valid = this.rules.validate(footerText);
-              if (!valid) {
-                const [, errors] = this.rules.parse(footerText);
-                return errors.join('\n');
-              }
+              const [, errors] = this.rules.parse(`${value}:`);
+              if (!errors.length) return errors.join('\n');
               return true;
             },
             transformer: value => {
-              [value] = this.rules.parse(`${value}:`);
-              if (!this.rules.validate(value)) value = red(value);
-              return value;
+              const [parsed, errors] = this.rules.parse(`${value}:`);
+              return errors.length ? red(parsed) : parsed;
             },
           }).then(value => this.rules.parse(value)[0]);
     }
@@ -86,18 +81,13 @@ export default class FooterPrompt extends BasePrompt {
       default: text,
       prefill: 'editable',
       validate: value => {
-        const footerText = `${token}: ${value}`;
-        const valid = this.rules.validate(footerText);
-        if (!valid) {
-          const [, errors] = this.rules.parse(footerText);
-          return errors.join('\n');
-        }
+        const [, errors] = this.rules.parse(`${token}: ${value}`);
+        if (!errors.length) return errors.join('\n');
         return true;
       },
       transformer: value => {
-        [value] = this.rules.parse(`${token}: ${value}`);
-        if (!this.rules.validate(value)) value = red(value);
-        return value;
+        const [parsed, errors] = this.rules.parse(`${token}: ${value}`);
+        return errors.length ? red(parsed) : parsed;
       },
     }).then(value => this.rules.parse(`${token}: ${value}`)[0]);
 
