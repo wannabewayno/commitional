@@ -83,4 +83,31 @@ describe('EmptyRule', () => {
       }, /be empty/);
     });
   });
+
+  describe('check with fix parameter', () => {
+    it('should apply fix when fix=true', () => {
+      const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'always');
+      const result = rule.check('Hello', true);
+      assert.strictEqual(result, '');
+    });
+
+    it('should not apply fix when fix=false', () => {
+      const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'always');
+      assert.throws(() => {
+        rule.check('Hello', false);
+      }, /be empty/);
+    });
+
+    it('should return valid input unchanged regardless of fix parameter', () => {
+      const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'always');
+      assert.strictEqual(rule.check('', false), '');
+      assert.strictEqual(rule.check('', true), '');
+    });
+
+    it('should return error when fix=false and input invalid with WARNING level', () => {
+      const rule = new EmptyRule('subject', RuleConfigSeverity.Warning, 'always');
+      const result = rule.check('Hello', false);
+      assert.ok(result instanceof Error);
+    });
+  });
 });

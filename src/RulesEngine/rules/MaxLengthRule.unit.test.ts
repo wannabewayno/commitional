@@ -98,4 +98,31 @@ describe('MaxLengthRule', () => {
       }, /exceed 10 characters/);
     });
   });
+
+  describe('check with fix parameter', () => {
+    it('should apply fix when fix=true', () => {
+      const rule = new MaxLengthRule('subject', RuleConfigSeverity.Error, 'always', 5);
+      const result = rule.check('Hello World', true);
+      assert.strictEqual(result, 'Hello');
+    });
+
+    it('should not apply fix when fix=false', () => {
+      const rule = new MaxLengthRule('subject', RuleConfigSeverity.Error, 'always', 5);
+      assert.throws(() => {
+        rule.check('Hello World', false);
+      }, /exceed 5 characters/);
+    });
+
+    it('should return valid input unchanged regardless of fix parameter', () => {
+      const rule = new MaxLengthRule('subject', RuleConfigSeverity.Error, 'always', 10);
+      assert.strictEqual(rule.check('Hello', false), 'Hello');
+      assert.strictEqual(rule.check('Hello', true), 'Hello');
+    });
+
+    it('should return error when fix=false and input invalid with WARNING level', () => {
+      const rule = new MaxLengthRule('subject', RuleConfigSeverity.Warning, 'always', 5);
+      const result = rule.check('Hello World', false);
+      assert.ok(result instanceof Error);
+    });
+  });
 });

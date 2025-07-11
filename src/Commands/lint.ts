@@ -40,6 +40,9 @@ export const Provider =
     // load the rules engine
     const rulesEngine = await RulesEngine.fromConfig();
 
+    // TODO: If we're fixing use process, if we're not simply validate it we will either need to
+    // parse vs validate
+
     // Lint all commits against the rules engine
     const results = commits.map(({ msg }) => {
       // TODO: write option will attempt to fix before casting validation

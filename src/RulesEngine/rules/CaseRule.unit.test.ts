@@ -115,4 +115,31 @@ describe('CaseRule', () => {
       assert.strictEqual(result, 'HELLO WORLD');
     });
   });
+
+  describe('check with fix parameter', () => {
+    it('should apply fix when fix=true', () => {
+      const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
+      const result = rule.check('Hello World', true);
+      assert.strictEqual(result, 'hello world');
+    });
+
+    it('should not apply fix when fix=false', () => {
+      const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
+      assert.throws(() => {
+        rule.check('Hello World', false);
+      }, /lower-case/);
+    });
+
+    it('should return valid input unchanged regardless of fix parameter', () => {
+      const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
+      assert.strictEqual(rule.check('hello world', false), 'hello world');
+      assert.strictEqual(rule.check('hello world', true), 'hello world');
+    });
+
+    it('should return error when fix=false and input invalid with WARNING level', () => {
+      const rule = new CaseRule('subject', RuleConfigSeverity.Warning, 'always', 'lower-case');
+      const result = rule.check('Hello World', false);
+      assert.ok(result instanceof Error);
+    });
+  });
 });
