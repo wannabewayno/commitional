@@ -40,13 +40,12 @@ export const Provider =
     // load the rules engine
     const rulesEngine = await RulesEngine.fromConfig();
 
-    // TODO: If we're fixing use process, if we're not simply validate it we will either need to
-    // parse vs validate
+    // fix vs validate
+    const behaviour = opts.fix ? 'fix' : 'validate';
 
     // Lint all commits against the rules engine
     const results = commits.map(({ msg }) => {
-      // TODO: write option will attempt to fix before casting validation
-      const [commit, valid, errorsAndWarnings] = CommitMessage.fromString(msg).process(rulesEngine);
+      const [commit, valid, errorsAndWarnings] = CommitMessage.fromString(msg).process(rulesEngine, behaviour);
 
       const errorSections: string[] = [];
       if (!valid) {
@@ -66,9 +65,7 @@ export const Provider =
     const allValid = !results.some(result => result.error);
 
     // Write fixed commit back to file if --fix is used and it's a file
-    if (opts.fix && isFile && results[0]) {
-      await writeFile(args[0], results[0].commit.unstyle().toString());
-    }
+    if (behaviour === 'fix' && isFile && results[0]) await writeFile(args[0], results[0].commit.unstyle().toString());
 
     if (!allValid) {
       const errorMessage = filterMap(results, ({ commit, error }) => {
