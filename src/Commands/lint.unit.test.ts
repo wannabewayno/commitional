@@ -321,27 +321,6 @@ describe('Lint Cmd', () => {
   });
 
   describe('Options Handling', () => {
-    it('should handle edit option (TODO implementation)', async () => {
-      mockReadFile.resolves('invalid commit');
-
-      const mockCommit = sinon.createStubInstance(CommitMessage);
-      mockCommit.process.returns([
-        mockCommit,
-        false,
-        [{ type: 'subject', filter: undefined, errors: ['Subject missing'], warnings: [] }],
-      ]);
-      mockCommit.setStyle.returns(undefined);
-      mockCommit.style.returns(mockCommit);
-      mockCommit.toString.returns('invalid commit');
-      sinon.stub(CommitMessage, 'fromString').returns(mockCommit);
-
-      await lintCmd('commit-msg.txt', { edit: true });
-
-      // Currently just logs error and exits, TODO implementation should be tested when implemented
-      expect(mockLogError.called).to.be.true;
-      expect(mockExit.calledWith(1)).to.be.true;
-    });
-
     it('should handle both fix and edit options', async () => {
       mockReadFile.resolves('feat: commit message');
 
@@ -351,7 +330,7 @@ describe('Lint Cmd', () => {
       mockCommit.toString.returns('feat: fixed commit message');
       sinon.stub(CommitMessage, 'fromString').returns(mockCommit);
 
-      await lintCmd('commit-msg.txt', { fix: true, edit: true });
+      await lintCmd('commit-msg.txt', { fix: true });
 
       expect(mockWriteFile.called).to.be.true;
       expect(mockExit.calledWith(0)).to.be.true;

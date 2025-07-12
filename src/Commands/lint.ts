@@ -7,7 +7,6 @@ import { red } from 'yoctocolors';
 import filterMap from '../lib/filterMap.js';
 
 interface LintOpts {
-  edit?: boolean;
   fix?: boolean;
 }
 
@@ -64,7 +63,7 @@ export const Provider =
 
     const allValid = !results.some(result => result.error);
 
-    // Write fixed commit back to file if --fix is used and it's a file
+    // Write fixed commit back to file if we have opted to fix and our commit comes from a file.
     if (behaviour === 'fix' && isFile && results[0]) await writeFile(args[0], results[0].commit.unstyle().toString());
 
     if (!allValid) {
@@ -74,10 +73,6 @@ export const Provider =
       }).join('\n\n');
 
       logError(errorMessage);
-
-      if (opts.edit) {
-        // TODO:
-      }
     }
 
     exit(allValid ? 0 : 1);
