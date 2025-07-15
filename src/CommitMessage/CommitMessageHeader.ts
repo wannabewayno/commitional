@@ -51,8 +51,8 @@ export default class CommitMessageHeader {
     behaviour: 'validate' | 'fix' = 'fix',
   ): [header: CommitMessageHeader, valid: boolean, errorsAndWarnings: ErrorsAndWarnings[]] {
     const [subject, subjectErrors, subjectWarnings] = rulesEngine.narrow('subject').parse(this.subject, behaviour);
-    const [scope, scopeErrors, scopeWarnings] = rulesEngine.narrow('scope').parse(this.subject, behaviour);
-    const [type, typeErrors, typeWarnings] = rulesEngine.narrow('type').parse(this.subject, behaviour);
+    const [scope, scopeErrors, scopeWarnings] = rulesEngine.narrow('scope').parse(this.scope, behaviour);
+    const [type, typeErrors, typeWarnings] = rulesEngine.narrow('type').parse(this.type, behaviour);
 
     const errorsAndWarnings: ErrorsAndWarnings[] = [];
 
