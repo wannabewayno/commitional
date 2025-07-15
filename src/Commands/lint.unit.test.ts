@@ -164,14 +164,14 @@ describe('Lint Cmd', () => {
       mockGit.log.resolves([
         {
           hash: 'abc123def456',
-          short: 'abc123',
+          short: 'abc123d',
           date: new Date(),
           msg: 'feat: add feature 1',
           author: { name: 'Test User', email: 'test@example.com' },
         },
         {
           hash: 'def456ghi789',
-          short: 'def456',
+          short: 'def456g',
           date: new Date(),
           msg: 'fix: fix bug 2',
           author: { name: 'Test User', email: 'test@example.com' },
@@ -235,7 +235,7 @@ describe('Lint Cmd', () => {
       mockGit.log.resolves([
         {
           hash: '123456789abcdef',
-          short: '123',
+          short: '1234567',
           date: new Date(),
           msg: 'feat: add new feature',
           author: { name: 'Test User', email: 'test@example.com' },
