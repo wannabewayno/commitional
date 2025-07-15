@@ -1,108 +1,99 @@
 import path from 'node:path';
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { execSync } from 'node:child_process';
 import Cliete from 'cliete';
-
-
-// Helper function to create a git repository with staged files
-function setupGitRepo(tempDir: string, files: Record<string, string> = {}) {
-  // Initialize git repo
-  execSync('git init', { cwd: tempDir });
-  execSync('git config user.name "Test User"', { cwd: tempDir });
-  execSync('git config user.email "test@example.com"', { cwd: tempDir });
-  
-  // Create and stage files
-  Object.entries(files).forEach(([filename, content]) => {
-    const filePath = path.join(tempDir, filename);
-    const dir = path.dirname(filePath);
-    if (dir !== tempDir) {
-      mkdirSync(dir, { recursive: true });
-    }
-    writeFileSync(filePath, content);
-    execSync(`git add "${filename}"`, { cwd: tempDir });
-  });
-}
-
-// Helper function to create commitlint config
-function createCommitlintConfig(tempDir: string, config: any) {
-  writeFileSync(
-    path.join(tempDir, 'commitlint.config.js'),
-    `module.exports = ${JSON.stringify(config, null, 2)};`
-  );
-}
+import TestGitRepo from './fixtures/TestGitRepo';
+import CommitlintConfigBuilder from './fixtures/CommitlintConfigBuilder';
 
 describe('CLI E2E Tests', () => {
   let tempDir: string;
-  let I: Cliete;
 
   beforeEach(() => {
     tempDir = mkdtempSync(path.join(tmpdir(), 'commitional-test-'));
   });
 
   afterEach(async () => {
-    // if (I) {
-      // await I.close();
-    // }
     rmSync(tempDir, { recursive: true, force: true });
   });
 
   describe('Basic CLI Functionality', () => {
+    // find the version it will be what-ever is in the package.json
     it('should display version information', async () => {
-      I = await Cliete.openTerminal('commitional --version', {
+      const I = await Cliete.openTerminal('commitional --version', {
         width: 80,
         height: 24,
-        // cwd: tempDir
+        cwd: tempDir,
       });
 
-      await I.spot('dev');
+      await I.spot('1.0.0');
     });
 
     it('should display help information', async () => {
-      I = await Cliete.openTerminal('commitional --help', {
-        width: 80,
+      const I = await Cliete.openTerminal('commitional --help', {
+        width: 120,
         height: 24,
-        // cwd: tempDir
+        cwd: tempDir,
       });
-
-      await I.spot('Usage: commitional [options]');
+      await I.spot('Usage: commitional [options] [command]');
       await I.spot('CLI tool for crafting commit messages');
       await I.spot('Options:');
     });
 
     it('should show error when not in git repository', async () => {
-      I = await Cliete.openTerminal('commitional', {
-        width: 80,
+      const I = await Cliete.openTerminal('commitional', {
+        width: 100,
         height: 24,
-        // cwd: tempDir
+        cwd: tempDir,
       });
 
       await I.spot('Not a git repository');
     });
 
     it('should show error when no files are staged', async () => {
-      setupGitRepo(tempDir);
-      
-      I = await Cliete.openTerminal('commitional', {
+      const repo = new TestGitRepo();
+
+      const I = await Cliete.openTerminal('commitional', {
         width: 80,
         height: 24,
-        // cwd: tempDir
+        cwd: repo.tempDir,
       });
 
       await I.spot('No files staged to commit');
     });
+
+    it('should handle ctrl+c gracefully', async () => {
+      const repo = new TestGitRepo();
+      repo.addJsFile('test', 'console.log("test");', { stage: true });
+
+      const I = await Cliete.openTerminal('commitional', {
+        width: 80,
+        height: 24,
+        cwd: repo.tempDir,
+      });
+
+      await I.wait.until.I.spot('? Select the type');
+      await I.press.ctrlC.and.wait.for.the.process.to.exit();
+      await I.spot('👋 bye!');
+    });
   });
 
   describe('Interactive Commit Flow', () => {
-    beforeEach(() => {
-      setupGitRepo(tempDir, { 'test.js': 'console.log("test");' });
+    let repo: TestGitRepo;
+
+    before(() => {
+      repo = new TestGitRepo();
+      repo.addJsFile('test', 'console.log("test");', { stage: true });
+    });
+
+    after(() => {
+      repo.teardown();
     });
 
     it('should show commit type selection', async () => {
-      I = await Cliete.openTerminal('commitional', {
+      const I = await Cliete.openTerminal('commitional', {
         width: 100,
         height: 30,
-        // cwd: tempDir
+        cwd: repo.tempDir,
       });
 
       await I.spot("Select the type of change that you're committing:");
@@ -112,63 +103,77 @@ describe('CLI E2E Tests', () => {
     });
 
     it('should navigate through commit types', async () => {
-      I = await Cliete.openTerminal('commitional', {
+      const I = await Cliete.openTerminal('commitional', {
         width: 100,
         height: 30,
-        // cwd: tempDir
+        cwd: repo.tempDir,
       });
 
       await I.spot('❯ feat');
-      
-      await I.press.down.twice.and.spot('❯ docs');
-      
-      await I.press.up.once.and.spot('❯ fix');
+
+      await I.press.down.twice.and.wait.until.I.spot('❯ docs');
+
+      await I.press.up.once.and.wait.until.I.spot('❯ fix');
     });
   });
 
   describe('Command Line Options', () => {
-    beforeEach(() => {
-      setupGitRepo(tempDir, { 'test.js': 'console.log("test");' });
+    let repo: TestGitRepo;
+
+    before(() => {
+      repo = new TestGitRepo();
+      repo.addJsFile('test', 'console.log("test");', { stage: true });
+    });
+
+    after(() => {
+      repo.teardown();
     });
 
     it('should accept pre-filled type option', async () => {
-      I = await Cliete.openTerminal('commitional --type feat', {
+      const I = await Cliete.openTerminal('commitional --type feat', {
         width: 100,
         height: 30,
-        // cwd: tempDir
+        cwd: repo.tempDir,
       });
 
-      await I.spot('Subject');
+      await I.wait.until.I.spot('? Subject');
     });
 
     it('should handle breaking change flag', async () => {
-      I = await Cliete.openTerminal(`commitional --type feat --subject 'breaking change' --breaking`, {
+      const I = await Cliete.openTerminal(`commitional --type feat --subject 'breaking change' --breaking`, {
         width: 100,
         height: 30,
-        // cwd: tempDir
+        cwd: repo.tempDir,
       });
 
-      await I.spot('feat!: breaking change');
+      await I.spot('feat!: breaking change ⚠️');
     });
   });
 
   describe('Configuration Integration', () => {
-    it('should use custom commit types from config', async () => {
-      setupGitRepo(tempDir, { 'test.js': 'console.log("test");' });
-      
-      const config = {
-        rules: {
-          'type-enum': [2, 'always', ['custom', 'special', 'unique']]
-        }
-      };
-      createCommitlintConfig(tempDir, config);
+    let repo: TestGitRepo;
 
-      I = await Cliete.openTerminal('commitional', {
+    before(() => {
+      repo = new TestGitRepo();
+      // Commit a configuration file
+      new CommitlintConfigBuilder(repo).typeEnum(['custom', 'special', 'unique']).commitAsYaml();
+
+      // Stage a file for addition
+      repo.addJsFile('test', 'console.log("test");', { stage: true });
+    });
+
+    after(() => {
+      repo.teardown();
+    });
+
+    it('should use custom commit types from config', async () => {
+      const I = await Cliete.openTerminal('commitional', {
         width: 100,
         height: 30,
-        // cwd: tempDir
+        cwd: repo.tempDir,
       });
 
+      await I.spot('? Select the type');
       await I.spot('custom');
       await I.spot('special');
       await I.spot('unique');
