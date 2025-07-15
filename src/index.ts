@@ -8,6 +8,7 @@ import { blue, green, red } from 'yoctocolors';
 import ora from 'ora';
 import PromptFlow from './PromptFlow/index.js';
 import Highlighter from './lib/highlighter.js';
+import { lintCmd } from './Commands/index.js';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
@@ -31,7 +32,7 @@ program
   .name('commitional')
   .description('CLI tool for crafting commit messages - compatible with commitlint')
   .version(process.env.VERSION ?? 'dev', '-v, --version', 'Output the current version')
-  .option('-t, --type [type]', 'Commit type; feat, fix, test ...')
+  .option('-t, --type [type]', 'Commit type (feat, fix, test, ...)')
   .option('-S, --scope [scope]', 'Commit scope (if any)')
   .option('-s, --subject [subject]', 'Commit subject')
   .option('-b, --body [body]', 'Commit body')
@@ -192,5 +193,7 @@ program
     if (res.success) spinner.succeed(res.commitHash);
     else spinner.fail(res.error?.message);
   });
+
+program.addCommand(lintCmd);
 
 await program.parseAsync(process.argv);
