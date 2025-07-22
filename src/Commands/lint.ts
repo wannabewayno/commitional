@@ -34,8 +34,9 @@ export const Provider = ({ git, readFile, writeFile, exit, logError }: Dependenc
   async function getCommits(
     commitMsgArgs: [string, string?],
   ): Promise<{ type: 'log' | 'file'; commits: { msg: string }[] }> {
-    if (isHash(commitMsgArgs[0])) return { type: 'log', commits: await git.log(...commitMsgArgs) };
-    if (isInteger(commitMsgArgs[0])) return { type: 'log', commits: await git.log(Number.parseInt(commitMsgArgs[0])) };
+    if (isHash(commitMsgArgs[0])) return { type: 'log', commits: await git.log(...commitMsgArgs).catch(() => []) };
+    if (isInteger(commitMsgArgs[0]))
+      return { type: 'log', commits: await git.log(Number.parseInt(commitMsgArgs[0])).catch(() => []) };
     // Otherwise assume a filepath
     return {
       type: 'file',
@@ -79,8 +80,9 @@ export const Provider = ({ git, readFile, writeFile, exit, logError }: Dependenc
     const allValid = !results.some(result => result.error);
 
     // Write fixed commit back to file if we have opted to fix and our commit comes from a file.
-    if (behaviour === 'fix' && type === 'file' && results[0])
+    if (behaviour === 'fix' && type === 'file' && results[0]) {
       await writeFile(args[0], results[0].commit.unstyle().toString());
+    }
 
     if (!allValid) {
       const errorMessage = filterMap(results, ({ commit, error }) => {

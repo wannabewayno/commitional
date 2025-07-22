@@ -11,53 +11,58 @@ export default class CommitlintConfigBuilder {
   constructor(private repo: TestGitRepo) {}
 
   // Rule builder methods
-  typeEnum(types: string[], level: RuleLevel = 2, condition: RuleCondition = 'always'): this {
+  typeEnum(types: string[], condition: RuleCondition = 'always', level: RuleLevel = 2): this {
     this.rules['type-enum'] = [level, condition, types];
     return this;
   }
 
-  typeEmpty(level: RuleLevel = 2, condition: RuleCondition = 'never'): this {
+  typeEmpty(condition: RuleCondition = 'never', level: RuleLevel = 2): this {
     this.rules['type-empty'] = [level, condition];
     return this;
   }
 
-  subjectEmpty(level: RuleLevel = 2, condition: RuleCondition = 'never'): this {
+  subjectEmpty(condition: RuleCondition = 'never', level: RuleLevel = 2): this {
     this.rules['subject-empty'] = [level, condition];
     return this;
   }
 
-  subjectMaxLength(length: number, level: RuleLevel = 2, condition: RuleCondition = 'always'): this {
+  subjectMaxLength(length: number, condition: RuleCondition = 'always', level: RuleLevel = 2): this {
     this.rules['subject-max-length'] = [level, condition, length];
     return this;
   }
 
-  subjectMinLength(length: number, level: RuleLevel = 2, condition: RuleCondition = 'always'): this {
+  subjectMinLength(length: number, condition: RuleCondition = 'always', level: RuleLevel = 2): this {
     this.rules['subject-min-length'] = [level, condition, length];
     return this;
   }
 
-  subjectCase(caseType: string, level: RuleLevel = 2, condition: RuleCondition = 'always'): this {
+  subjectCase(caseType: string, condition: RuleCondition = 'always', level: RuleLevel = 2): this {
     this.rules['subject-case'] = [level, condition, caseType];
     return this;
   }
 
-  subjectFullStop(level: RuleLevel = 2, condition: RuleCondition = 'never', char = '.'): this {
+  subjectFullStop(condition: RuleCondition = 'never', level: RuleLevel = 2, char = '.'): this {
     this.rules['subject-full-stop'] = [level, condition, char];
     return this;
   }
 
-  bodyMaxLineLength(length: number, level: RuleLevel = 2, condition: RuleCondition = 'always'): this {
+  bodyMaxLineLength(length: number, condition: RuleCondition = 'always', level: RuleLevel = 2): this {
     this.rules['body-max-line-length'] = [level, condition, length];
     return this;
   }
 
-  scopeEnum(scopes: string[], level: RuleLevel = 2, condition: RuleCondition = 'always'): this {
+  scopeEnum(scopes: string[], condition: RuleCondition = 'always', level: RuleLevel = 2): this {
     this.rules['scope-enum'] = [level, condition, scopes];
     return this;
   }
 
-  scopeEmpty(level: RuleLevel = 2, condition: RuleCondition = 'never'): this {
+  scopeEmpty(condition: RuleCondition = 'never', level: RuleLevel = 2): this {
     this.rules['scope-empty'] = [level, condition];
+    return this;
+  }
+
+  footerCase(types: string[], condition: RuleCondition = 'never', level: RuleLevel = 2): this {
+    this.rules['footer-case'] = [level, condition, types];
     return this;
   }
 

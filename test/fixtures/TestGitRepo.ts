@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, rmSync, mkdtempSync } from 'node:fs';
+import { mkdirSync, writeFileSync, rmSync, mkdtempSync, unlinkSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -107,6 +107,17 @@ export default class TestGitRepo {
     }
 
     return hashes;
+  }
+
+  removeFile(name: string) {
+    const filePath = path.join(this.tempDir, name);
+    unlinkSync(filePath);
+    return this;
+  }
+
+  getFileContents(filename: string): string {
+    const filePath = path.join(this.tempDir, filename);
+    return readFileSync(filePath, 'utf-8');
   }
 
   teardown(): void {

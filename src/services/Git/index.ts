@@ -73,11 +73,22 @@ export default class Git {
     }
   }
 
-  async log(to: string | number, from = 'HEAD'): Promise<ICommit[]> {
-    const logArgs = typeof to === 'number' ? { [`-${to}`]: null, [from]: null } : { from, to };
+  async log(to: string | number, from?: string): Promise<ICommit[]> {
+    const logArgs: Record<string, string | null> = {};
+
+    if (typeof to === 'number') {
+      logArgs[`-${to}`] = null;
+      logArgs.HEAD = null;
+    } else if (!from) {
+      logArgs[to] = null;
+      logArgs.maxCount = '1';
+    } else {
+      logArgs.from = from;
+      logArgs.to = to;
+    }
 
     // fetch git commit
-    const commits = await this.git.log(logArgs);
+    const commits = await this.git.log({ ...logArgs });
 
     return commits.all.map(
       logItem =>
