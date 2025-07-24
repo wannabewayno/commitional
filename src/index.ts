@@ -14,8 +14,9 @@ process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
     console.log('👋 bye!');
   } else {
-    // Rethrow unknown errors
-    throw error;
+    // Rethrow unknown errors Log errors to the console and exit with a non-zero exit code
+    console.log(error.message);
+    process.exit(1);
   }
 });
 
@@ -37,7 +38,8 @@ program
   .option('-s, --subject [subject]', 'Commit subject')
   .option('-b, --body [body]', 'Commit body')
   .option('-f, --footer [footer...]', 'Commit footer(s)')
-  .option('-B, --breaking', 'Is this a Breaking change?')
+  .option('-B, --breaking', 'Mark the commit as a breaking change')
+  .option('-P, --no-breaking', 'Mark the commit as a non breaking change')
   .option('-A, --auto', 'Use Generative AI to pre-fill your commit message', false)
   .addHelpCommand('help [command]', 'Display help for command')
   .action(async (opts: Partial<CommitJSON> & { breaking?: boolean; auto: boolean }) => {
