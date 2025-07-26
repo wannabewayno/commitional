@@ -149,7 +149,7 @@ describe('CLI E2E Tests', () => {
       repo = new TestGitRepo();
       new CommitlintConfigBuilder(repo).typeEnum(['custom', 'special', 'unique']).commitAsYaml();
 
-      // Ensure we have staged changes, otherwise the cli with short circuit.
+      // Ensure we have staged changes, otherwise the cli will short circuit.
       repo.addJsFile('test', 'console.log("test");', { stage: true });
 
       Cliete.setDefault('cwd', repo.tempDir);
