@@ -39,6 +39,40 @@ Lowers the barrier to entry for frequent, descriptive and lintable commits
 **help**
 use the `--help` flag to see a list of allowed subcommands and options.
 
+### lint
+Validate commit messages against your configured linting rules.
+
+```bash
+commitional lint <target> [--fix]
+```
+
+**Target Options:**
+- **File path**: `commitional lint COMMIT_EDITMSG` - Lint commit message from file
+- **Commit hash**: `commitional lint a1b2c3d` - Lint specific commit (full or short hash)
+- **Hash range**: `commitional lint abc123...def456` - Lint commits in range
+- **Recent commits**: `commitional lint 3` - Lint last N commits from HEAD
+
+**Options:**
+- `--fix` - Automatically fix correctable violations (only writes back to files)
+
+**Examples:**
+```bash
+# Lint commit message file
+commitional lint .git/COMMIT_EDITMSG
+
+# Lint and fix commit message file
+commitional lint .git/COMMIT_EDITMSG --fix
+
+# Lint specific commit
+commitional lint a1b2c3d
+
+# Lint range of commits
+commitional lint abc123...def456
+
+# Lint last 5 commits
+commitional lint 5
+```
+
 ### --auto Flag
 
 When using the `--auto` flag, Commitional can leverage configured AIs to help generate commit messages.
@@ -71,52 +105,6 @@ export COMMITIONAL_AMPLIFY_KEY="your-amplify-token"
 export COMMITIONAL_AMPLIFY_PREFERENCE="2"  # Second preference
 export COMMITIONAL_AMPLIFY_MODEL="custom-model"  # Use custom model
 ```
-
-## Development
-
-### Prerequisites
-
-- Node.js (v18 or higher) or Bun
-- npm, yarn or bun
-
-### Setup
-
-1. Clone the repository
-```bash
-git clone https://github.com/wannabewayno/commitional.git
-cd commitional
-```
-
-2. Install dependencies
-```bash
-# Node
-npm install
-
-# Bun
-bun install
-```
-
-3. Run development mode
-```bash
-npm run dev
-```
-
-4. Installing the current local version globally
-**Convenience script**
-```bash
-./install.sh
-```
-**Manually**
-```bash
-npm run build && npm install -g .
-```
-
-### Scripts
-- `npm run format` - Format code using Biome
-- `npm run lint` - Lint code using Biome
-- `npm run check` - Check code with tsc
-- `npm run build` - Bundles code with esbuild to bin/commitional.js
-- `npm test` - Run tests
 
 ## Contributing
 
