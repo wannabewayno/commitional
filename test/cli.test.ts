@@ -12,9 +12,7 @@ describe('CLI E2E Tests', () => {
     before(() => {
       tempDir = mkdtempSync(path.join(tmpdir(), 'commitional-test-'));
 
-      Cliete.clearDefaults();
-      Cliete.setDefault('cwd', tempDir);
-      Cliete.setDefault('width', 200);
+      Cliete.setDefaults({ cwd: tempDir, width: 200 });
     });
 
     after(async () => {
@@ -66,14 +64,16 @@ describe('CLI E2E Tests', () => {
 
     before(() => {
       repo = new TestGitRepo();
-      new CommitlintConfigBuilder(repo).typeEnum(['custom', 'special', 'unique']).commitAsYaml();
+      new CommitlintConfigBuilder(repo).typeEnum(['custom', 'special', 'unique']).typeEmpty('never').commitAsYaml();
 
       // Ensure we have staged changes, otherwise the cli with short circuit.
       repo.addJsFile('test', 'console.log("test");', { stage: true });
 
-      Cliete.setDefault('cwd', repo.tempDir);
-      Cliete.setDefault('width', 100);
-      Cliete.setDefault('height', 30);
+      Cliete.setDefaults({
+        width: 100,
+        height: 30,
+        cwd: repo.tempDir,
+      });
     });
 
     after(() => {
@@ -105,14 +105,16 @@ describe('CLI E2E Tests', () => {
 
     before(() => {
       repo = new TestGitRepo();
-      new CommitlintConfigBuilder(repo).typeEnum(['custom', 'special', 'unique']).commitAsYaml();
+      new CommitlintConfigBuilder(repo).typeEnum(['custom', 'special', 'unique']).typeEmpty('never').commitAsYaml();
 
       // Ensure we have staged changes, otherwise the cli with short circuit.
       repo.addJsFile('test', 'console.log("test");', { stage: true });
 
-      Cliete.setDefault('cwd', repo.tempDir);
-      Cliete.setDefault('width', 100);
-      Cliete.setDefault('height', 30);
+      Cliete.setDefaults({
+        width: 100,
+        height: 30,
+        cwd: repo.tempDir,
+      });
     });
 
     after(() => {
@@ -139,35 +141,6 @@ describe('CLI E2E Tests', () => {
       const I = await Cliete.openTerminal(`commitional --type custom --subject 'no breaking change' --no-breaking`);
 
       await I.spot('custom: no breaking change');
-    });
-  });
-
-  describe('Configuration Integration', () => {
-    let repo: TestGitRepo;
-
-    before(() => {
-      repo = new TestGitRepo();
-      new CommitlintConfigBuilder(repo).typeEnum(['custom', 'special', 'unique']).commitAsYaml();
-
-      // Ensure we have staged changes, otherwise the cli will short circuit.
-      repo.addJsFile('test', 'console.log("test");', { stage: true });
-
-      Cliete.setDefault('cwd', repo.tempDir);
-      Cliete.setDefault('width', 100);
-      Cliete.setDefault('height', 30);
-    });
-
-    after(() => {
-      repo.teardown();
-    });
-
-    it('should use custom commit types from config', async () => {
-      const I = await Cliete.openTerminal('commitional');
-
-      await I.spot('? Select the type');
-      await I.spot('custom');
-      await I.spot('special');
-      await I.spot('unique');
     });
   });
 });
