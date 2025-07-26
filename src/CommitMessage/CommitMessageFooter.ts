@@ -1,4 +1,6 @@
 import sentaceKebabCase from '../lib/sentenceKebabCase.js';
+import type RulesEngine from '../RulesEngine/index.js';
+import type { ErrorsAndWarnings } from './interfaces.js';
 import type { StyleFn } from './Text.js';
 
 export default class CommitMessageFooter {
@@ -32,6 +34,25 @@ export default class CommitMessageFooter {
     this._text = value;
   }
 
+  process(
+    rulesEngine: RulesEngine,
+    behaviour: 'validate' | 'fix' = 'fix',
+  ): [footer: CommitMessageFooter, info?: ErrorsAndWarnings] {
+    const [output, errors, warnings] = rulesEngine.narrow('footer').parse(this.toString(), behaviour);
+    const footer = CommitMessageFooter.fromString(output);
+
+    if (footer instanceof Error) {
+      errors.push(footer.message);
+
+      const validFooter = CommitMessageFooter.fromString(`Error: ${output}`);
+      if (validFooter instanceof Error) throw validFooter;
+
+      return [validFooter, { type: 'footer', filter: 'Error', errors, warnings }];
+    }
+
+    return [footer, !errors.length ? undefined : { type: 'footer', filter: footer.token, errors, warnings }];
+  }
+
   setStyle(style: StyleFn) {
     this._style = style;
     return this;
@@ -53,7 +74,7 @@ export default class CommitMessageFooter {
   }
 
   static fromString(footer: string): CommitMessageFooter | Error {
-    const match = footer.match(/^(?<token>[\w+-]+): (?<text>.*)$/i);
+    const match = footer.match(/^(?<token>[\w-]+): (?<text>.*)$/i);
     if (!match || !match.groups?.token || !match.groups?.text)
       return new Error(`[Invalid footer] '${footer}' is does not conform to "<Some-token>: <text content>"`);
 

@@ -32,22 +32,25 @@ export abstract class BaseRule {
   abstract errorMessage(): string;
 
   /**
-   * Check if the input passes the rule
+   * Check if the input passes the rule by first validating it and if it fails, attempt to fix it
+   * If it can be fixed, return the augmented string, otherwise return or throw an error as appropriate to the level.
    * @param input The input to check against the rule
    * @returns original string or fixed string if valid, error if WARNING and cannot be fixed.
    * @throws error if level is ERROR and cannont be fixed.
    */
-  check(input: string): string | Error {
+  check(input: string, fix = true): string | Error {
     if (this.level === RuleConfigSeverity.Disabled) return input;
 
     const result = this.validate(input);
 
     if (result) return input;
 
-    // Attempt to fix the input if invalid.
-    const fixedInput = this.fix(input);
+    if (fix) {
+      // Attempt to fix the input if invalid.
+      const fixedInput = this.fix(input);
 
-    if (fixedInput !== null) return fixedInput;
+      if (fixedInput !== null) return fixedInput;
+    }
 
     const errorMsg = new Error(this.errorMessage());
 

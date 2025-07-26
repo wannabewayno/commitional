@@ -1,34 +1,173 @@
-import assert from 'node:assert';
-import { execSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
-import { mkdtempSync } from 'node:fs';
+import Cliete from 'cliete';
+import TestGitRepo from './fixtures/TestGitRepo';
+import CommitlintConfigBuilder from './fixtures/CommitlintConfigBuilder';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import path from 'node:path';
 
-// Get the directory name in ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const binPath = path.join(__dirname, '..', 'bin', 'commitional.js');
+describe('CLI E2E Tests', () => {
+  describe('Basic CLI Functionality', () => {
+    let tempDir: string;
 
-// Create a temporary directory for tests
-const tempDir = mkdtempSync(path.join(tmpdir(), 'commitional-test-'));
+    before(() => {
+      tempDir = mkdtempSync(path.join(tmpdir(), 'commitional-test-'));
 
-describe('CLI Tests', () => {
-  it('should display version information', () => {
-    const output = execSync(`node ${binPath} --version`, {
-      cwd: tempDir,
-      env: { ...process.env, HOME: tempDir },
-    }).toString();
-    assert.match(output, /\d+\.\d+\.\d+/);
+      Cliete.clearDefaults();
+      Cliete.setDefault('cwd', tempDir);
+      Cliete.setDefault('width', 200);
+    });
+
+    after(async () => {
+      rmSync(tempDir, { recursive: true, force: true });
+    });
+
+    // find the version it will be what-ever is in the package.json
+    it('should display version information', async () => {
+      const I = await Cliete.openTerminal('commitional --version');
+
+      await I.spot('1.0.0');
+    });
+
+    it('should display help information', async () => {
+      const I = await Cliete.openTerminal('commitional --help');
+      await I.spot('Usage: commitional [options] [command]');
+      await I.spot('CLI tool for crafting commit messages');
+      await I.spot('Options:');
+    });
+
+    it('should show error when not in git repository', async () => {
+      const I = await Cliete.openTerminal('commitional');
+
+      await I.spot('Not a git repository');
+    });
+
+    it('should show error when no files are staged', async () => {
+      const repo = new TestGitRepo();
+
+      const I = await Cliete.openTerminal('commitional', { cwd: repo.tempDir });
+
+      await I.spot('No files staged to commit');
+    });
+
+    it('should handle ctrl+c gracefully', async () => {
+      const repo = new TestGitRepo();
+      repo.addJsFile('test', 'console.log("test");', { stage: true });
+
+      const I = await Cliete.openTerminal('commitional', { cwd: repo.tempDir });
+
+      await I.wait.until.I.spot('? Select the type');
+      await I.press.ctrlC.and.wait.for.the.process.to.exit();
+      await I.spot('👋 bye!');
+    });
   });
 
-  it('should display help information', () => {
-    const output = execSync(`node ${binPath} --help`, {
-      cwd: tempDir,
-      env: { ...process.env, HOME: tempDir },
-    }).toString();
-    assert.ok(output.includes('Usage: commitional [options]'));
-    assert.ok(output.includes('CLI tool for crafting commit messages'));
-    assert.ok(output.includes('Options:'));
+  describe('Interactive Commit Flow', () => {
+    let repo: TestGitRepo;
+
+    before(() => {
+      repo = new TestGitRepo();
+      new CommitlintConfigBuilder(repo).typeEnum(['custom', 'special', 'unique']).commitAsYaml();
+
+      // Ensure we have staged changes, otherwise the cli with short circuit.
+      repo.addJsFile('test', 'console.log("test");', { stage: true });
+
+      Cliete.setDefault('cwd', repo.tempDir);
+      Cliete.setDefault('width', 100);
+      Cliete.setDefault('height', 30);
+    });
+
+    after(() => {
+      repo.teardown();
+    });
+
+    it('should show commit type selection', async () => {
+      const I = await Cliete.openTerminal('commitional');
+
+      await I.spot("Select the type of change that you're committing:");
+      await I.spot('custom');
+      await I.spot('special');
+      await I.spot('unique');
+    });
+
+    it('should navigate through commit types', async () => {
+      const I = await Cliete.openTerminal('commitional');
+
+      await I.spot('❯ custom');
+
+      await I.press.down.twice.and.wait.until.I.spot('❯ unique');
+
+      await I.press.up.once.and.wait.until.I.spot('❯ special');
+    });
+  });
+
+  describe('Command Line Options', () => {
+    let repo: TestGitRepo;
+
+    before(() => {
+      repo = new TestGitRepo();
+      new CommitlintConfigBuilder(repo).typeEnum(['custom', 'special', 'unique']).commitAsYaml();
+
+      // Ensure we have staged changes, otherwise the cli with short circuit.
+      repo.addJsFile('test', 'console.log("test");', { stage: true });
+
+      Cliete.setDefault('cwd', repo.tempDir);
+      Cliete.setDefault('width', 100);
+      Cliete.setDefault('height', 30);
+    });
+
+    after(() => {
+      repo.teardown();
+    });
+
+    it('should accept pre-filled type option', async () => {
+      const I = await Cliete.openTerminal('commitional --type custom');
+
+      await I.wait.until.I.spot('? Does this change introduce any breaking changes');
+
+      await I.type('n').and.press.enter.and.wait.until.I.spot('custom:');
+      await I.spot('? Commit or Edit');
+    });
+
+    it('should handle breaking change flag', async () => {
+      const I = await Cliete.openTerminal(`commitional --type custom --subject 'breaking change' --breaking`);
+
+      await I.spot('? Describe the breaking change:');
+      await I.type('It breaks stuff').and.press.enter.and.wait.until.I.spot('custom!: breaking change ⚠️');
+    });
+
+    it('should handle no-breaking change flag', async () => {
+      const I = await Cliete.openTerminal(`commitional --type custom --subject 'no breaking change' --no-breaking`);
+
+      await I.spot('custom: no breaking change');
+    });
+  });
+
+  describe('Configuration Integration', () => {
+    let repo: TestGitRepo;
+
+    before(() => {
+      repo = new TestGitRepo();
+      new CommitlintConfigBuilder(repo).typeEnum(['custom', 'special', 'unique']).commitAsYaml();
+
+      // Ensure we have staged changes, otherwise the cli with short circuit.
+      repo.addJsFile('test', 'console.log("test");', { stage: true });
+
+      Cliete.setDefault('cwd', repo.tempDir);
+      Cliete.setDefault('width', 100);
+      Cliete.setDefault('height', 30);
+    });
+
+    after(() => {
+      repo.teardown();
+    });
+
+    it('should use custom commit types from config', async () => {
+      const I = await Cliete.openTerminal('commitional');
+
+      await I.spot('? Select the type');
+      await I.spot('custom');
+      await I.spot('special');
+      await I.spot('unique');
+    });
   });
 });

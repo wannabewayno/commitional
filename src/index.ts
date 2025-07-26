@@ -8,13 +8,15 @@ import { blue, green, red } from 'yoctocolors';
 import ora from 'ora';
 import PromptFlow from './PromptFlow/index.js';
 import Highlighter from './lib/highlighter.js';
+import { lintCmd } from './Commands/index.js';
 
 process.on('uncaughtException', error => {
   if (error instanceof Error && error.name === 'ExitPromptError') {
     console.log('👋 bye!');
   } else {
-    // Rethrow unknown errors
-    throw error;
+    // Rethrow unknown errors Log errors to the console and exit with a non-zero exit code
+    console.log(error.message);
+    process.exit(1);
   }
 });
 
@@ -31,12 +33,13 @@ program
   .name('commitional')
   .description('CLI tool for crafting commit messages - compatible with commitlint')
   .version(process.env.VERSION ?? 'dev', '-v, --version', 'Output the current version')
-  .option('-t, --type [type]', 'Commit type; feat, fix, test ...')
+  .option('-t, --type [type]', 'Commit type (feat, fix, test, ...)')
   .option('-S, --scope [scope]', 'Commit scope (if any)')
   .option('-s, --subject [subject]', 'Commit subject')
   .option('-b, --body [body]', 'Commit body')
   .option('-f, --footer [footer...]', 'Commit footer(s)')
-  .option('-B, --breaking', 'Is this a Breaking change?')
+  .option('-B, --breaking', 'Mark the commit as a breaking change')
+  .option('-P, --no-breaking', 'Mark the commit as a non breaking change')
   .option('-A, --auto', 'Use Generative AI to pre-fill your commit message', false)
   .addHelpCommand('help [command]', 'Display help for command')
   .action(async (opts: Partial<CommitJSON> & { breaking?: boolean; auto: boolean }) => {
@@ -192,5 +195,7 @@ program
     if (res.success) spinner.succeed(res.commitHash);
     else spinner.fail(res.error?.message);
   });
+
+program.addCommand(lintCmd);
 
 await program.parseAsync(process.argv);

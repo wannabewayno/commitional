@@ -67,4 +67,28 @@ describe('TrimRule', () => {
       }).to.not.throw();
     });
   });
+
+  describe('check with fix parameter', () => {
+    it('should apply fix when fix=true', () => {
+      const result = rule.check(' leading space ', true);
+      expect(result).to.equal('leading space');
+    });
+
+    it('should not apply fix when fix=false', () => {
+      expect(() => {
+        rule.check(' leading space ', false);
+      }).to.throw(/whitespace/);
+    });
+
+    it('should return valid input unchanged regardless of fix parameter', () => {
+      expect(rule.check('clean text', false)).to.equal('clean text');
+      expect(rule.check('clean text', true)).to.equal('clean text');
+    });
+
+    it('should return error when fix=false and input invalid with WARNING level', () => {
+      const warningRule = new TrimRule('subject', RuleConfigSeverity.Warning, 'always');
+      const result = warningRule.check(' leading space ', false);
+      expect(result).to.be.instanceOf(Error);
+    });
+  });
 });

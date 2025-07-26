@@ -1,4 +1,6 @@
 import type { CommitPart } from '../RulesEngine/index.js';
+import type RulesEngine from '../RulesEngine/index.js';
+import type { ErrorsAndWarnings } from './interfaces.js';
 import Text, { type StyleFn } from './Text.js';
 
 export interface CommitMessageHeaderOpts {
@@ -39,6 +41,33 @@ export default class CommitMessageHeader {
 
   get subject() {
     return this._subject.toString();
+  }
+
+  /**
+   *
+   */
+  process(
+    rulesEngine: RulesEngine,
+    behaviour: 'validate' | 'fix' = 'fix',
+  ): [header: CommitMessageHeader, valid: boolean, errorsAndWarnings: ErrorsAndWarnings[]] {
+    const [subject, subjectErrors, subjectWarnings] = rulesEngine.narrow('subject').parse(this.subject, behaviour);
+    const [scope, scopeErrors, scopeWarnings] = rulesEngine.narrow('scope').parse(this.scope, behaviour);
+    const [type, typeErrors, typeWarnings] = rulesEngine.narrow('type').parse(this.type, behaviour);
+
+    const errorsAndWarnings: ErrorsAndWarnings[] = [];
+
+    if (subjectErrors.length || subjectWarnings.length)
+      errorsAndWarnings.push({ type: 'subject', errors: subjectErrors, warnings: subjectWarnings });
+    if (scopeErrors.length || scopeWarnings.length)
+      errorsAndWarnings.push({ type: 'scope', errors: scopeErrors, warnings: scopeWarnings });
+    if (typeErrors.length || typeWarnings.length)
+      errorsAndWarnings.push({ type: 'type', errors: typeErrors, warnings: typeWarnings });
+
+    return [
+      new CommitMessageHeader({ subject, scope, type }),
+      !(subjectErrors.length + scopeErrors.length + typeErrors.length),
+      errorsAndWarnings,
+    ];
   }
 
   setStyle(style: StyleFn, commitPart?: Extract<CommitPart, 'type' | 'subject' | 'scope'>) {

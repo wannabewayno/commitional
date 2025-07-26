@@ -86,7 +86,10 @@ export function CommitPartFactory(rules: RulesEngine, diff: Diff, commit: Commit
         // Text to show on the command line history when generation completes
         successText: () => commit.toString(),
       });
-    else await prompt.promptIfInvalid(commit); // Present the prompt to the user with the initial value
+    else {
+      commit.setStyle(value => value, commitPart);
+      await prompt.promptIfInvalid(commit); // Present the prompt to the user with the initial value
+    }
 
     commit.setStyle(value => value, commitPart);
   };

@@ -1,8 +1,10 @@
 import fallbackOnErr from '../lib/fallbackOnError.js';
 import filterMap from '../lib/filterMap.js';
 import type { CommitPart } from '../RulesEngine/index.js';
+import type RulesEngine from '../RulesEngine/index.js';
 import CommitMessageFooter from './CommitMessageFooter.js';
 import CommitMessageHeader from './CommitMessageHeader.js';
+import type { ErrorsAndWarnings } from './interfaces.js';
 import Text, { type StyleFn } from './Text.js';
 
 export interface CommitMessageHeaderOpts {
@@ -20,6 +22,7 @@ export interface CommitJSON {
   body?: string;
   footer?: string[];
 }
+
 /**
  * Simple class for formatting and parsing commit messages
  */
@@ -206,6 +209,54 @@ export default class CommitMessage {
     };
   }
 
+  /**
+   * Process the current commit message with a rules engine and return a new commit message with
+   * any errors or warning captured during the process will be collected.
+   * @param rulesEngine
+   * @returns A tuple of the [processed commit, if it's valid according to all rules, info object of field names and any errors and warnings]
+   */
+  process(
+    rulesEngine: RulesEngine,
+    behaviour: 'validate' | 'fix' = 'fix',
+  ): [processedCommit: CommitMessage, valid: boolean, info: ErrorsAndWarnings[]] {
+    const errorsAndWarnings: ErrorsAndWarnings[] = [];
+
+    // Header
+    const [header, headersValid, headerErrorsAndWarnings] = this._header.process(rulesEngine, behaviour);
+    errorsAndWarnings.push(...headerErrorsAndWarnings);
+
+    // Body
+    const [body, bodyErrors, bodyWarnings] = rulesEngine.narrow('body').parse(this.body, behaviour);
+    if (bodyErrors.length || bodyWarnings.length)
+      errorsAndWarnings.push({ type: 'body', errors: bodyErrors, warnings: bodyWarnings });
+
+    // Footers
+    const { footers, valid: footersValid } = this._footers.reduce(
+      (info, footer) => {
+        const [parsedFooter, footerErrorsAndWarnings] = footer.process(rulesEngine, behaviour);
+
+        info.footers.push(parsedFooter);
+        if (footerErrorsAndWarnings) {
+          errorsAndWarnings.push(footerErrorsAndWarnings);
+          info.valid = false;
+        }
+
+        return info;
+      },
+      { footers: [], valid: true } as {
+        footers: CommitMessageFooter[];
+        valid: boolean;
+      },
+    );
+
+    // Construct an error message for the whole commit.
+    return [
+      new CommitMessage(header, body, ...footers),
+      headersValid && !bodyErrors.length && footersValid,
+      errorsAndWarnings,
+    ];
+  }
+
   static fromJSON({ type, scope, body, footer, subject }: CommitJSON) {
     const header = new CommitMessageHeader({ type, scope, subject });
     const footers = footer
@@ -243,7 +294,7 @@ export default class CommitMessage {
       contents.delete(key);
 
       // Collect our footer
-      footers.push(footer);
+      footers.unshift(footer);
     }
 
     // The rest must be the body - join remaining lines
