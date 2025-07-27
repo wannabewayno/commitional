@@ -1,6 +1,7 @@
 import type CommitMessage from '../CommitMessage/index.js';
 import type RulesEngine from '../RulesEngine/index.js';
 import type { CommitPart } from '../RulesEngine/index.js';
+import type { ICompletion } from '../services/AI/Completion/index.js';
 import AIProvider from '../services/AI/index.js';
 import type Diff from '../services/Git/Diff.js';
 import { generalRules, bodyGuidelines, subjectAndBodyGuidelines, usingImperativeMood } from './commit-message-standard.js';
@@ -51,4 +52,48 @@ export default abstract class BasePrompt {
    * @param commit
    */
   abstract generate(diff: Diff, commit: CommitMessage): Promise<void>;
+
+  protected async createAiCompletion() {
+    const ai = this.AI.byPreference();
+    return ai
+      .completion()
+      .usecase('Coding')
+      .system(
+        'You are integrated into a cli that helps software engineers write meaningful git commits.',
+        'You will be provided with the git diff of the currenty staged files to be committed asked to either generate a commit type, scope, title, or body.',
+        'If previous parts of the commit message are known, these will also be provided for you.',
+        'The following rules and guidelines must be adhered to.\n',
+        await this.commitStandard(),
+      );
+  }
+
+  protected async tryAiCompletion(completion: ICompletion, jsonSchema: 'string' | `"${string}"`): Promise<string> {
+    const maxAttempts = 3;
+    let attempts = 0;
+    const schemaName = `commit_${this.type}`;
+
+    while (attempts < maxAttempts) {
+      const res = await completion.json(schemaName, { value: jsonSchema });
+
+      if (res instanceof Error) continue;
+
+      const [parsed, errors] = this.rules.parse(res.value as string);
+
+      if (!errors.length) return parsed;
+
+      attempts++;
+
+      if (attempts >= maxAttempts) return parsed;
+
+      completion.assistant(JSON.stringify(res, null, 2));
+
+      completion.user(
+        `The previous response was not a valid ${this.type}. Please fix the response and try again.`,
+        '## Errors',
+        errors.join('\n'),
+      );
+    }
+
+    return '';
+  }
 }
