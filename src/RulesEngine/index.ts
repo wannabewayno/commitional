@@ -189,15 +189,21 @@ export default class RulesEngine<Config extends Rules = Rules> {
    * @returns
    */
   describe(): string {
-    const description: string[] = ['## Commit message standard'];
+    const description: string[] = [];
 
-    const rules = this.listRules();
+    description.push('## Commit message standard');
+    description.push(this.commitStructure());
 
+    description.push('\n## General Rules');
+    description.push(this.generalRules());
+
+    return description.join('\n');
+  }
+
+  commitStructure(): string {
+    const description: string[] = [];
     const requiredList = new Intl.ListFormat('en-au', { type: 'conjunction', style: 'long', localeMatcher: 'best fit' });
     const optionalList = new Intl.ListFormat('en-au', { type: 'disjunction', style: 'long', localeMatcher: 'best fit' });
-
-    // Separate out Empty rules
-    const nonEmptyRules = rules.filter(rule => !(rule instanceof EmptyRule));
 
     const { required, optional, forbidden } = this.allowedCommitProps();
 
@@ -228,31 +234,44 @@ export default class RulesEngine<Config extends Rules = Rules> {
     // Forbidden
     if (forbidden.length) structure.push(`must not contain a ${optionalList.format(forbidden)}`);
     if (structure[0]) structure[0] = `Commit messages ${structure[0]}`;
+
+    // Show what's required
     description.push(requiredList.format(structure));
 
     // Show what the stucture looks like.
-    description.push(`\`\`\`txt\n${CommitMessage.fromJSON(commitStructure).toString()}\n\`\`\``);
+    description.push('```txt');
+    description.push(CommitMessage.fromJSON(commitStructure).toString());
+    description.push('```');
 
-    description.push('\n## General Rules');
+    return description.join('\n');
+  }
+
+  generalRules(): string {
+    const ruleDescriptions: string[] = [];
+
+    const rules = this.listRules();
+
+    // Separate out Empty rules
+    const nonEmptyRules = rules.filter(rule => !(rule instanceof EmptyRule));
 
     (['type', 'scope', 'subject', 'header', 'body', 'footer', 'trailer'] as CommitPart[]).reduce((rules, part) => {
       // find all rules for the type.
       const [applicableRules, otherRules] = separate(rules, rule => rule.name.startsWith(part));
 
       if (applicableRules.length) {
-        description.push(`### ${capitalize(part)}`);
-        description.push(...applicableRules.map(v => `- ${capitalize(v.errorMessage())}`));
+        ruleDescriptions.push(`### ${capitalize(part)}`);
+        ruleDescriptions.push(...applicableRules.map(v => `- ${capitalize(v.errorMessage())}`));
       }
 
       // There's no "rule" for this, so it's a begrudging special case
       if (part === 'subject')
-        description.push('- The subject must be written in imperative mood (Fix, not Fixed / Fixes etc.)');
+        ruleDescriptions.push('- The subject must be written in imperative mood (Fix, not Fixed / Fixes etc.)');
 
       // return the other rules to continue
       return otherRules;
     }, nonEmptyRules);
 
-    return description.join('\n');
+    return ruleDescriptions.join('\n');
   }
 
   /**
