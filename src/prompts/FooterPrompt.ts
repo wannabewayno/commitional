@@ -60,12 +60,12 @@ export default class FooterPrompt extends BasePrompt {
     // Footer Token
     if (!token) {
       token = enumRule
-        ? await select<string>({ message: 'select token:', choices: enumRule.value })
+        ? await select<string>({ message: 'footer token:', choices: enumRule.value })
         : await input({
             message: 'footer token:',
             validate: value => {
               const [, errors] = this.rules.parse(`${value}:`);
-              if (!errors.length) return errors.join('\n');
+              if (errors.length) return errors.join('\n');
               return true;
             },
             transformer: value => {
@@ -82,7 +82,7 @@ export default class FooterPrompt extends BasePrompt {
       prefill: 'editable',
       validate: value => {
         const [, errors] = this.rules.parse(`${token}: ${value}`);
-        if (!errors.length) return errors.join('\n');
+        if (errors.length) return errors.join('\n');
         return true;
       },
       transformer: value => {

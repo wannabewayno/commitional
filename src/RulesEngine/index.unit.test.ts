@@ -29,11 +29,17 @@ describe('RulesEngine', () => {
     });
 
     it('should describe in plain english the rules the engine enforces.', () => {
-      expect(rules.describe()).to.equal(`## General Rules
-Commit messages must have a subject and type, may have a body and must not contain a scope
+      expect(rules.describe()).to.equal(`## Commit message standard
+Commit messages must have a subject and type, may have a body or footer and must not contain a scope
+\`\`\`txt
 <type>: <subject>
 
 [optional body]
+
+[optional <Token>: <Message>]
+\`\`\`
+
+## General Rules
 ### Type
 - The type can only be one of: 'feat', 'chore', 'fix', 'docs', 'style', 'test', 'build' or 'ci'
 ### Subject

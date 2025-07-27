@@ -62,7 +62,7 @@ describe('Lint Command E2E Tests', () => {
             '',
           );
 
-          await I.wait.until.the.process.exits();
+          await I.wait.until.the.process.exits.with.nonZero.exit.code;
         });
 
         it('should lint a single commit by short hash', async () => {
@@ -80,13 +80,13 @@ describe('Lint Command E2E Tests', () => {
             '',
           );
 
-          await I.wait.until.the.process.exits();
+          await I.wait.until.the.process.exits.with.nonZero.exit.code;
         });
 
         it('should handle invalid commit hash', async () => {
           const I = await Cliete.openTerminal('commitional lint blarhgg', { timeout: null });
 
-          await I.wait.for.the.process.to.exit();
+          await I.wait.for.the.process.to.exit.with.exit.code.zero;
           await I.see('');
         });
       });
@@ -110,13 +110,13 @@ describe('Lint Command E2E Tests', () => {
             '',
           );
 
-          await I.wait.for.the.process.to.exit();
+          await I.wait.for.the.process.to.exit.with.nonZero.exit.code;
         });
 
         it('should handle invalid hash range', async () => {
           const I = await Cliete.openTerminal('commitional lint 1234abc...5678def', { timeout: null });
 
-          await I.wait.for.the.process.to.exit();
+          await I.wait.for.the.process.to.exit.with.exit.code.zero;
           await I.see('');
         });
       });
@@ -134,7 +134,7 @@ describe('Lint Command E2E Tests', () => {
             '',
           );
 
-          await I.wait.until.the.process.exits();
+          await I.wait.until.the.process.exits.with.nonZero.exit.code;
         });
 
         it('should lint the last 2 commits', async () => {
@@ -155,7 +155,7 @@ describe('Lint Command E2E Tests', () => {
             '',
           );
 
-          await I.wait.until.the.process.exits();
+          await I.wait.until.the.process.exits.with.nonZero.exit.code;
         });
       });
 
@@ -185,13 +185,13 @@ describe('Lint Command E2E Tests', () => {
             '',
           );
 
-          await I.wait.until.the.process.exits();
+          await I.wait.until.the.process.exits.with.nonZero.exit.code;
         });
 
         it('should fix commit message file when --fix is used', async () => {
           const I = await Cliete.openTerminal(`commitional lint ${commitMsgPath} --fix`, { timeout: null });
 
-          await I.wait.for.the.process.to.exit();
+          await I.wait.for.the.process.to.exit.with.exit.code.zero;
           await I.see('');
 
           // Expect file to be changed
@@ -202,7 +202,7 @@ describe('Lint Command E2E Tests', () => {
         it('should handle non-existent file', async () => {
           const I = await Cliete.openTerminal('commitional lint i-do-not-exist', { timeout: null });
 
-          await I.wait.for.the.process.to.exit();
+          await I.wait.for.the.process.to.exit.with.exit.code.zero;
           await I.see('');
         });
       });

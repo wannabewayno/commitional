@@ -54,7 +54,7 @@ describe('CLI E2E Tests', () => {
       const I = await Cliete.openTerminal('commitional', { cwd: repo.tempDir });
 
       await I.wait.until.I.spot('? Select the type');
-      await I.press.ctrlC.and.wait.for.the.process.to.exit();
+      await I.press.ctrlC.and.wait.for.the.process.to.exit.with.exit.code.zero;
       await I.spot('👋 bye!');
     });
   });

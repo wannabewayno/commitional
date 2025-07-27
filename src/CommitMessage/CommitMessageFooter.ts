@@ -74,7 +74,7 @@ export default class CommitMessageFooter {
   }
 
   static fromString(footer: string): CommitMessageFooter | Error {
-    const match = footer.match(/^(?<token>[\w-]+): (?<text>.*)$/i);
+    const match = footer.match(/^(?<token>.+): (?<text>.*)$/i);
     if (!match || !match.groups?.token || !match.groups?.text)
       return new Error(`[Invalid footer] '${footer}' is does not conform to "<Some-token>: <text content>"`);
 

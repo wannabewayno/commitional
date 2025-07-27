@@ -166,7 +166,7 @@ export default class RulesEngine<Config extends Rules = Rules> {
     const emptyRules = rules.filter(rule => rule instanceof EmptyRule);
 
     // Assume everything is optional unless otherwise required or forbidden
-    const optional = new Set<CommitPart>(['type', 'subject', 'scope', 'body']);
+    const optional = new Set<CommitPart>(['type', 'subject', 'scope', 'body', 'footer']);
 
     const ruleToString = (rule: BaseRule) => {
       const name = rule.name;
@@ -189,7 +189,7 @@ export default class RulesEngine<Config extends Rules = Rules> {
    * @returns
    */
   describe(): string {
-    const description: string[] = ['## General Rules'];
+    const description: string[] = ['## Commit message standard'];
 
     const rules = this.listRules();
 
@@ -231,7 +231,9 @@ export default class RulesEngine<Config extends Rules = Rules> {
     description.push(requiredList.format(structure));
 
     // Show what the stucture looks like.
-    description.push(CommitMessage.fromJSON(commitStructure).toString());
+    description.push(`\`\`\`txt\n${CommitMessage.fromJSON(commitStructure).toString()}\n\`\`\``);
+
+    description.push('\n## General Rules');
 
     (['type', 'scope', 'subject', 'header', 'body', 'footer', 'trailer'] as CommitPart[]).reduce((rules, part) => {
       // find all rules for the type.
