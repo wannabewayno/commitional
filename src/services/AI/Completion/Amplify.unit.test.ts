@@ -38,7 +38,7 @@ describe('AmplifyCompletion Integration Tests', () => {
 
       // Act
       amplify.system('You are a helpful assistant');
-      amplify.prompt('Tell me about TypeScript');
+      amplify.user('Tell me about TypeScript');
       const result = await amplify.text();
 
       // Assert
@@ -63,7 +63,7 @@ describe('AmplifyCompletion Integration Tests', () => {
       httpPostStub.resolves({ data: { error: errorMessage } });
 
       // Act
-      amplify.prompt('Tell me about TypeScript');
+      amplify.user('Tell me about TypeScript');
       const result = await amplify.text();
 
       // Assert
@@ -80,7 +80,7 @@ describe('AmplifyCompletion Integration Tests', () => {
 
       // Act
       amplify.system('Return JSON data');
-      amplify.prompt('Get person data');
+      amplify.user('Get person data');
       const result = await amplify.json('Person', {
         name: 'string',
         age: 'number',
@@ -96,7 +96,7 @@ describe('AmplifyCompletion Integration Tests', () => {
       httpPostStub.resolves({ data: { assistant_resp: invalidJsonResponse } });
 
       // Act
-      amplify.prompt('Get person data');
+      amplify.user('Get person data');
       const result = await amplify.json('Person', {
         name: 'string',
         age: 'number',
@@ -112,7 +112,7 @@ describe('AmplifyCompletion Integration Tests', () => {
       httpPostStub.resolves({ data: { error: errorMessage } });
 
       // Act
-      amplify.prompt('Get person data');
+      amplify.user('Get person data');
       const result = await amplify.json('Person', {
         name: 'string',
         age: 'number',
@@ -130,7 +130,7 @@ describe('AmplifyCompletion Integration Tests', () => {
       httpPostStub.resolves({ data: { assistant_resp: 'Response' } });
 
       // Act & Assert - This should not throw
-      const result = await amplify.system('You are a helpful assistant').prompt('Tell me about TypeScript').text();
+      const result = await amplify.system('You are a helpful assistant').user('Tell me about TypeScript').text();
 
       expect(result).to.equal('Response');
     });

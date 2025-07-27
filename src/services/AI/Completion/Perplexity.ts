@@ -118,10 +118,19 @@ export default function Provider(Completion: Completion) {
       return this;
     }
 
-    prompt(...messages: string[]): this {
+    user(...lines: string[]): this {
       this._prompt = {
         role: 'user',
-        content: messages.join('\n'),
+        content: lines.join('\n'),
+      };
+
+      return this;
+    }
+
+    assistant(...lines: string[]): this {
+      this._prompt = {
+        role: 'assistant',
+        content: lines.join('\n'),
       };
 
       return this;

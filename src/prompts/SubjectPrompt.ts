@@ -23,7 +23,7 @@ export default class SubjectPrompt extends BasePrompt {
         'The following rules and guidelines must be adhered to.\n',
         await this.commitStandard(),
       )
-      .prompt(
+      .user(
         'Generate an appropriate commit title to be included in the commit subject for the provided staged files.',
         'The partial commit header is shown for context',
         '## Commit Header',

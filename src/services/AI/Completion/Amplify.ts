@@ -93,15 +93,20 @@ export default function Provider(Completion: Completion) {
 
     private _temperature?: Temperature;
     private _system?: SystemMessage;
-    private _prompt?: UserMessage;
+    private messages: (UserMessage | AssistantMessage)[] = [];
 
     system(...lines: string[]): this {
       this._system = { role: 'system', content: lines.join('\n') };
       return this;
     }
 
-    prompt(...lines: string[]): this {
-      this._prompt = { role: 'user', content: [{ type: 'text', text: lines.join('\n') }] };
+    user(...lines: string[]): this {
+      this.messages.push({ role: 'user', content: [{ type: 'text', text: lines.join('\n') }] });
+      return this;
+    }
+
+    assistant(...message: string[]): this {
+      this.messages.push({ role: 'assistant', content: message.join('\n') });
       return this;
     }
 
@@ -126,9 +131,8 @@ export default function Provider(Completion: Completion) {
     }
 
     private buildMessages(): CompletionRequest['messages'] {
-      const messages: CompletionRequest['messages'] = [];
-      if (this._system) messages.push(this._system);
-      if (this._prompt) messages.push(this._prompt);
+      const messages = [...this.messages] as CompletionRequest['messages'];
+      if (this._system) messages.unshift(this._system);
 
       return messages;
     }

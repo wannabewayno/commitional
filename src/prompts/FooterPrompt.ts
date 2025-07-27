@@ -23,7 +23,7 @@ export default class FooterPrompt extends BasePrompt {
         'The following rules and guidelines must be adhered to.\n',
         await this.commitStandard(),
       )
-      .prompt(
+      .user(
         'Generate an appropriate commit footer (if any) to be appended to the body that relates to the provided staged files.',
         'The current commit is shown for context',
         '## Current Partial Commit',

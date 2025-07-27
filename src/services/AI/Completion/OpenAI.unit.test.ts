@@ -52,7 +52,7 @@ describe('OpenAICompletion Integration Tests', () => {
 
       // Act
       openai.system('You are a helpful assistant');
-      openai.prompt('Tell me about TypeScript');
+      openai.user('Tell me about TypeScript');
       const result = await openai.text();
 
       // Assert
@@ -78,7 +78,7 @@ describe('OpenAICompletion Integration Tests', () => {
       httpPostStub.rejects(new Error(errorMessage));
 
       // Act
-      openai.prompt('Tell me about TypeScript');
+      openai.user('Tell me about TypeScript');
       const result = await openai.text();
 
       // Assert
@@ -91,7 +91,7 @@ describe('OpenAICompletion Integration Tests', () => {
       httpPostStub.resolves({ data: {} }); // Missing choices
 
       // Act
-      openai.prompt('Tell me about TypeScript');
+      openai.user('Tell me about TypeScript');
       const result = await openai.text();
 
       // Assert
@@ -121,7 +121,7 @@ describe('OpenAICompletion Integration Tests', () => {
 
       // Act
       openai.system('Return JSON data');
-      openai.prompt('Get person data');
+      openai.user('Get person data');
       const result = await openai.json('Person', {
         name: 'string',
         age: 'number',
@@ -147,7 +147,7 @@ describe('OpenAICompletion Integration Tests', () => {
       });
 
       // Act
-      openai.prompt('Get person data');
+      openai.user('Get person data');
       const result = await openai.json('Person', {
         name: 'string',
         age: 'number',
@@ -163,7 +163,7 @@ describe('OpenAICompletion Integration Tests', () => {
       httpPostStub.rejects(new Error(errorMessage));
 
       // Act
-      openai.prompt('Get person data');
+      openai.user('Get person data');
       const result = await openai.json('Person', {
         name: 'string',
         age: 'number',
@@ -190,7 +190,7 @@ describe('OpenAICompletion Integration Tests', () => {
       });
 
       // Act
-      openai.prompt('Get person data');
+      openai.user('Get person data');
       const result = await openai.json('Person', {
         name: 'string',
         age: 'number',
@@ -221,7 +221,7 @@ describe('OpenAICompletion Integration Tests', () => {
       });
 
       // Act & Assert - This should not throw
-      const result = await openai.system('You are a helpful assistant').prompt('Tell me about TypeScript').text();
+      const result = await openai.system('You are a helpful assistant').user('Tell me about TypeScript').text();
 
       expect(result).to.equal('Response');
     });

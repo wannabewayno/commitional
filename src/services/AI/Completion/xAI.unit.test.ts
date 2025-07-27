@@ -52,7 +52,7 @@ describe('xAICompletion Unit Tests', () => {
 
       // Act
       xAI.system('You are a helpful assistant');
-      xAI.prompt('Tell me about TypeScript');
+      xAI.user('Tell me about TypeScript');
       const result = await xAI.text();
 
       // Assert
@@ -78,7 +78,7 @@ describe('xAICompletion Unit Tests', () => {
       httpPostStub.rejects(new Error(errorMessage));
 
       // Act
-      xAI.prompt('Tell me about TypeScript');
+      xAI.user('Tell me about TypeScript');
       const result = await xAI.text();
 
       // Assert
@@ -91,7 +91,7 @@ describe('xAICompletion Unit Tests', () => {
       httpPostStub.resolves({ data: {} }); // Missing choices
 
       // Act
-      xAI.prompt('Tell me about TypeScript');
+      xAI.user('Tell me about TypeScript');
       const result = await xAI.text();
 
       // Assert
@@ -121,7 +121,7 @@ describe('xAICompletion Unit Tests', () => {
 
       // Act
       xAI.system('Return JSON data');
-      xAI.prompt('Get person data');
+      xAI.user('Get person data');
       const result = await xAI.json('Person', {
         name: 'string',
         age: 'number',
@@ -147,7 +147,7 @@ describe('xAICompletion Unit Tests', () => {
       });
 
       // Act
-      xAI.prompt('Get person data');
+      xAI.user('Get person data');
       const result = await xAI.json('Person', {
         name: 'string',
         age: 'number',
@@ -163,7 +163,7 @@ describe('xAICompletion Unit Tests', () => {
       httpPostStub.rejects(new Error(errorMessage));
 
       // Act
-      xAI.prompt('Get person data');
+      xAI.user('Get person data');
       const result = await xAI.json('Person', {
         name: 'string',
         age: 'number',
@@ -190,7 +190,7 @@ describe('xAICompletion Unit Tests', () => {
       });
 
       // Act
-      xAI.prompt('Get person data');
+      xAI.user('Get person data');
       const result = await xAI.json('Person', {
         name: 'string',
         age: 'number',
@@ -221,7 +221,7 @@ describe('xAICompletion Unit Tests', () => {
       });
 
       // Act & Assert - This should not throw
-      const result = await xAI.system('You are a helpful assistant').prompt('Tell me about TypeScript').text();
+      const result = await xAI.system('You are a helpful assistant').user('Tell me about TypeScript').text();
 
       expect(result).to.equal('Response');
     });

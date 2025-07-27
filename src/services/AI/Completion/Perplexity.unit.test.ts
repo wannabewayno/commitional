@@ -52,7 +52,7 @@ describe('PerplexityCompletion Unit Tests', () => {
 
       // Act
       Perplexity.system('You are a helpful assistant');
-      Perplexity.prompt('Tell me about TypeScript');
+      Perplexity.user('Tell me about TypeScript');
       const result = await Perplexity.text();
 
       // Assert
@@ -78,7 +78,7 @@ describe('PerplexityCompletion Unit Tests', () => {
       httpPostStub.rejects(new Error(errorMessage));
 
       // Act
-      Perplexity.prompt('Tell me about TypeScript');
+      Perplexity.user('Tell me about TypeScript');
       const result = await Perplexity.text();
 
       // Assert
@@ -91,7 +91,7 @@ describe('PerplexityCompletion Unit Tests', () => {
       httpPostStub.resolves({ data: {} }); // Missing choices
 
       // Act
-      Perplexity.prompt('Tell me about TypeScript');
+      Perplexity.user('Tell me about TypeScript');
       const result = await Perplexity.text();
 
       // Assert
@@ -121,7 +121,7 @@ describe('PerplexityCompletion Unit Tests', () => {
 
       // Act
       Perplexity.system('Return JSON data');
-      Perplexity.prompt('Get person data');
+      Perplexity.user('Get person data');
       const result = await Perplexity.json('Person', {
         name: 'string',
         age: 'number',
@@ -147,7 +147,7 @@ describe('PerplexityCompletion Unit Tests', () => {
       });
 
       // Act
-      Perplexity.prompt('Get person data');
+      Perplexity.user('Get person data');
       const result = await Perplexity.json('Person', {
         name: 'string',
         age: 'number',
@@ -163,7 +163,7 @@ describe('PerplexityCompletion Unit Tests', () => {
       httpPostStub.rejects(new Error(errorMessage));
 
       // Act
-      Perplexity.prompt('Get person data');
+      Perplexity.user('Get person data');
       const result = await Perplexity.json('Person', {
         name: 'string',
         age: 'number',
@@ -190,7 +190,7 @@ describe('PerplexityCompletion Unit Tests', () => {
       });
 
       // Act
-      Perplexity.prompt('Get person data');
+      Perplexity.user('Get person data');
       const result = await Perplexity.json('Person', {
         name: 'string',
         age: 'number',
@@ -221,7 +221,7 @@ describe('PerplexityCompletion Unit Tests', () => {
       });
 
       // Act & Assert - This should not throw
-      const result = await Perplexity.system('You are a helpful assistant').prompt('Tell me about TypeScript').text();
+      const result = await Perplexity.system('You are a helpful assistant').user('Tell me about TypeScript').text();
 
       expect(result).to.equal('Response');
     });

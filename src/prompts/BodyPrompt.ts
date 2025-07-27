@@ -74,7 +74,7 @@ export default class BodyPrompt extends BasePrompt {
         'The following rules and guidelines must be adhered to.\n',
         await this.commitStandard(),
       )
-      .prompt(
+      .user(
         'Generate an appropriate commit body for the provided staged files to be committed',
         'The partially constructed commit has been provided for context',
         '## Partial Commit',

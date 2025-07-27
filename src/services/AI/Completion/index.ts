@@ -75,11 +75,18 @@ export default function Provider(http: HttpClientProvider) {
     abstract system(...message: string[]): this;
 
     /**
-     * Sets the prompt/user message for the completion
+     * Adds a user message for the completion
      * @param message The prompt message to set
      * @returns The current instance for method chaining
      */
-    abstract prompt(...message: string[]): this;
+    abstract user(...message: string[]): this;
+
+    /**
+     * Adds an assistant message for the completion if there's one to set
+     * @param message The prompt message to set
+     * @returns The current instance for method chaining
+     */
+    abstract assistant(...message: string[]): this;
 
     /**
      * Gets the completion result as text

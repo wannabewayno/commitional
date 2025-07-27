@@ -28,7 +28,7 @@ export default class TypePrompt extends BasePrompt {
 
     const res = await (enumRule
       ? completion
-          .prompt(
+          .user(
             'From the list of provided commit types, select the appropriate commit type for the provided git diff of currently staged files to commit',
             '',
             '## Commit types',
@@ -42,7 +42,7 @@ export default class TypePrompt extends BasePrompt {
           // Force the output to be in JSON.
           .json('commit_type', { type: toEnum(enumRule.value) })
       : completion
-          .prompt(
+          .user(
             'From the list of provided commit types, select the appropriate commit type for the provided git diff of currently staged files to commit',
             '',
             '## Git Diff',

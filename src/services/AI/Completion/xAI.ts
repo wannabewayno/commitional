@@ -8,7 +8,7 @@ function formatArkErrors(error: ArkErrors) {
 const scope = type.module({
   content: 'string',
   base_message: {
-    role: '"system" | "user"',
+    role: '"system" | "user" | "assistant"',
     name: 'string?',
     content: 'content',
   },
@@ -115,7 +115,7 @@ export default function Provider(Completion: Completion) {
 
     private _temperature: Temperature = Temperature.Coding;
     private _system?: BaseMessage;
-    private _prompt?: BaseMessage;
+    private messages: BaseMessage[] = [];
 
     system(...messages: string[]): this {
       this._system = {
@@ -126,11 +126,20 @@ export default function Provider(Completion: Completion) {
       return this;
     }
 
-    prompt(...messages: string[]): this {
-      this._prompt = {
+    user(...lines: string[]): this {
+      this.messages.push({
         role: 'user',
-        content: messages.join('\n'),
-      };
+        content: lines.join('\n'),
+      });
+
+      return this;
+    }
+
+    assistant(...lines: string[]): this {
+      this.messages.push({
+        role: 'assistant',
+        content: lines.join('\n'),
+      });
 
       return this;
     }
@@ -156,9 +165,8 @@ export default function Provider(Completion: Completion) {
     }
 
     private buildMessages(): CompletionRequest['messages'] {
-      const messages: CompletionRequest['messages'] = [];
-      if (this._system) messages.push(this._system);
-      if (this._prompt) messages.push(this._prompt);
+      const messages = [...this.messages] as CompletionRequest['messages'];
+      if (this._system) messages.unshift(this._system);
 
       return messages;
     }
