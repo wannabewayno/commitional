@@ -95,13 +95,13 @@ export default function Provider(Completion: Completion) {
     private _system?: SystemMessage;
     private _prompt?: UserMessage;
 
-    system(message: string): this {
-      this._system = { role: 'system', content: message };
+    system(...lines: string[]): this {
+      this._system = { role: 'system', content: lines.join('\n') };
       return this;
     }
 
-    prompt(message: string): this {
-      this._prompt = { role: 'user', content: [{ type: 'text', text: message }] };
+    prompt(...lines: string[]): this {
+      this._prompt = { role: 'user', content: [{ type: 'text', text: lines.join('\n') }] };
       return this;
     }
 
