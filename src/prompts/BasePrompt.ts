@@ -67,7 +67,10 @@ export default abstract class BasePrompt {
       );
   }
 
-  protected async tryAiCompletion(completion: ICompletion, jsonSchema: 'string' | `"${string}"`): Promise<string> {
+  protected async tryAiCompletion(
+    completion: ICompletion,
+    jsonSchema: 'string' | `"${string}"` = 'string',
+  ): Promise<string> {
     const maxAttempts = 3;
     let attempts = 0;
     const schemaName = `commit_${this.type}`;

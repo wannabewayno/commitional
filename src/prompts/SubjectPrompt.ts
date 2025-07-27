@@ -11,19 +11,8 @@ export default class SubjectPrompt extends BasePrompt {
   }
 
   async generate(diff: Diff, commit: CommitMessage) {
-    const ai = this.AI.byPreference();
-
-    const res = await ai
-      .completion()
-      .usecase('Coding')
-      .system(
-        'You are integrated into a cli that helps software engineers write meaningful git commits.',
-        'You will be provided with the git diff of the currenty staged files to be committed asked to either generate a commit type, scope, title, or body.',
-        'If previous parts of the commit message are known, these will also be provided for you.',
-        'The following rules and guidelines must be adhered to.\n',
-        await this.commitStandard(),
-      )
-      .user(
+    const completion = await this.createAiCompletion().then(completion =>
+      completion.user(
         'Generate an appropriate commit title to be included in the commit subject for the provided staged files.',
         'The partial commit header is shown for context',
         '## Commit Header',
@@ -33,14 +22,11 @@ export default class SubjectPrompt extends BasePrompt {
         '```txt',
         diff.toString(),
         '```',
-      )
-      // Force the output to be in JSON.
-      .json('commit_subject', { subject: 'string' });
-
-    if (res instanceof Error) throw res;
+      ),
+    );
 
     // set the commit's subject
-    commit.subject = res.subject;
+    commit.subject = await this.tryAiCompletion(completion);
   }
 
   async prompt(commit: CommitMessage): Promise<void> {
