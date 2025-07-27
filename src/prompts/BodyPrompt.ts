@@ -62,19 +62,8 @@ export default class BodyPrompt extends BasePrompt {
   }
 
   async generate(diff: Diff, commit: CommitMessage) {
-    const ai = this.AI.byPreference();
-
-    const res = await ai
-      .completion()
-      .usecase('Coding')
-      .system(
-        'You are integrated into a cli that helps software engineers write meaningful git commits.',
-        'You will be provided with the git diff of the currenty staged files to be committed asked to either generate a commit type, scope, title, or body.',
-        'If previous parts of the commit message are known, these will also be provided for you.',
-        'The following rules and guidelines must be adhered to.\n',
-        await this.commitStandard(),
-      )
-      .user(
+    const completion = await this.createAiCompletion().then(completion =>
+      completion.user(
         'Generate an appropriate commit body for the provided staged files to be committed',
         'The partially constructed commit has been provided for context',
         '## Partial Commit',
@@ -83,14 +72,11 @@ export default class BodyPrompt extends BasePrompt {
         '```txt',
         diff.toString(),
         '```',
-      )
-      // Force the output to be in JSON.
-      .json('commit_body', { body: 'string' });
-
-    if (res instanceof Error) throw res;
+      ),
+    );
 
     // set the commit's body
-    commit.body = res.body;
+    commit.body = await this.tryAiCompletion(completion);
   }
 
   async prompt(commit: CommitMessage): Promise<void> {
