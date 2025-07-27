@@ -21,6 +21,14 @@ export default class TestGitRepo {
     execSync('git config user.email "test@example.com"', { cwd: this.tempDir });
   }
 
+  get commits() {
+    return execSync('git rev-list --all', { cwd: this.tempDir }).toString().trim().split('\n').filter(Boolean);
+  }
+
+  get lastCommit() {
+    return execSync('git rev-parse HEAD', { cwd: this.tempDir }).toString().trim();
+  }
+
   addFile(name: string, content: string, opts: AddFileOpts = {}) {
     const filePath = path.join(this.tempDir, name);
     const dir = path.dirname(filePath);

@@ -1,6 +1,38 @@
 import Cliete from 'cliete';
 import CommitlintConfigBuilder from './fixtures/CommitlintConfigBuilder';
 import TestGitRepo from './fixtures/TestGitRepo';
+import { expect } from 'chai';
+
+class CliHelpers {
+  constructor(private readonly cliete: Cliete) {}
+
+  async addFooter(token: string, text: string) {
+    const I = this.cliete;
+
+    await I.press.down.until.I.spot('❯ add footer');
+    await I.press.enter.and.wait.until.I.spot('footer token:');
+    await I.type(token).and.press.enter.and.wait.until.I.spot(`${token}:`);
+    await I.type(text).and.press.enter.and.wait.until.I.spot('? Commit or Edit');
+  }
+
+  async editFoooter(token: string, newText: string) {
+    const I = this.cliete;
+
+    await I.press.down.until.I.spot(`❯ ${token}`);
+    await I.press.enter.and.wait.until.I.spot(`?  ${token}: `);
+    await I.press.backspace.until.I.spot(new RegExp(`\\?  ${token}:$`));
+    await I.type(newText).and.press.enter.and.wait.until.I.spot('? Commit or Edit');
+  }
+
+  async deleteFoooter(token: string) {
+    const I = this.cliete;
+
+    await I.press.down.until.I.spot(`❯ ${token}`);
+    await I.press.enter.and.wait.until.I.spot(`${token}:`);
+    await I.press.backspace.until.I.spot(new RegExp(`\\?  ${token}:$`));
+    await I.press.enter.and.wait.until.I.spot('? Commit or Edit');
+  }
+}
 
 describe('Interactive Commit Flow', () => {
   let repo: TestGitRepo;
@@ -82,6 +114,8 @@ describe('Interactive Commit Flow', () => {
   it('should allow a user to edit a commit', async () => {
     const I = await Cliete.openTerminal('commitional --type feat --subject "Edit commits" --no-breaking');
 
+    const cli = new CliHelpers(I);
+
     await I.see(
       '------------',
       'feat: Edit commits',
@@ -105,27 +139,25 @@ describe('Interactive Commit Flow', () => {
     await I.press.enter.and.wait.until.I.spot('fix: Edit commits');
 
     // Edit scope
-    await I.press.down.twice.and.wait.until.I.spot('❯ scope');
+    await I.press.down.until.I.spot('❯ scope');
     await I.press.enter.and.wait.until.I.spot('? Scope of the change');
     await I.type('test').and.press.enter.and.wait.until.I.spot('fix(test): Edit commits');
 
     // Edit subject
-    await I.press.down.thrice.and.wait.until.I.spot('❯ subject');
+    await I.press.down.until.I.spot('❯ subject');
     await I.press.enter.and.wait.until.I.spot('If applied, this commit will...');
     await I.press.backspace.nth('Edit commits'.length + 1).and.wait.until.I.spot(/\.\.\.$/);
     await I.type('Updated subject').and.press.enter.and.wait.until.I.spot('fix(test): Updated subject');
 
     // TODO: Need to interact with a spawned process, how?
     // Edit body
-    // await I.press.down.four.times.and.wait.until.I.spot('❯ body');
+    // await I.press.down.until.I.spot('❯ body');
     // await I.press.enter.and.wait.until.I.spot('Provide a longer description');
     // await I.type('This is the body content').and.press.enter.and.wait.until.I.spot('This is the body content');
 
     // Add footer
-    await I.press.down.five.times.and.wait.until.I.spot('❯ add footer');
-    await I.press.enter.and.wait.until.I.spot('footer token:');
-    await I.type('Closes').and.press.enter.and.wait.until.I.spot('Closes:');
-    await I.type('#123').and.press.enter.and.wait.until.I.spot(
+    await cli.addFooter('Closes', '#123');
+    await I.spot(
       [
         '------------',
         'fix(test): Updated subject',
@@ -145,8 +177,84 @@ describe('Interactive Commit Flow', () => {
       ].join('\n'),
     );
 
+    await cli.addFooter('Signed-off-by', 'me (lol)');
+    await I.spot(
+      [
+        '------------',
+        'fix(test): Updated subject',
+        '',
+        'Closes: #123',
+        '',
+        'Signed-off-by: me (lol)',
+        '',
+        '',
+        '? Commit or Edit',
+        '❯ Commit',
+        '──────────────',
+        'type',
+        'scope',
+        'subject',
+        'body',
+        'add footer',
+        '(Use arrow keys to reveal more choices)',
+      ].join('\n'),
+    );
+
+    // Edit footer after creation
+    await cli.editFoooter('Closes', '#456');
+    await I.spot(
+      [
+        '------------',
+        'fix(test): Updated subject',
+        '',
+        'Closes: #456',
+        '',
+        'Signed-off-by: me (lol)',
+        '',
+        '',
+        '? Commit or Edit',
+        '❯ Commit',
+        '──────────────',
+        'type',
+        'scope',
+        'subject',
+        'body',
+        'add footer',
+        '(Use arrow keys to reveal more choices)',
+      ].join('\n'),
+    );
+
+    // Delete footer after creation
+    await cli.deleteFoooter('Signed-off-by');
+    await I.spot(
+      [
+        '------------',
+        'fix(test): Updated subject',
+        '',
+        'Closes: #456',
+        '',
+        '',
+        '? Commit or Edit',
+        '❯ Commit',
+        '──────────────',
+        'type',
+        'scope',
+        'subject',
+        'body',
+        'add footer',
+        '(Use arrow keys to reveal more choices)',
+      ].join('\n'),
+    );
+
     // Commit the changes
     await I.press.enter.and.wait.until.I.spot(/[a-f0-9]{40}$/m);
     await I.wait.for.the.process.to.exit.with.exit.code.zero;
+
+    // check that this is in our commits.
+    const lastCommit = repo.lastCommit;
+    expect(lastCommit).to.exist;
+
+    // Check that our lastCommit hash is indeed printed on the screen
+    await I.spot(lastCommit);
   });
 });
