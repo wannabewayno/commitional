@@ -4,6 +4,7 @@ import CommitlintConfigBuilder from './fixtures/CommitlintConfigBuilder';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 
 describe('CLI E2E Tests', () => {
   describe('Basic CLI Functionality', () => {
@@ -21,15 +22,18 @@ describe('CLI E2E Tests', () => {
 
     // find the version it will be what-ever is in the package.json
     it('should display version information', async () => {
+      // "1.0.0" => 1.0.0
+      const currentVersion = execSync('npm pkg get version').toString().trim().slice(1, -1);
+
       const I = await Cliete.openTerminal('commitional --version');
 
-      await I.spot('1.0.0');
+      await I.spot(currentVersion);
     });
 
     it('should display help information', async () => {
       const I = await Cliete.openTerminal('commitional --help');
       await I.spot('Usage: commitional [options] [command]');
-      await I.spot('CLI tool for crafting commit messages');
+      await I.spot('CLI tool for crafting, formatting and linting commit messages');
       await I.spot('Options:');
     });
 

@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import { default as lint } from './lint.js';
+import { default as create } from './create.js';
 
 /**
  * Lint command
@@ -19,3 +20,16 @@ export const lintCmd = new Command('lint')
     false,
   )
   .action(lint());
+
+export const createCmd = new Command('create')
+  .description('The create subcommand will create a new commit message interactively')
+  .option('-e, --edit', 'Edit the commit message in an editor', false)
+  .option('-t, --type [type]', 'Commit type (feat, fix, test, ...)')
+  .option('-S, --scope [scope]', 'Commit scope (if any)')
+  .option('-s, --subject [subject]', 'Commit subject')
+  .option('-b, --body [body]', 'Commit body')
+  .option('-f, --footer [footer...]', 'Commit footer(s)')
+  .option('-B, --breaking', 'Mark the commit as a breaking change')
+  .option('-P, --no-breaking', 'Mark the commit as a non breaking change')
+  .option('-A, --auto', 'Use Generative AI to pre-fill your commit message', false)
+  .action(create());
