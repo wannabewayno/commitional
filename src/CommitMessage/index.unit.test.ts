@@ -16,36 +16,36 @@ describe('CommitMessage', () => {
 
   describe('constructor', () => {
     it('should create a commit message with header only', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       expect(commit).to.be.instanceOf(CommitMessage);
     });
 
     it('should create a commit message with header and body', () => {
-      const commit = new CommitMessage(header, 'Test body');
+      const commit = new CommitMessage({ header, body: 'Test body' });
       expect(commit.body).to.equal('Test body');
     });
 
     it('should create a commit message with header, body, and footers', () => {
-      const commit = new CommitMessage(header, 'Test body', footer);
+      const commit = new CommitMessage({ header, body: 'Test body', footers: [footer] });
       expect(commit.body).to.equal('Test body');
     });
   });
 
   describe('body getter/setter', () => {
     it('should set and get body', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       commit.body = 'Test body content';
       expect(commit.body).to.equal('Test body content');
     });
 
     it('should trim body content when setting', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       commit.body = '  Test body with spaces  ';
       expect(commit.body).to.equal('Test body with spaces');
     });
 
     it('should handle empty body', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       commit.body = '';
       expect(commit.body).to.equal('');
     });
@@ -53,7 +53,7 @@ describe('CommitMessage', () => {
 
   describe('breaking change functionality', () => {
     it('should mark commit as breaking', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       commit.breaking();
       expect(commit.isBreaking).to.be.true;
     });
@@ -61,19 +61,19 @@ describe('CommitMessage', () => {
     it('should call breaking on header when marked as breaking', () => {
       const breakingSpy = sinon.spy(header, 'breaking');
 
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       commit.breaking();
       expect(breakingSpy.calledOnce).to.be.true;
     });
 
     it('should add breaking change footer with message', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       commit.breaking('This is a breaking change');
       expect(commit.isBreaking).to.be.true;
     });
 
     it('should return the commit instance for chaining', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       const result = commit.breaking();
       expect(result).to.equal(commit);
     });
@@ -81,34 +81,34 @@ describe('CommitMessage', () => {
 
   describe('footer management', () => {
     it('should add a new footer', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       const footer = commit.footer('Closes', '#123');
       expect(footer).to.be.instanceOf(CommitMessageFooter);
     });
 
     it('should update existing footer', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       commit.footer('Closes', '#123');
       commit.footer('Closes', '#456');
       // Should have only one footer with updated content
     });
 
     it('should remove footer when message is null', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       commit.footer('Closes', '#123');
       commit.footer('Closes', null);
       // Footer should be removed
     });
 
     it('should return existing footer when no message provided', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       commit.footer('Closes', '#123');
       const footer = commit.footer('Closes');
       expect(footer).to.be.instanceOf(CommitMessageFooter);
     });
 
     it('should return undefined for non-existent footer', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       const footer = commit.footer('NonExistent');
       expect(footer).to.be.undefined;
     });
@@ -116,14 +116,14 @@ describe('CommitMessage', () => {
 
   describe('style management', () => {
     it('should set style for body', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       const styleFn = sinon.stub();
       commit.setStyle(styleFn, 'body');
       // Verify style was applied to body
     });
 
     it('should set style for footer', () => {
-      const commit = new CommitMessage(header, '', footer);
+      const commit = new CommitMessage({ header, footers: [footer] });
       const styleFn = sinon.stub();
       commit.setStyle(styleFn, 'footer');
       // Verify style was applied to footers
@@ -131,7 +131,7 @@ describe('CommitMessage', () => {
 
     it('should set style for header parts', () => {
       const setStyle = sinon.spy(header, 'setStyle');
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       const styleFn = sinon.stub();
       commit.setStyle(styleFn, 'type');
       expect(setStyle.calledWith(styleFn, 'type')).to.be.true;
@@ -140,7 +140,7 @@ describe('CommitMessage', () => {
     it('should set style for all parts when no part specified', () => {
       const setStyleHeader = sinon.spy(header, 'setStyle');
       const setStyleFooter = sinon.spy(footer, 'setStyle');
-      const commit = new CommitMessage(header, 'body', footer);
+      const commit = new CommitMessage({ header, body: 'body', footers: [footer] });
       const styleFn = sinon.stub();
       commit.setStyle(styleFn);
 
@@ -149,13 +149,13 @@ describe('CommitMessage', () => {
     });
 
     it('should apply style to body', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       const result = commit.style('body');
       expect(result).to.equal(commit);
     });
 
     it('should apply style to specific footer', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       commit.footer('Closes', '#123');
       const result = commit.style('footer', 'Closes');
       expect(result).to.equal(commit);
@@ -164,7 +164,7 @@ describe('CommitMessage', () => {
     it('should apply style to all elements when no part specified', () => {
       const styleHeader = sinon.spy(header, 'style');
       const styleFooter = sinon.spy(footer, 'style');
-      const commit = new CommitMessage(header, 'body', footer);
+      const commit = new CommitMessage({ header, body: 'body', footers: [footer] });
       const result = commit.style();
 
       expect(result).to.equal(commit);
@@ -176,7 +176,7 @@ describe('CommitMessage', () => {
     });
 
     it('should unstyle body', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       const result = commit.unstyle('body');
       expect(result).to.equal(commit);
     });
@@ -184,7 +184,7 @@ describe('CommitMessage', () => {
     it('should unstyle specific footer', () => {
       const secondFooter = new CommitMessageFooter('Second', 'footer');
       const secondFooterUnstyle = sinon.spy(secondFooter, 'unstyle');
-      const commit = new CommitMessage(header, 'body', footer, secondFooter);
+      const commit = new CommitMessage({ header, body: 'body', footers: [footer, secondFooter] });
       const result = commit.unstyle('footer', secondFooter.token);
       expect(result).to.equal(commit);
 
@@ -192,7 +192,7 @@ describe('CommitMessage', () => {
     });
 
     it('should unstyle all parts when no part specified', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       const result = commit.unstyle();
       expect(result).to.equal(commit);
     });
@@ -206,21 +206,21 @@ describe('CommitMessage', () => {
 
     it('should get and set type', () => {
       header.type = 'feat';
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       commit.type = 'fix';
       expect(header.type).to.equal('fix');
     });
 
     it('should get and set subject', () => {
       header.subject = 'Test subject';
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       commit.subject = 'New subject';
       expect(header.subject).to.equal('New subject');
     });
 
     it('should get and set scope', () => {
       header.scope = 'api';
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       commit.scope = 'ui';
       expect(header.scope).to.equal('ui');
     });
@@ -229,25 +229,25 @@ describe('CommitMessage', () => {
       header.type = 'feat';
       header.scope = '';
       header.subject = 'test subject';
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       expect(commit.header).to.equal('feat: test subject');
     });
 
     it('should get footers array', () => {
       footer.token = 'Closes';
       footer.text = '#123';
-      const commit = new CommitMessage(header, '', footer);
+      const commit = new CommitMessage({ header, body: '', footers: [footer] });
       expect(commit.footers).to.deep.equal(['Closes: #123']);
     });
 
     it('should get addScope method', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       const addScope = commit.addScope;
       expect(header.addScope).to.equal(addScope);
     });
 
     it('should get delScope method', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       const delScope = commit.delScope;
       expect(header.delScope).to.equal(delScope);
     });
@@ -261,7 +261,7 @@ describe('CommitMessage', () => {
       footer.token = 'Closes';
       footer.text = '#123';
 
-      const commit = new CommitMessage(header, 'Test body', footer);
+      const commit = new CommitMessage({ header, body: 'Test body', footers: [footer] });
       const json = commit.toJSON();
 
       expect(json).to.deep.equal({
@@ -424,22 +424,22 @@ describe('CommitMessage', () => {
     });
 
     it('should format commit with header only', () => {
-      const commit = new CommitMessage(header);
+      const commit = new CommitMessage({ header });
       expect(commit.toString()).to.equal('feat: add feature');
     });
 
     it('should format commit with header and body', () => {
-      const commit = new CommitMessage(header, 'Test body');
+      const commit = new CommitMessage({ header, body: 'Test body' });
       expect(commit.toString()).to.equal('feat: add feature\n\nTest body');
     });
 
     it('should format commit with header, body, and footers', () => {
-      const commit = new CommitMessage(header, 'Test body', footer);
+      const commit = new CommitMessage({ header, body: 'Test body', footers: [footer] });
       expect(commit.toString()).to.equal('feat: add feature\n\nTest body\n\nCloses: #123');
     });
 
     it('should format commit with header and footers but no body', () => {
-      const commit = new CommitMessage(header, '', footer);
+      const commit = new CommitMessage({ header, body: '', footers: [footer] });
       expect(commit.toString()).to.equal('feat: add feature\n\nCloses: #123');
     });
   });
@@ -469,7 +469,7 @@ describe('CommitMessage', () => {
       const processedFooter = new CommitMessageFooter('Closes', '#456');
       const footerProcessStub = sinon.stub(footer, 'process').returns([processedFooter]);
 
-      const commit = new CommitMessage(header, 'test body', footer);
+      const commit = new CommitMessage({ header, body: 'test body', footers: [footer] });
       const [processedCommit, valid, errorsAndWarnings] = commit.process(mockRulesEngine);
 
       expect(processedCommit).to.be.instanceOf(CommitMessage);
@@ -485,7 +485,7 @@ describe('CommitMessage', () => {
         .stub(header, 'process')
         .returns([processedHeader, false, [{ type: 'type', errors: ['Type error'], warnings: [] }]]);
 
-      const commit = new CommitMessage(header, 'test body');
+      const commit = new CommitMessage({ header, body: 'test body' });
       const [processedCommit, valid, errorsAndWarnings] = commit.process(mockRulesEngine);
 
       expect(processedCommit).to.be.instanceOf(CommitMessage);
@@ -500,7 +500,7 @@ describe('CommitMessage', () => {
 
       mockNarrowedEngine.parse.returns(['parsed body', ['Body error'], ['Body warning']]);
 
-      const commit = new CommitMessage(header, 'test body');
+      const commit = new CommitMessage({ header, body: 'test body' });
       const [processedCommit, valid, errorsAndWarnings] = commit.process(mockRulesEngine);
 
       expect(processedCommit).to.be.instanceOf(CommitMessage);
@@ -521,7 +521,7 @@ describe('CommitMessage', () => {
           { type: 'footer', filter: 'Closes', errors: ['issue not found'], warnings: ['invalid syntax'] },
         ]);
 
-      const commit = new CommitMessage(header, 'test body', footer);
+      const commit = new CommitMessage({ header, body: 'test body', footers: [footer] });
       const [processedCommit, valid, errorsAndWarnings] = commit.process(mockRulesEngine);
 
       expect(processedCommit).to.be.instanceOf(CommitMessage);
@@ -553,7 +553,7 @@ describe('CommitMessage', () => {
           { type: 'footer', filter: 'Signed-off-by', errors: ["you can't sign it off yourself!"], warnings: [] },
         ]);
 
-      const commit = new CommitMessage(header, 'test body', footer, footer2);
+      const commit = new CommitMessage({ header, body: 'test body', footers: [footer, footer2] });
       const [processedCommit, valid, errorsAndWarnings] = commit.process(mockRulesEngine);
 
       expect(processedCommit).to.be.instanceOf(CommitMessage);
@@ -580,7 +580,7 @@ describe('CommitMessage', () => {
         .stub(footerWithoutToken, 'process')
         .returns([processedFooter, { type: 'footer', filter: 'Error', errors: ['No token!'], warnings: [] }]);
 
-      const commit = new CommitMessage(header, 'test body', footerWithoutToken);
+      const commit = new CommitMessage({ header, body: 'test body', footers: [footerWithoutToken] });
       const [processedCommit, valid, errorsAndWarnings] = commit.process(mockRulesEngine);
 
       expect(processedCommit).to.be.instanceOf(CommitMessage);
@@ -599,7 +599,7 @@ describe('CommitMessage', () => {
 
       mockNarrowedEngine.parse.returns(['updated body', [], []]);
 
-      const commit = new CommitMessage(header, 'original body', footer);
+      const commit = new CommitMessage({ header, body: 'original body', footers: [footer] });
       const [processedCommit, valid] = commit.process(mockRulesEngine);
 
       expect(processedCommit.type).to.equal('fix');
@@ -615,7 +615,7 @@ describe('CommitMessage', () => {
       const processedHeader = new CommitMessageHeader({ type: 'feat', subject: 'processed subject' });
       sinon.stub(header, 'process').returns([processedHeader, true, []]);
 
-      const commit = new CommitMessage(header, 'test body');
+      const commit = new CommitMessage({ header, body: 'test body' });
       commit.process(mockRulesEngine);
 
       expect(mockRulesEngine.narrow.calledWith('body')).to.be.true;

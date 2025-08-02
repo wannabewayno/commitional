@@ -20,7 +20,7 @@ export default class CommitMessageHeader {
   private separator = ': ';
   private breakingEmoji = '⚠️';
 
-  constructor(opts: CommitMessageHeaderOpts) {
+  constructor(opts: CommitMessageHeaderOpts = {}) {
     this._type = new Text(opts.type ?? '');
     this._subject = new Text(opts.subject ?? '');
     this.scopeDelimiter = opts.scopeDelimiter ?? ',';
@@ -136,6 +136,10 @@ export default class CommitMessageHeader {
 
   get scope(): string {
     return this._scopeText.toString();
+  }
+
+  get scopes(): string[] {
+    return this._scope;
   }
 
   delScope(scope: string) {
