@@ -1,32 +1,22 @@
 import { BaseRuleWithValue } from './BaseRule.js';
 
 export class AllowMultipleRule extends BaseRuleWithValue<string> {
-  validate(input: string): boolean {
-    if (!input) return true;
-
-    // The value is the delimiter
-    const delimiter = this.value;
-    const items = input.split(delimiter).filter(item => item.trim() !== '');
-
-    if (this.applicable === 'always') {
-      // For 'always', we're *allowing* multiple items so it's free real estate. return valid.
-      return true;
-    }
-
-    // For 'never', we should have at most one item
-    return items.length <= 1;
+  validate(inputs: string[]): null | Record<number, string> {
+    if (this.applicable === 'always') return null
+    
+    const [, ...rest] = inputs;
+    if (rest.length) return Object.fromEntries(rest.map((_, i) => [i + 1, this.allowMultipleErrorMessage()]));
+    return null;
   }
 
-  fix(_input: string): string | null {
-    // Can't automatically fix multiple items issues
-    if (this.applicable === 'always') return _input;
+  fix(parts: string[]): [null | Record<number, string>, string[]] {
+    if (this.applicable === 'always') return [null, parts];
 
-    const [firstItem] = _input.split(this.value);
-
-    return firstItem ?? null;
+    // Keep only the first part
+    return [null, parts.slice(0, 1)];
   }
 
-  errorMessage(): string {
-    return "Multiple aren't allowed";
+  private allowMultipleErrorMessage(): string {
+    return `Multiple ${this.scope}s aren't allowed`;
   }
 }

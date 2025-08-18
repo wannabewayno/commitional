@@ -1,21 +1,30 @@
 import { BaseRuleWithValue } from './BaseRule.js';
 
 export class FullStopRule extends BaseRuleWithValue<string> {
-  validate(input: string): boolean {
+  validate(parts: string[]): null | Record<number, string> {
+    const errs = Object.fromEntries(parts.map((part, idx) => [idx, !this.validateFullStop(part) && this.fullStopErrorMessage()]).filter(([, err]) => err));
+    return Object.keys(errs).length ? errs : null;
+  }
+
+  private validateFullStop(input: string): boolean {
     const endsWithFullStop = input.endsWith(this.value);
     return this.applicable === 'always' ? endsWithFullStop : !endsWithFullStop;
   }
 
-  fix(input: string): string | null {
-    if (this.applicable === 'always' && !input.endsWith(this.value)) {
-      return input + this.value;
-    }
+  fix(parts: string[]): [null | Record<number, string>, string[]] {
+    const fixed = parts.map(part => {
+      if (this.applicable === 'always' && !part.endsWith(this.value)) {
+        return part + this.value;
+      }
 
-    if (this.applicable === 'never' && input.endsWith(this.value)) {
-      return input.slice(0, -this.value.length);
-    }
+      if (this.applicable === 'never' && part.endsWith(this.value)) {
+        return part.slice(0, -this.value.length);
+      }
 
-    return null;
+      return part;
+    });
+    
+    return [null, fixed];
   }
 
   private get symbolName() {
@@ -86,8 +95,8 @@ export class FullStopRule extends BaseRuleWithValue<string> {
     return `${article} ${text}`;
   }
 
-  errorMessage(): string {
+  private fullStopErrorMessage(): string {
     const modifier = this.applicable === 'always' ? 'must' : 'must not';
-    return `the ${this.name} ${modifier} end with ${this.indefiniteArticle(this.symbolName)}`;
+    return `the ${this.scope} ${modifier} end with ${this.indefiniteArticle(this.symbolName)}`;
   }
 }

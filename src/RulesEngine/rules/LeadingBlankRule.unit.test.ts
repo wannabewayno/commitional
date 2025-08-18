@@ -6,61 +6,81 @@ describe('LeadingBlankRule', () => {
   describe('validate()', () => {
     it('should validate when input begins with a blank line', () => {
       const rule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'always');
-      expect(rule.validate('\nThis is a message')).to.be.true;
-      expect(rule.validate('  \nThis is a message')).to.be.true;
+      expect(rule.validate(['\nThis is a message'])).to.be.null;
+      expect(rule.validate(['  \nThis is a message'])).to.be.null;
     });
 
     it('should not validate when input does not begin with a blank line', () => {
       const rule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'always');
-      expect(rule.validate('This is a message')).to.be.false;
-      expect(rule.validate('This is a message\nWith multiple lines')).to.be.false;
+      expect(rule.validate(['This is a message'])).to.deep.equal({ 0: 'the subject must always begin with a blank line' });
+      expect(rule.validate(['This is a message\nWith multiple lines'])).to.deep.equal({ 0: 'the subject must always begin with a blank line' });
     });
   });
 
   describe('fix()', () => {
     it('should fix by adding a blank line when applicable is always', () => {
       const rule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'always');
-      expect(rule.fix('This is a message')).to.equal('\nThis is a message');
+      const [errors, fixed] = rule.fix(['This is a message']);
+      expect(errors).to.be.null;
+      expect(fixed).to.deep.equal(['\nThis is a message']);
     });
 
     it('should fix by removing the blank line when applicable is never', () => {
       const rule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'never');
-      expect(rule.fix('\nThis is a message')).to.equal('This is a message');
-      expect(rule.fix('  \nThis is a message')).to.equal('This is a message');
+      
+      const [errors1, fixed1] = rule.fix(['\nThis is a message']);
+      expect(errors1).to.be.null;
+      expect(fixed1).to.deep.equal(['This is a message']);
+      
+      const [errors2, fixed2] = rule.fix(['  \nThis is a message']);
+      expect(errors2).to.be.null;
+      expect(fixed2).to.deep.equal(['This is a message']);
     });
 
     it('should return null when fix is not needed', () => {
       const alwaysRule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'always');
-      expect(alwaysRule.fix('\nThis is a message')).to.be.null;
+      const [errors1, fixed1] = alwaysRule.fix(['\nThis is a message']);
+      expect(errors1).to.be.null;
+      expect(fixed1).to.deep.equal(['\nThis is a message']);
 
       const neverRule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'never');
-      expect(neverRule.fix('This is a message')).to.be.null;
-    });
-  });
-
-  describe('errorMessage()', () => {
-    it('should provide a helpful error message for always condition', () => {
-      const alwaysRule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'always');
-      expect(alwaysRule.errorMessage()).to.equal('the subject must always begin with a blank line');
-    });
-
-    it('should provide a helpful error message for never condition', () => {
-      const neverRule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'never');
-      expect(neverRule.errorMessage()).to.equal('the subject must never begin with a blank line');
+      const [errors2, fixed2] = neverRule.fix(['This is a message']);
+      expect(errors2).to.be.null;
+      expect(fixed2).to.deep.equal(['This is a message']);
     });
   });
 
   describe('check()', () => {
     it('should handle check method correctly for always condition', () => {
       const alwaysRule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'always');
-      expect(alwaysRule.check('\nThis is a message')).to.equal('\nThis is a message');
-      expect(() => alwaysRule.check('This is a message')).to.not.throw(); // it heals itself.
+      
+      // Valid input
+      const [output1, errors1, warnings1] = alwaysRule.check(['\nThis is a message']);
+      expect(output1).to.deep.equal(['\nThis is a message']);
+      expect(errors1).to.be.null;
+      expect(warnings1).to.be.null;
+      
+      // Invalid input that gets fixed
+      const [output2, errors2, warnings2] = alwaysRule.check(['This is a message']);
+      expect(output2).to.deep.equal(['\nThis is a message']);
+      expect(errors2).to.be.null;
+      expect(warnings2).to.be.null;
     });
 
     it('should handle check method correctly for never condition', () => {
       const neverRule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'never');
-      expect(neverRule.check('This is a message')).to.equal('This is a message');
-      expect(() => neverRule.check('\nThis is a message')).to.not.throw(); // it heals itself.
+      
+      // Valid input
+      const [output1, errors1, warnings1] = neverRule.check(['This is a message']);
+      expect(output1).to.deep.equal(['This is a message']);
+      expect(errors1).to.be.null;
+      expect(warnings1).to.be.null;
+      
+      // Invalid input that gets fixed
+      const [output2, errors2, warnings2] = neverRule.check(['\nThis is a message']);
+      expect(output2).to.deep.equal(['This is a message']);
+      expect(errors2).to.be.null;
+      expect(warnings2).to.be.null;
     });
   });
 });

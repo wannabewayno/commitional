@@ -84,6 +84,11 @@ export const Provider = ({ git, readFile, writeFile, exit, logError }: Dependenc
       await writeFile(args[0], results[0].commit.unstyle().toString());
     }
 
+    /*
+      If not all valid, construct an error message for every commit that failed.
+      Show the commit that failed, highlighting (styling) the part of the commit that failed
+      Show all the errors underneath as a list.
+    */
     if (!allValid) {
       const errorMessage = filterMap(results, ({ commit, error }) => {
         if (!error) return undefined;

@@ -1,17 +1,27 @@
 import { BaseRuleWithValue } from './BaseRule.js';
 
 export class MaxLengthRule extends BaseRuleWithValue<number> {
-  validate(input: string): boolean {
+  validate(parts: string[]): null | Record<number, string> {
+    const errs = Object.fromEntries(parts.map((part, idx) => [idx, !this.validateMaxLength(part) && this.maxLineLengthErrorMessage()]).filter(([, err]) => err));
+    return Object.keys(errs).length ? errs : null;
+  }
+
+  private validateMaxLength(input: string): boolean {
     const isLessThanMaxLength = input.length <= this.value;
     return this.applicable === 'always' ? isLessThanMaxLength : !isLessThanMaxLength;
   }
 
-  fix(input: string): string | null {
-    if (this.applicable === 'never' && input.length < this.value) return null;
-    return input.substring(0, this.value);
+  fix(parts: string[]): [null | Record<number, string>, string[]] {
+    if (this.applicable === 'never') {
+      const errs = this.validate(parts);
+      return [errs, parts];
+    }
+    
+    const fixed = parts.map(part => part.substring(0, this.value));
+    return [null, fixed];
   }
 
-  errorMessage(): string {
-    return `the ${this.name} must not exceed ${this.value} characters`;
+  private maxLineLengthErrorMessage(): string {
+    return `the ${this.scope} must not exceed ${this.value} characters`;
   }
 }

@@ -19,7 +19,7 @@ export default class BodyPrompt extends BasePrompt {
 
     if (editorCmd) return null;
 
-    // Common editor commands
+    // Common editor commandsgit a
     const editorOptions = [
       { name: 'VS Code', value: 'code --wait --new-window' },
       { name: 'Vim', value: 'vim' },
@@ -80,7 +80,7 @@ export default class BodyPrompt extends BasePrompt {
   }
 
   async prompt(commit: CommitMessage): Promise<void> {
-    const initialValue = commit.body;
+    const inMemoryCommit = commit.clone();
 
     // Ensure we have an editor command
     await this.checkEditor();
@@ -88,13 +88,14 @@ export default class BodyPrompt extends BasePrompt {
     // Gather all the errors currently with the body and display them in the editor as a comment.
     const answer = await editor({
       message: '',
-      default: this.defaultMessage(initialValue),
+      default: this.defaultMessage(commit),
       waitForUseInput: false,
       validate: value => {
         // Trim comments
         const content = value.replace(/^#.+$/gm, '').trim();
+        inMemoryCommit.body = content;
 
-        const [, errors] = this.rules.parse(content);
+        const [errors] = this.rules.parse(inMemoryCommit, 'fix');
 
         // Invalid, return a list of errors
         if (errors.length) return errors.join('\n');
@@ -105,13 +106,12 @@ export default class BodyPrompt extends BasePrompt {
     });
 
     // Remove any comments from the commit body
-    const content = answer.replace(/^#.+$/gm, '').trim();
-
-    commit.body = this.rules.parse(content)[0];
+    commit.body = answer.replace(/^#.+$/gm, '').trim();
+    this.rules.parse(commit, 'fix');
   }
 
-  private defaultMessage(initialValue?: string) {
-    const [, errors] = this.rules.parse(initialValue ?? '');
+  private defaultMessage(commit: CommitMessage) {
+    const [errors] = this.rules.parse(commit, 'fix');
 
     // If there are any errors construct an error message with list of errors
     // The user's commit body is in breach of the rules and these show the user how to address it.
@@ -134,7 +134,7 @@ export default class BodyPrompt extends BasePrompt {
       ...errorMessage,
     );
 
-    return [comments, initialValue ?? '', '# Rules and guidelines here'].join('\n\n');
+    return [comments, commit.body, '# Rules and guidelines here'].join('\n\n');
   }
 
   private comment(...lines: string[]) {

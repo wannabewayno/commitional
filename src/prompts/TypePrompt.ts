@@ -1,10 +1,10 @@
 import { input, select } from '@inquirer/prompts';
 import type RulesEngine from '../RulesEngine/index.js';
-import toEnum from '../lib/toEnum.js';
+// import toEnum from '../lib/toEnum.js';
 import BasePrompt from './BasePrompt.js';
 import type Diff from '../services/Git/Diff.js';
 import { red } from 'yoctocolors';
-import type CommitMessage from '../CommitMessage/index.js';
+import CommitMessage from '../CommitMessage/index.js';
 
 export default class TypePrompt extends BasePrompt {
   constructor(rules: RulesEngine) {
@@ -38,34 +38,47 @@ export default class TypePrompt extends BasePrompt {
       '```',
     );
 
-    commit.type = await this.tryAiCompletion(completion, enumRule ? toEnum(enumRule.value) : 'string');
+    commit.type = await completion.text(type => {
+
+      const blankCommit = new CommitMessage();
+      blankCommit.type = type;
+
+      const [errors] = this.rules.validate(blankCommit);
+
+      if (errors.length) return new Error(errors.join('\n'));
+
+      return type;
+    });
   }
 
   async prompt(commit: CommitMessage): Promise<void> {
     const [enumRule] = this.rules.getRulesOfType('enum');
-    const initialValue = commit.type;
+    const _commit = commit.clone();
+    _commit.setStyle(red, 'type');
 
-    const answer = enumRule
+    enumRule
       ? await select<string>({
           message: "Select the type of change that you're committing:",
           choices: enumRule.value,
-          default: initialValue,
+          default: _commit.type,
         })
       : await input({
           message: "Type of change that you're committing:",
-          default: initialValue,
+          default: _commit.type,
           prefill: 'editable',
           validate: value => {
-            const [, errors] = this.rules.parse(value);
-            if (errors.length) return errors.join('\n');
+            _commit.type = value;
+            const [errors] = this.rules.validate(_commit);
+            if (errors.length) {
+              _commit.style('type');
+              return errors.join('\n');
+            }
+            _commit.unstyle('type');
             return true;
           },
-          transformer: value => {
-            const [parsed, errors] = this.rules.parse(value);
-            return errors.length ? red(value) : parsed;
-          },
+          transformer: () => _commit.type,
         });
 
-    commit.type = this.rules.parse(answer)[0];
+    commit.type = _commit.type;
   }
 }

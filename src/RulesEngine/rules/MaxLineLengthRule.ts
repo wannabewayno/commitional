@@ -2,27 +2,22 @@ import wrapText from '../../lib/wrapText.js';
 import { BaseRuleWithValue } from './BaseRule.js';
 
 export class MaxLineLengthRule extends BaseRuleWithValue<number> {
-  validate(input: string): boolean {
+  validate(parts: string[]): null | Record<number, string> {
+    const errs = Object.fromEntries(parts.map((part, idx) => [idx, !this.validateMaxLineLength(part) && this.maxLengthErrorMessage()]).filter(([, err]) => err));
+    return Object.keys(errs).length ? errs : null;
+  }
+
+  private validateMaxLineLength(input: string): boolean {
     const lines = input.split('\n');
     return !lines.some(line => line.length > this.value);
   }
 
-  fix(input: string): string | null {
-    // Split by paragraphs
-    const paragraphs = input.split('\n\n');
-
-    // fix each paragraph to wrap the content to the line limit
-    const fixedParagraphs = paragraphs.map(paragraph => {
-      const fixedParagraph = paragraph
-        .split('\n')
-        .reduce((lines, currentLine) => lines.concat(wrapText(currentLine, this.value)), [] as string[]);
-      return fixedParagraph.join('\n');
-    });
-
-    return fixedParagraphs.join('\n\n');
+  fix(parts: string[]): [null | Record<number, string>, string[]] {
+    const fixed = parts.map(part => wrapText(part, this.value));
+    return [null, fixed];
   }
 
-  errorMessage(): string {
-    return `the ${this.name} must be wrapped at ${this.value} characters`;
+  private maxLengthErrorMessage(): string {
+    return `the ${this.scope} must be wrapped at ${this.value} characters`;
   }
 }

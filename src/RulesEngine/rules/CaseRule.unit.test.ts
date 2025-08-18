@@ -1,4 +1,4 @@
-import assert from 'node:assert';
+import { expect } from 'chai';
 import { CaseRule } from './CaseRule.js';
 import { RuleConfigSeverity } from './BaseRule.js';
 
@@ -6,13 +6,13 @@ describe('CaseRule', () => {
   // Test construction
   describe('constructor', () => {
     it('should create a rule with a single case type', () => {
-      assert.doesNotThrow(() => new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case'));
+      expect(() => new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case')).to.not.throw();
     });
 
     it('should create a rule with multiple case types', () => {
-      assert.doesNotThrow(
+      expect(
         () => new CaseRule('subject', RuleConfigSeverity.Warning, 'always', ['sentence-case', 'pascal-case']),
-      );
+      ).to.not.throw();
     });
   });
 
@@ -20,32 +20,48 @@ describe('CaseRule', () => {
   describe('validate', () => {
     it('should validate lowercase text correctly', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
-      assert.strictEqual(rule.validate('hello world'), true);
-      assert.strictEqual(rule.validate('Hello World'), false);
+      const result1 = rule.validate(['hello world']);
+      const result2 = rule.validate(['Hello World']);
+      expect(result1).to.be.null;
+      expect(result2).to.deep.equal({ 0: 'the subject must always be in lower-case' });
     });
 
     it('should validate uppercase text correctly', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'upper-case');
-      assert.strictEqual(rule.validate('HELLO WORLD'), true);
-      assert.strictEqual(rule.validate('Hello World'), false);
+      const result1 = rule.validate(['HELLO WORLD']);
+      const result2 = rule.validate(['Hello World']);
+      expect(result1).to.be.null;
+      expect(result2).to.deep.equal({ 0: 'the subject must always be in upper-case' });
     });
 
     it('should validate sentence case text correctly', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'sentence-case');
-      assert.strictEqual(rule.validate('Hello world'), true);
-      assert.strictEqual(rule.validate('hello World'), false);
+      const result1 = rule.validate(['Hello world']);
+      const result2 = rule.validate(['hello World']);
+      expect(result1).to.be.null;
+      expect(result2).to.deep.equal({ 0: 'the subject must always be in sentence-case' });
     });
 
     it('should validate multiple case types correctly', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', ['sentence-case', 'pascal-case']);
-      assert.strictEqual(rule.validate('Hello world'), true);
-      assert.strictEqual(rule.validate('HelloWorld'), true);
-      assert.strictEqual(rule.validate('hello world'), false);
+      const result1 = rule.validate(['Hello world']);
+      const result2 = rule.validate(['HelloWorld']);
+      const result3 = rule.validate(['hello world']);
+      expect(result1).to.be.null;
+      expect(result2).to.be.null;
+      expect(result3).to.deep.equal({ 0: 'the subject must always be in either PascalCase or Sentence case' });
     });
 
     it('should handle empty input', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
-      assert.strictEqual(rule.validate(''), true);
+      const result = rule.validate(['']);
+      expect(result).to.be.null;
+    });
+
+    it('should validate multiple parts', () => {
+      const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
+      const result = rule.validate(['hello', 'WORLD', 'test']);
+      expect(result).to.deep.equal({ 1: 'the subject must always be in lower-case' });
     });
   });
 
@@ -53,93 +69,124 @@ describe('CaseRule', () => {
   describe('fix', () => {
     it('should fix lowercase text', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
-      assert.strictEqual(rule.fix('Hello World'), 'hello world');
+      const [errors, fixed] = rule.fix(['Hello World']);
+      expect(errors).to.be.null;
+      expect(fixed).to.deep.equal(['hello world']);
     });
 
     it('should fix uppercase text', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'upper-case');
-      assert.strictEqual(rule.fix('Hello World'), 'HELLO WORLD');
+      const [errors, fixed] = rule.fix(['Hello World']);
+      expect(errors).to.be.null;
+      expect(fixed).to.deep.equal(['HELLO WORLD']);
     });
 
     it('should fix sentence case text', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'sentence-case');
-      assert.strictEqual(rule.fix('hello world'), 'Hello world');
+      const [errors, fixed] = rule.fix(['hello world']);
+      expect(errors).to.be.null;
+      expect(fixed).to.deep.equal(['Hello world']);
     });
 
     it('should fix start case text', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'start-case');
-      assert.strictEqual(rule.fix('hello world'), 'Hello World');
+      const [errors, fixed] = rule.fix(['hello world']);
+      expect(errors).to.be.null;
+      expect(fixed).to.deep.equal(['Hello World']);
     });
 
     it('should use first case type when multiple are provided', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', ['sentence-case', 'pascal-case']);
-      assert.strictEqual(rule.fix('hello world'), 'Hello world');
+      const [errors, fixed] = rule.fix(['hello world']);
+      expect(errors).to.be.null;
+      expect(fixed).to.deep.equal(['Hello world']);
     });
 
     it('should handle empty input', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
-      assert.strictEqual(rule.fix(''), null);
+      const [errors, fixed] = rule.fix(['']);
+      expect(errors).to.be.null;
+      expect(fixed).to.deep.equal(['']);
     });
-  });
 
-  // Test error message
-  describe('errorMessage', () => {
-    it('should return correct error message for single case type', () => {
+    it('should fix multiple parts', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
-      assert.strictEqual(rule.errorMessage(), 'the subject must always be in lower-case');
-    });
-
-    it('should return correct error message for multiple case types', () => {
-      const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', ['sentence-case', 'pascal-case']);
-      assert.strictEqual(rule.errorMessage(), 'the subject must always be in either PascalCase or Sentence case');
+      const [errors, fixed] = rule.fix(['Hello', 'WORLD', 'Test']);
+      expect(errors).to.be.null;
+      expect(fixed).to.deep.equal(['hello', 'world', 'test']);
     });
   });
 
   // Test check method (integration)
   describe('check', () => {
-    it('should return valid input when it matches the case', () => {
+    it('should return valid output when it matches the case', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
-      const result = rule.check('hello world');
-      assert.strictEqual(result, 'hello world');
+      const [output, errors, warnings] = rule.check(['hello world']);
+      expect(output).to.deep.equal(['hello world']);
+      expect(errors).to.be.null;
+      expect(warnings).to.be.null;
     });
 
     it('should fix input when possible', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
-      const result = rule.check('Hello World');
-      assert.strictEqual(result, 'hello world');
+      const [output, errors, warnings] = rule.check(['Hello World']);
+      expect(output).to.deep.equal(['hello world']);
+      expect(errors).to.be.null;
+      expect(warnings).to.be.null;
     });
 
     it('should handle never applicable correctly', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'never', 'lower-case');
-      const result = rule.check('HELLO WORLD');
-      assert.strictEqual(result, 'HELLO WORLD');
+      const [output, errors, warnings] = rule.check(['HELLO WORLD']);
+      expect(output).to.deep.equal(['HELLO WORLD']);
+      expect(errors).to.be.null;
+      expect(warnings).to.be.null;
+    });
+
+    it('should handle mixed valid/invalid parts', () => {
+      const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
+      const [output, errors, warnings] = rule.check(['hello', 'WORLD']);
+      expect(output).to.deep.equal(['hello', 'world']);
+      expect(errors).to.be.null;
+      expect(warnings).to.be.null;
     });
   });
 
   describe('check with fix parameter', () => {
     it('should apply fix when fix=true', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
-      const result = rule.check('Hello World', true);
-      assert.strictEqual(result, 'hello world');
+      const [output, errors, warnings] = rule.check(['Hello World'], true);
+      expect(output).to.deep.equal(['hello world']);
+      expect(errors).to.be.null;
+      expect(warnings).to.be.null;
     });
 
     it('should not apply fix when fix=false', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
-      assert.throws(() => {
-        rule.check('Hello World', false);
-      }, /lower-case/);
+      const [output, errors, warnings] = rule.check(['Hello World'], false);
+      expect(output).to.deep.equal(['Hello World']);
+      expect(errors).to.deep.equal({ 0: 'the subject must always be in lower-case' });
+      expect(warnings).to.be.null;
     });
 
     it('should return valid input unchanged regardless of fix parameter', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
-      assert.strictEqual(rule.check('hello world', false), 'hello world');
-      assert.strictEqual(rule.check('hello world', true), 'hello world');
+      const [output1, errors1, warnings1] = rule.check(['hello world'], false);
+      const [output2, errors2, warnings2] = rule.check(['hello world'], true);
+      expect(output1).to.deep.equal(['hello world']);
+      expect(errors1).to.be.null;
+      expect(warnings1).to.be.null;
+      expect(output2).to.deep.equal(['hello world']);
+      expect(errors2).to.be.null;
+      expect(warnings2).to.be.null;
     });
 
-    it('should return error when fix=false and input invalid with WARNING level', () => {
+    it('should return warning when fix=false and input invalid with WARNING level', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Warning, 'always', 'lower-case');
-      const result = rule.check('Hello World', false);
-      assert.ok(result instanceof Error);
+      const [output, errors, warnings] = rule.check(['Hello World'], false);
+      expect(output).to.deep.equal(['Hello World']);
+      expect(errors).to.be.null;
+      expect(warnings).to.deep.equal({ 0: 'the subject must always be in lower-case' });
     });
   });
 });

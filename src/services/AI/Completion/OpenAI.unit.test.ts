@@ -79,7 +79,7 @@ describe('OpenAICompletion Integration Tests', () => {
 
       // Act
       openai.user('Tell me about TypeScript');
-      const result = await openai.text();
+      const result = await openai.text().catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);
@@ -167,7 +167,7 @@ describe('OpenAICompletion Integration Tests', () => {
       const result = await openai.json('Person', {
         name: 'string',
         age: 'number',
-      });
+      }).catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);

@@ -92,23 +92,6 @@ export default function Provider(Completion: Completion) {
     }
 
     private _temperature?: Temperature;
-    private _system?: SystemMessage;
-    private messages: (UserMessage | AssistantMessage)[] = [];
-
-    system(...lines: string[]): this {
-      this._system = { role: 'system', content: lines.join('\n') };
-      return this;
-    }
-
-    user(...lines: string[]): this {
-      this.messages.push({ role: 'user', content: [{ type: 'text', text: lines.join('\n') }] });
-      return this;
-    }
-
-    assistant(...message: string[]): this {
-      this.messages.push({ role: 'assistant', content: message.join('\n') });
-      return this;
-    }
 
     usecase(
       usecase:
@@ -132,71 +115,93 @@ export default function Provider(Completion: Completion) {
 
     private buildMessages(): CompletionRequest['messages'] {
       const messages = [...this.messages] as CompletionRequest['messages'];
-      if (this._system) messages.unshift(this._system);
+      if (this.systemMessage) messages.unshift({ role: 'system', content: this.systemMessage });
 
       return messages;
     }
 
     // So we actually don't care
-    async text(): Promise<string | Error> {
+    async text<R = string>(validate?: (response: string) => Error | R): Promise<R> {
+
       const messages = this.buildMessages();
+    
+      const body: CompletionRequest = {
+        model_id: this.model || GPT4o,
+        messages,
+        temperature: this._temperature,
+      };
 
-      const res = await this.http
-        .post<CompletionResponse>('/external/api/completion', {
-          model_id: this.model || GPT4o,
-          messages,
-          temperature: this._temperature,
-        })
-        .catch((v: Error) => ({ data: { error: v.message } }));
+      // Call the OpenAPI with a very basic completion request.
+      // further paramters subject to fine-tuning and testing.
+      return this.try(
+        () => this.http.post<CompletionResponse>('/external/api/completion', body),
+        {
+          validate: (input) => {
+            if (isErrorResponse(input.data)) return new Error(input.data.error);
 
-      return isErrorResponse(res.data) ? new Error(res.data.error) : res.data.assistant_resp;
+            const response = input.data.assistant_resp;
+  
+            // Add the response as the assistant message for further interactions.
+            this.assistant(response);
+
+            // Validate the response.
+            return validate ? validate(response) : response as R;
+          }
+        }
+      )
     }
 
-    async json<const SchemaDefinition extends object>(
+     async json<const SchemaDefinition extends object, R = type.instantiate<SchemaDefinition>['infer']>(
       name: string,
       schemaDef: type.validate<SchemaDefinition>,
-    ): Promise<type.instantiate<SchemaDefinition>['infer'] | Error> {
+      validate?: (response: type.instantiate<SchemaDefinition>['infer']) => Error | R
+    ): Promise<R> {
       // Ensure a system message exists
-      if (!this._system) this._system = { role: 'system', content: '' };
+      if (!this.systemMessage) this.systemMessage = '';
 
       const schema = type(schemaDef);
 
       // Appened an important rule that tells the agent to always use JSON.
-      this._system.content += [
+      this.systemMessage += [
         '**IMPORTANT**',
         'You **always** provide responses as valid json that conform to the following json schema',
         '```json',
-        JSON.stringify({ name, schema: schema.toJsonSchema() }),
+        JSON.stringify({ name, schema: schema.toJsonSchema({ dialect: null }) }),
         '```',
       ].join('\n');
 
       // Build our messages (including any user provided stuff)
       const messages = this.buildMessages();
 
-      // Make the request
-      const res = await this.http
-        .post<CompletionResponse>('/external/api/completion', {
-          model_id: this.model || GPT4o,
-          messages,
-          temperature: this._temperature,
-        })
-        .catch((v: Error) => ({ data: { error: v.message } }));
+      const payload: CompletionRequest = {
+        model_id: this.model || GPT4o,
+        messages,
+        temperature: this._temperature,
+      }
 
-      // An error occured, return a new error
-      if (isErrorResponse(res.data)) return new Error(res.data.error);
+      // Exactly the same as text, except prime the model return a JSON schema
+      return this.try(
+        () => this.http.post<CompletionResponse>('/external/api/completion', payload),
+        {
+          validate: (input) => {
+            // An error occured, return a new error
+            if (isErrorResponse(input.data)) return new Error(input.data.error);
 
-      const json = this.parseJSON(res.data.assistant_resp);
-      if (json instanceof Error) return json;
+            const json = this.parseJSON(input.data.assistant_resp);
+            if (json instanceof Error) return json;
 
-      // Successsful response, check if the format is valid.
-      const data = schema(json);
+            // Successsful response, check if the format is valid.
+            const data = schema(json);
 
-      // Successful response but invaid format, collect errors into a single error.
-      if (data instanceof ArkErrors)
-        return new Error([''].concat(data.map((v, index) => `  ${index + 1}.) ${v.toString()}`)).join('\n'));
+            // Successful response but invaid format, collect errors into a single error.
+            if (data instanceof ArkErrors)
+            return new Error(data.map((v, index) => `  ${index + 1}.) ${v.toString()}`).join('\n'));
 
-      // Hooray it's valid.
-      return data;
+            // Valid, Schema, however does the schema parse arbitrary formatting provided by the user?
+            return validate ? validate(data): data as R;
+          }
+        }
+      )
     }
   }
 

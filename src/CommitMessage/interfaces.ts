@@ -1,4 +1,4 @@
-import type { CommitPart } from '../RulesEngine/index.js';
+import type { CommitPart } from "./index.js";
 
 export interface ErrorsAndWarnings {
   type: CommitPart;

@@ -26,30 +26,33 @@ export default class SubjectPrompt extends BasePrompt {
     );
 
     // set the commit's subject
-    commit.subject = await this.tryAiCompletion(completion);
+    commit.subject = await completion.text();
   }
 
   async prompt(commit: CommitMessage): Promise<void> {
     const [enumRule] = this.rules.getRulesOfType('enum');
-    const initialValue = commit.subject;
+    const _commit = commit.clone();
+    _commit.setStyle(red, 'subject');
 
-    const answer = enumRule
-      ? await select<string>({ message: 'Choose a subject to commit as', choices: enumRule.value, default: initialValue })
+    enumRule
+      ? await select<string>({ message: 'Choose a subject to commit as:', choices: enumRule.value, default: _commit.subject })
       : await input({
           message: 'If applied, this commit will...',
-          default: initialValue,
+          default: _commit.subject,
           prefill: 'editable',
           validate: value => {
-            const [, errors] = this.rules.parse(value);
-            if (errors.length) return errors.join('\n');
+            _commit.subject = value;
+            const [errors] = this.rules.validate(commit, 'fix');
+            if (errors.length) {
+              commit.style('subject');
+              return errors.join('\n');
+            }
+            commit.unstyle('subject');
             return true;
           },
-          transformer: value => {
-            const [parsed, errors] = this.rules.parse(value);
-            return errors.length ? red(value) : parsed;
-          },
+          transformer: () => _commit.subject,
         });
 
-    commit.subject = this.rules.parse(answer)[0];
+    commit.subject = _commit.subject
   }
 }

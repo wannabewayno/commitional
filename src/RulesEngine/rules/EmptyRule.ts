@@ -1,20 +1,26 @@
 import { BaseRule } from './BaseRule.js';
 
 export class EmptyRule extends BaseRule {
-  validate(input: string): boolean {
+  validate(parts: string[]): null | Record<number, string> {
+    const errs = Object.fromEntries(parts.map((part, idx) => [idx, !this.validateEmpty(part) && this.emptyErrorMessage()]).filter(([, err]) => err));
+    return Object.keys(errs).length ? errs : null;
+  }
+
+  private validateEmpty(input: string): boolean {
     const isEmpty = input.trim() === '';
     return this.applicable === 'always' ? isEmpty : !isEmpty;
   }
 
-  fix(_input: string): string | null {
-    // If applicable is 'always', we can fix by returning empty string
-    if (this.applicable === 'always') return '';
+  fix(parts: string[]): [null | Record<number, string>, string[]] {
+    // If applicable is 'always', we can fix by setting empty strings
+    if (this.applicable === 'always') return [null, parts.map(() => '')];
 
-    // Can't fix if applicable is 'never' and input is empty
-    return null;
+    // Can't fix if applicable is 'never' and input is empty - return original
+    const errs = Object.fromEntries(parts.map((part, idx) => [idx, !this.validateEmpty(part) && this.emptyErrorMessage()]).filter(([, err]) => err));
+    return [Object.keys(errs).length ? errs : null, parts];
   }
 
-  errorMessage(): string {
-    return `the ${this.name} must ${this.applicable} be empty`;
+  private emptyErrorMessage(): string {
+    return `the ${this.scope} must ${this.applicable} be empty`;
   }
 }

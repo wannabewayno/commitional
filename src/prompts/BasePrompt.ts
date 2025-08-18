@@ -1,7 +1,6 @@
 import type CommitMessage from '../CommitMessage/index.js';
 import type RulesEngine from '../RulesEngine/index.js';
-import type { CommitPart } from '../RulesEngine/index.js';
-import type { ICompletion } from '../services/AI/Completion/index.js';
+import type { RuleScope } from '../RulesEngine/index.js';
 import AIProvider from '../services/AI/index.js';
 import type Diff from '../services/Git/Diff.js';
 import { generalRules, bodyGuidelines, subjectAndBodyGuidelines, usingImperativeMood } from './commit-message-standard.js';
@@ -12,9 +11,9 @@ export default abstract class BasePrompt {
 
   constructor(
     rules: RulesEngine,
-    private readonly type: CommitPart,
+    ...scopes: RuleScope[]
   ) {
-    this.rules = rules.narrow(type);
+    this.rules = rules.narrow(...scopes);
   }
 
   protected commitStandard(): string {
@@ -32,17 +31,11 @@ export default abstract class BasePrompt {
    * @param initialValue
    */
   async promptIfInvalid(commit: CommitMessage): Promise<void> {
-    if (this.type === 'footer') {
-      // it gets harder for array types, especially since there's no good design pattern for this.
-      for (const footer of commit.footers) {
-        const [token = '', text = ''] = footer.split(':').map(v => v.trim());
-        if (this.rules.validate(footer)) commit.footer(token, text);
-        else await this.prompt(commit, token);
-      }
-    } else {
-      const initialValue = commit[this.type];
-      if (this.rules.validate(initialValue)) commit[this.type] = this.rules.parse(initialValue)[0];
-      else await this.prompt(commit);
+    // This will keep prompting the user until it's valid address it.
+    while (true) {      
+      const [errors] = this.rules.validate(commit, 'fix');
+      if (errors.length) await this.prompt(commit);
+      else break;
     }
   }
 
@@ -65,38 +58,5 @@ export default abstract class BasePrompt {
         'The following rules and guidelines must be adhered to.\n',
         await this.commitStandard(),
       );
-  }
-
-  protected async tryAiCompletion(
-    completion: ICompletion,
-    jsonSchema: 'string' | `"${string}"` = 'string',
-  ): Promise<string> {
-    const maxAttempts = 3;
-    let attempts = 0;
-    const schemaName = `commit_${this.type}`;
-
-    while (attempts < maxAttempts) {
-      const res = await completion.json(schemaName, { value: jsonSchema });
-
-      if (res instanceof Error) continue;
-
-      const [parsed, errors] = this.rules.parse(res.value as string);
-
-      if (!errors.length) return parsed;
-
-      attempts++;
-
-      if (attempts >= maxAttempts) return parsed;
-
-      completion.assistant(JSON.stringify(res, null, 2));
-
-      completion.user(
-        `The previous response was not a valid ${this.type}. Please fix the response and try again.`,
-        '## Errors',
-        errors.join('\n'),
-      );
-    }
-
-    return '';
   }
 }

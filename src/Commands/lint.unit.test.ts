@@ -20,7 +20,8 @@ describe('Lint Cmd', () => {
     mockWriteFile = sinon.stub();
     mockLogError = sinon.stub();
     mockExit = sinon.stub();
-    mockRulesEngine = sinon.createStubInstance(RulesEngine);
+    // biome-ignore lint/suspicious/noExplicitAny: Complex typing has made this hard for sinon...
+    mockRulesEngine = sinon.createStubInstance(RulesEngine) as any;
 
     // Mock RulesEngine.fromConfig
     sinon.stub(RulesEngine, 'fromConfig').resolves(mockRulesEngine);

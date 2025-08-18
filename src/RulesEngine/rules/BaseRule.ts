@@ -1,74 +1,60 @@
 import { RuleConfigSeverity, type RuleConfigCondition, type RuleConfigTuple } from '@commitlint/types';
-import type { CommitPart } from '../index.js';
+import type { RuleScope } from '../index.js';
 export { RuleConfigSeverity };
 export type { RuleConfigCondition, RuleConfigTuple };
 
 export abstract class BaseRule {
   constructor(
-    public readonly name: CommitPart,
+    public readonly scope: RuleScope,
     protected readonly level: RuleConfigSeverity,
     public readonly applicable: RuleConfigCondition = 'always',
   ) {}
 
   /**
-   * Check if the input passes the rule
-   * @param input The input to check against the rule
-   * @returns true if VALID or OFF, string message if WARNING, error if ERROR
+   * Check if the input parts pass the rule
+   * @param parts Array of strings to validate
+   * @returns Array where null = valid, string = error message
    */
-  abstract validate(input: string): boolean;
+  abstract validate(parts: string[]): null | Record<number, string>;
 
   /**
-   * Fix the input based on the rule
-   * @param {string} input - The input to fix
-   * @returns {string | null} - The fixed input if able to fix, otherwise null if unable to fix
+   * Fix the input parts based on the rule
+   * @param parts Array of strings to fix
+   * @returns Array of fixed strings (same length as input)
    */
-  abstract fix(input: string): string | null;
+  abstract fix(parts: string[]): [errors: null | Record<number, string>, fixed: string[]]
 
   /**
-   * Since rules work as 'always' or 'never' error messages should be able to handle both
-   * Good rule of thumb is this 'Must <always|never> <error message>'
-   * @returns {String} - Message for why this was rejected.
+   * Check if the input parts pass the rule by first validating and optionally fixing
+   * @param parts Array of strings to check
+   * @param fix Whether to attempt fixing invalid parts
+   * @returns Array of results: null if valid, string if warning, Error if error
    */
-  abstract errorMessage(): string;
+  check(input: string[], fix = true): [output: string[], err: null | Record<number, string>, warnings: null | Record<number, string>] {
+    // TODO: Disabled should never occur, this should be parsed at config time and simply not ingested.
+    // Disabled, return early
+    if (this.level === RuleConfigSeverity.Disabled) return [input, null, null]
 
-  /**
-   * Check if the input passes the rule by first validating it and if it fails, attempt to fix it
-   * If it can be fixed, return the augmented string, otherwise return or throw an error as appropriate to the level.
-   * @param input The input to check against the rule
-   * @returns original string or fixed string if valid, error if WARNING and cannot be fixed.
-   * @throws error if level is ERROR and cannont be fixed.
-   */
-  check(input: string, fix = true): string | Error {
-    if (this.level === RuleConfigSeverity.Disabled) return input;
+    // fix or validate
+    const [err, fixed] = fix ? this.fix(input) : [this.validate(input)];
+    const output = fixed ?? input;
 
-    const result = this.validate(input);
+    // No errors return output as fixed or original input, the caller will know if they have chosen to fix or not
+    if (!err) return [output, null, null];
 
-    if (result) return input;
-
-    if (fix) {
-      // Attempt to fix the input if invalid.
-      const fixedInput = this.fix(input);
-
-      if (fixedInput !== null) return fixedInput;
-    }
-
-    const errorMsg = new Error(this.errorMessage());
-
-    // We couldn't fix it. If it's a Warning, return an error
-    if (this.level === RuleConfigSeverity.Warning) return errorMsg;
-
-    // Not a warning, throw the error.
-    throw errorMsg;
+    // Otherwise we encountered some errors.
+    if (this.level === RuleConfigSeverity.Warning) return [output, null, err];
+    return [output, err, null];
   }
 }
 
 export abstract class BaseRuleWithValue<T = unknown> extends BaseRule {
   constructor(
-    name: CommitPart,
+    scope: RuleScope,
     level: RuleConfigSeverity,
     applicable: RuleConfigCondition,
     public readonly value: T,
   ) {
-    super(name, level, applicable);
+    super(scope, level, applicable);
   }
 }

@@ -20,26 +20,27 @@ export default class ScopePrompt extends BasePrompt {
   }
 
   async prompt(commit: CommitMessage): Promise<void> {
-    // TODO: default should be the initial value if there is one.
-    // TODO: Scope is harder as it's technically a list, we'll need to go deeper here depending on the scope-allow-multiple rule.
-    // TODO: Scope enums will need to be expanded to look at the file system in order to deduce allowed scopes (only if an enum is set)
-    // otherwise it's a free for all, no need to do anything fancy just let the user type stuff and lint the damn thing.
+    const inMemoryCommit = commit.clone();
+    inMemoryCommit.setStyle((scope) => red(scope));
 
-    const answer = await input({
+    // TODO: Scope enums will need to be expanded to look at the file system in order to deduce allowed scopes (only if an enum is set)
+    await input({
       message: "Scope of the change you're committing:",
-      default: commit.scope,
+      default: inMemoryCommit.scope,
       prefill: 'editable',
       validate: value => {
-        const [, errors] = this.rules.parse(value);
-        if (errors.length) return errors.join('\n');
+        inMemoryCommit.scope = value;
+        const [errors] = this.rules.validate(inMemoryCommit);
+        if (errors.length) {
+          inMemoryCommit.style('scope');
+          return errors.join('\n');
+        }
+        inMemoryCommit.unstyle('scope');
         return true;
       },
-      transformer: value => {
-        const [parsed, errors] = this.rules.parse(value);
-        return errors.length ? red(value) : parsed;
-      },
+      transformer: () => inMemoryCommit.scope,
     });
 
-    commit.scope = this.rules.parse(answer)[0];
+    commit.scope = inMemoryCommit.scope;
   }
 }

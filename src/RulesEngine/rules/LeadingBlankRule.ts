@@ -1,26 +1,35 @@
 import { BaseRule } from './BaseRule.js';
 
 export class LeadingBlankRule extends BaseRule {
-  validate(input: string): boolean {
+  validate(parts: string[]): null | Record<number, string> {
+    const errs = Object.fromEntries(parts.map((part, idx) => [idx, !this.validateLeadingBlank(part) && this.LeadingBlankErrorMessage()]).filter(([, err]) => err));
+    return Object.keys(errs).length ? errs : null;
+  }
+
+  private validateLeadingBlank(input: string): boolean {
     const lines = input.split('\n');
     const hasLeadingBlank = lines.length > 0 && lines[0]?.trim() === '';
     return this.applicable === 'always' ? hasLeadingBlank : !hasLeadingBlank;
   }
 
-  fix(input: string): string | null {
-    if (this.applicable === 'always' && !this.validate(input)) {
-      return `\n${input}`;
-    }
+  fix(parts: string[]): [null | Record<number, string>, string[]] {
+    const fixed = parts.map(part => {
+      if (this.applicable === 'always' && !this.validateLeadingBlank(part)) {
+        return `\n${part}`;
+      }
 
-    if (this.applicable === 'never' && !this.validate(input)) {
-      const lines = input.split('\n');
-      return lines.slice(1).join('\n');
-    }
+      if (this.applicable === 'never' && this.validateLeadingBlank(part)) {
+        const lines = part.split('\n');
+        return lines.slice(1).join('\n');
+      }
 
-    return null;
+      return part;
+    });
+    
+    return [null, fixed];
   }
 
-  errorMessage(): string {
-    return `the ${this.name} must ${this.applicable} begin with a blank line`;
+  private LeadingBlankErrorMessage(): string {
+    return `the ${this.scope} must ${this.applicable} begin with a blank line`;
   }
 }

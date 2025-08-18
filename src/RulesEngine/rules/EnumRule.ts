@@ -1,24 +1,33 @@
 import { BaseRuleWithValue } from './BaseRule.js';
 
 export class EnumRule extends BaseRuleWithValue<string[]> {
-  validate(input: string): boolean {
-    // Can't validate empty input, asssume it's valid
-    // If input is required it will be picked up by allow-empty rules.
-    if (!input) return true;
-    return this.value.includes(input);
+  validate(parts: string[]): null | Record<number, string> {
+    const errs = Object.fromEntries(parts.map((part, idx) => {
+      // Can't validate empty input, assume it's valid
+      if (!part) return [idx, false];
+      
+      const isValid = this.applicable === 'always' 
+        ? this.value.includes(part)
+        : !this.value.includes(part);
+        
+      return [idx, !isValid && this.enumErrorMessage()];
+    }).filter(([, err]) => err));
+    
+    return Object.keys(errs).length ? errs : null;
   }
 
-  fix(_input: string): string | null {
-    // Can't automatically fix enum issues
+  fix(parts: string[]): [null | Record<number, string>, string[]] {
+    // Can't automatically fix enum issues - return original with errors
     // Could potentially use string similarity to find closest match,
     // but that's beyond the scope of a simple fix
-    return null;
+    const errs = this.validate(parts);
+    return [errs, parts];
   }
 
-  errorMessage(): string {
+  private enumErrorMessage(): string {
     const value = [...this.value];
     const last = value.pop();
-    const message = ['the', this.name];
+    const message = ['the', this.scope];
 
     if (this.applicable === 'never') message.push("can't be any of:");
     else message.push('can only be one of:');

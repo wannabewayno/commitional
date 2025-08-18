@@ -79,7 +79,7 @@ describe('PerplexityCompletion Unit Tests', () => {
 
       // Act
       Perplexity.user('Tell me about TypeScript');
-      const result = await Perplexity.text();
+      const result = await Perplexity.text().catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);
@@ -167,7 +167,7 @@ describe('PerplexityCompletion Unit Tests', () => {
       const result = await Perplexity.json('Person', {
         name: 'string',
         age: 'number',
-      });
+      }).catch(err => err);;
 
       // Assert
       expect(result).to.be.instanceOf(Error);

@@ -1,6 +1,6 @@
-import CommitMessage, { type CommitJSON } from '../CommitMessage/index.js';
+import CommitMessage, { type CommitPart, type CommitJSON } from '../CommitMessage/index.js';
 import Git from '../services/Git/index.js';
-import RulesEngine, { type CommitPart } from '../RulesEngine/index.js';
+import RulesEngine from '../RulesEngine/index.js';
 import { CommitPartFactory, PromptFactory } from '../prompts/index.js';
 import { confirm, input } from '@inquirer/prompts';
 import { blue, green, red } from 'yoctocolors';

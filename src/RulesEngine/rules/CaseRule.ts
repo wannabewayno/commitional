@@ -1,5 +1,5 @@
 import { BaseRuleWithValue, type RuleConfigCondition, type RuleConfigSeverity } from './BaseRule.js';
-import type { CommitPart } from '../index.js';
+import type { RuleScope} from '../index.js';
 import capitalize from '../../lib/capitalize.js';
 import kebabCase from '../../lib/kebabCase.js';
 import splitByWord from '../../lib/splitByWord.js';
@@ -14,28 +14,48 @@ export type CaseType =
   | 'snake-case'
   | 'start-case';
 
+const knownCases: CaseType[] = ['lower-case', 'upper-case', 'camel-case', 'kebab-case', 'pascal-case', 'sentence-case', 'snake-case', 'start-case'];
+
 export class CaseRule extends BaseRuleWithValue<CaseType[]> {
-  constructor(name: CommitPart, level: RuleConfigSeverity, applicable: RuleConfigCondition, value: CaseType | CaseType[]) {
+  constructor(name: RuleScope, level: RuleConfigSeverity, applicable: RuleConfigCondition, value: CaseType | CaseType[]) {
     value = !Array.isArray(value) ? [value] : value;
     super(name, level, applicable, value);
   }
 
-  validate(input: string): boolean {
+  validate(parts: string[]): null | Record<number, string> {
+    const errs = Object.fromEntries(parts.map((part, idx) => [idx, !this.validateCase(part) && this.caseErrorMessage()]).filter(([, err]) => err));
+    return Object.keys(errs).length ? errs : null;
+  }
+
+  private validateCase(input: string): boolean {
     if (!input) return true;
 
     const hasCase = this.value.some(caseType => this.matchesCase(input, caseType));
     return this.applicable === 'always' ? hasCase : !hasCase;
   }
 
-  fix(input: string): string | null {
-    // Use the first case type if multiple are provided
-    const [caseType] = this.value as [CaseType, ...CaseType[]];
-    if (!input || this.applicable === 'never') return null;
+  fix(parts: string[]): [null | Record<number, string>, string[]] {
+    // target case is either the first allowed case or the first case that doesn't match a non-allowed case;
+    const caseType = this.applicable === 'never' ? knownCases.find(v => !this.value.includes(v)) : this.value[0];
 
-    return this._fix(input, caseType);
+    // Couldn't fix - return original parts with errors
+    if (!caseType) {
+      const errs = this.validate(parts);
+      return [errs, parts];
+    }
+
+    const fixed = parts.map(part => {
+      // Nothing to fix, return as-is
+      if (!part) return part;
+      
+      // fix the case
+      return this.fixCase(part, caseType);
+    });
+    
+    return [null, fixed];
   }
 
-  private _fix(input: string, caseType: CaseType) {
+  private fixCase(input: string, caseType: CaseType): string {
     switch (caseType) {
       case 'lower-case':
         return input.toLowerCase();
@@ -68,17 +88,17 @@ export class CaseRule extends BaseRuleWithValue<CaseType[]> {
     }
   }
 
-  errorMessage(): string {
-    const message = ['the', this.name, 'must', this.applicable, 'be in'];
+  private caseErrorMessage(): string {
+    const message = ['the', this.scope, 'must', this.applicable, 'be in'];
     if (this.value.length === 1) {
       const caseStr = this.value[0] as CaseType;
-      message.push(this._fix(caseStr, caseStr));
+      message.push(this.fixCase(caseStr, caseStr));
     } else {
       const [last, ...rest] = this.value as [CaseType, ...CaseType[]];
 
       // convert cases to their own representations for readability.
-      const restStr = rest.map(v => this._fix(v, v)).join(', ');
-      const lastStr = this._fix(last, last);
+      const restStr = rest.map(v => this.fixCase(v, v)).join(', ');
+      const lastStr = this.fixCase(last, last);
 
       message.push(`either ${restStr} or ${lastStr}`);
     }

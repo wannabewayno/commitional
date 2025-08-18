@@ -56,7 +56,7 @@ const scope = type.module({
     top_p: 'between_0_and_1?',
     frequency_penalty: 'plus_or_minus_2?',
     presence_penalty: 'plus_or_minus_2?',
-    response_format: 'format_json | format_schema | format_text',
+    response_format: '(format_json | format_schema | format_text)?',
     max_tokens: 'number?',
     n: 'number?',
     // prediction: Prediction
@@ -92,8 +92,6 @@ enum Temperature {
 }
 
 type CompletionRequest = typeof scope.completion_request.infer;
-type CompletionResponse = typeof scope.completion_response.infer;
-type BaseMessage = typeof scope.message.infer;
 
 export default function Provider(Completion: Completion) {
   class PerplexityCompletion extends Completion {
@@ -106,35 +104,6 @@ export default function Provider(Completion: Completion) {
     }
 
     private _temperature: Temperature = Temperature.Coding;
-    private _system?: BaseMessage;
-    private _prompt?: BaseMessage;
-
-    system(...messages: string[]): this {
-      this._system = {
-        role: 'system',
-        content: messages.join('\n'),
-      };
-
-      return this;
-    }
-
-    user(...lines: string[]): this {
-      this._prompt = {
-        role: 'user',
-        content: lines.join('\n'),
-      };
-
-      return this;
-    }
-
-    assistant(...lines: string[]): this {
-      this._prompt = {
-        role: 'assistant',
-        content: lines.join('\n'),
-      };
-
-      return this;
-    }
 
     usecase(
       usecase:
@@ -157,82 +126,92 @@ export default function Provider(Completion: Completion) {
     }
 
     private buildMessages(): CompletionRequest['messages'] {
-      const messages: CompletionRequest['messages'] = [];
-      if (this._system) messages.push(this._system);
-      if (this._prompt) messages.push(this._prompt);
+      const messages = [...this.messages] as CompletionRequest['messages'];
+      if (this.systemMessage) messages.unshift({ role: 'system', content: this.systemMessage });
 
       return messages;
     }
 
-    async text(): Promise<string | Error> {
+    async text<R = string>(validate?: (response: string) => Error | R): Promise<R> {
       const messages = this.buildMessages();
+
+      const body: CompletionRequest = {
+        model: this.model || 'sonar',
+        messages,
+        temperature: this._temperature,
+      };
 
       // Call the OpenAPI with a very basic completion request.
       // further paramters subject to fine-tuning and testing.
-      const res = await this.http
-        .post<CompletionResponse>('/chat/completions', {
-          model: this.model || 'sonar',
-          messages,
-          temperature: this._temperature,
-        } as CompletionRequest)
-        .catch((v: Error) => v);
+      return this.try(
+        () => this.http.post('/chat/completions', body),
+        {
+          validate: (input) => {
+            const payload = scope.completion_response(input.data);
+            if (payload instanceof ArkErrors) return formatArkErrors(payload); // Validation Errors
 
-      if (res instanceof Error) return res;
-      const payload = scope.completion_response(res.data);
+            const choice = payload.choices[0];
+            if (!choice) return new Error('The Agent response is empty');
 
-      if (payload instanceof ArkErrors) return formatArkErrors(payload);
-      const choice = payload.choices[0];
-      if (!choice) throw new Error('Agent response is empty');
+            const response = choice.message.content;
 
-      // Extract the response
-      return choice.message.content;
+            // Add the response as the assistant message for further interactions.
+            this.assistant(response);
+
+            // Validate the response.
+            return validate ? validate(response): response as R;
+          }
+        }
+      )
     }
 
-    async json<const SchemaDefinition extends object>(
+    async json<const SchemaDefinition extends object, R = type.instantiate<SchemaDefinition>['infer']>(
       name: string,
       schemaDef: type.validate<SchemaDefinition>,
-    ): Promise<type.instantiate<SchemaDefinition>['infer'] | Error> {
+      validate?: (response: type.instantiate<SchemaDefinition>['infer']) => Error | R
+    ): Promise<R> {
       const messages = this.buildMessages();
 
       const schema = type(schemaDef);
 
-      // Exactly the same as text, except prime the model return a JSON schema
-      const res = await this.http
-        .post('/chat/completions', {
-          model: this.model || 'sonar',
-          messages,
-          temperature: this._temperature,
-          response_format: {
-            type: 'json_schema',
-            json_schema: {
-              name,
-              schema: schema.toJsonSchema({ dialect: null }),
-            },
+      const payload: CompletionRequest = {
+        model: this.model || 'sonar',
+        messages,
+        temperature: this._temperature,
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
+            name,
+            schema: schema.toJsonSchema({ dialect: null }),
           },
-        } as CompletionRequest)
-        .catch((v: Error) => v);
+        },
+      }
 
-      if (res instanceof Error) return res;
-      const payload = scope.completion_response(res.data);
+      return this.try(
+      () => this.http.post('/chat/completions', payload),
+      {
+        validate: (input) => {
+          const payload = scope.completion_response(input.data);
+          if (payload instanceof ArkErrors) return formatArkErrors(payload); // Validation Errors
 
-      // Success, however payload differs from expected payload.
-      if (payload instanceof ArkErrors) return formatArkErrors(payload);
+          const choice = payload.choices[0];
+          if (!choice) throw new Error('Agent response is empty');
 
-      const choice = payload.choices[0];
-      if (!choice) throw new Error('Agent response is empty');
+          // Check to see if it's valid JSON
+          const json = this.parseJSON(choice.message.content);
+          if (json instanceof Error) return json;
 
-      // Check to see if it's valid JSON
-      const json = this.parseJSON(choice.message.content);
-      if (json instanceof Error) return json;
+          // Check if the JSON matches our schema.
+          const data = schema(json);
 
-      // Check if the JSON matches our schema.
-      const data = schema(json);
+          // Successful response but invaid format, collect errors into a single error.
+          if (data instanceof ArkErrors) return formatArkErrors(data);
 
-      // Successful response but invaid format, collect errors into a single error.
-      if (data instanceof ArkErrors) return formatArkErrors(data);
-
-      // Hooray it's valid.
-      return data;
+          // Valid, Schema, however does the schema parse arbitrary formatting provided by the user?
+          return validate ? validate(data): data as R;
+        }
+      }
+    )
     }
   }
 

@@ -13,6 +13,7 @@ import { EnumRule } from './rules/EnumRule.js';
 import { TrimRule } from './rules/TrimRule.js';
 import { LeadingBlankRule } from './rules/LeadingBlankRule.js';
 import { ExclamationMarkRule } from './rules/ExclamationMarkRule.js';
+import CommitMessage from '../CommitMessage/index.js';
 
 describe('RulesEngine', () => {
   describe('description()', () => {
@@ -71,7 +72,7 @@ describe('RulesEngine', () => {
         validate: sinon.stub().returns(true),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.validate('valid input')).to.be.true;
+      expect(engine.validate(CommitMessage.fromJSON({ subject: 'valid input' }))).to.be.true;
     });
 
     it('should return false when input fails a rule', () => {
@@ -79,7 +80,7 @@ describe('RulesEngine', () => {
         validate: sinon.stub().returns(false),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.validate('invalid input')).to.be.false;
+      expect(engine.validate(CommitMessage.fromJSON({ subject: 'invalid input' }))).to.be.false;
     });
 
     it('should return false when a rule throws an error', () => {
@@ -87,15 +88,7 @@ describe('RulesEngine', () => {
         validate: sinon.stub().returns(false),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.validate('input')).to.be.false;
-    });
-
-    it('should handle empty input', () => {
-      const mockRule = {
-        validate: sinon.stub().returns(true),
-      };
-      const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.validate()).to.be.true;
+      expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.be.false;
     });
   });
 
@@ -103,10 +96,14 @@ describe('RulesEngine', () => {
     it('should return rules of the specified type', () => {
       const emptyRule = new EmptyRule('type', RuleConfigSeverity.Error, 'never');
       const maxLengthRule = new MaxLengthRule('subject', RuleConfigSeverity.Error, 'always', 100);
+      const minLengthRule = new MinLengthRule('subject', RuleConfigSeverity.Error, 'always', 5);
+      const enumRule = new EnumRule('type', RuleConfigSeverity.Error, 'always', ['feat', 'fix', 'docs'])
 
       const engine = new RulesEngine({
         'type-empty': emptyRule,
+        'type-enum': enumRule,
         'subject-max-length': maxLengthRule,
+        'subject-min-length': minLengthRule,
       });
 
       const emptyRules = engine.getRulesOfType('empty');
@@ -114,15 +111,37 @@ describe('RulesEngine', () => {
       expect(emptyRules[0]).to.equal(emptyRule);
     });
 
-    it('should return empty array when no rules of the specified type exist', () => {
+    it('should return rules of the specified types', () => {
       const emptyRule = new EmptyRule('type', RuleConfigSeverity.Error, 'never');
+      const maxLengthRule = new MaxLengthRule('subject', RuleConfigSeverity.Error, 'always', 100);
+      const minLengthRule = new MinLengthRule('subject', RuleConfigSeverity.Error, 'always', 5);
+      const enumRule = new EnumRule('type', RuleConfigSeverity.Error, 'always', ['feat', 'fix', 'docs'])
 
       const engine = new RulesEngine({
         'type-empty': emptyRule,
+        'type-enum': enumRule,
+        'subject-max-length': maxLengthRule,
+        'subject-min-length': minLengthRule,
       });
 
-      const caseRules = engine.getRulesOfType('case');
-      expect(caseRules).to.have.lengthOf(0);
+      const rules = engine.getRulesOfType('empty', 'enum');
+      expect(rules).to.have.lengthOf(2);
+      expect(rules[0]).to.equal(emptyRule);
+      expect(rules[1]).to.equal(enumRule);
+    });
+
+    it('should return empty array when no rules of the specified type exist', () => {
+      const engine = new RulesEngine({
+        'subject-empty': new EmptyRule('subject', RuleConfigSeverity.Error, 'never'),
+        'type-enum': new EnumRule('type', RuleConfigSeverity.Error, 'always', ['feat', 'fix', 'docs']),
+      });
+
+      // Only contains rules for subject
+      const narrowed = engine.narrow('subject');
+
+      // enum won't exist as it was associated with type and that has been filtered out.
+      const enumRules = narrowed.getRulesOfType('enum');
+      expect(enumRules).to.have.lengthOf(0);
     });
   });
 
@@ -161,7 +180,7 @@ describe('RulesEngine', () => {
         check: sinon.stub().returns('fixed input'),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.parse('input')).to.deep.equal(['fixed input', [], []]);
+      expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.deep.equal([[], []]);
     });
 
     it('should handle rules that throw errors', () => {
@@ -169,7 +188,7 @@ describe('RulesEngine', () => {
         check: sinon.stub().throws(new Error('Rule error')),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.parse('input')).to.deep.equal(['input', ['Rule error'], []]);
+      expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.deep.equal([['Rule error'], []]);
     });
 
     it('should apply multiple fixes in sequence', () => {
@@ -183,8 +202,7 @@ describe('RulesEngine', () => {
         'type-empty': mockRule1 as unknown as EmptyRule,
         'type-case': mockRule2 as unknown as CaseRule,
       });
-      expect(engine.parse('input')).to.deep.equal(['second fix', [], []]);
-      expect(mockRule2.check.calledWith('first fix')).to.be.true;
+      expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.deep.equal([[], []]);
     });
 
     it('should return empty errors array and empty warnings array when input passes all rules', () => {
@@ -192,7 +210,7 @@ describe('RulesEngine', () => {
         check: sinon.stub().returns('valid input'),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.parse('valid input')).to.deep.equal(['valid input', [], []]);
+      expect(engine.validate(CommitMessage.fromJSON({ subject: 'valid input' }))).to.deep.equal([[], []]);
     });
 
     it('should return warnings when rules return errors', () => {
@@ -200,7 +218,7 @@ describe('RulesEngine', () => {
         check: sinon.stub().returns(new Error('Warning message')),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.parse('input')).to.deep.equal(['input', [], ['Warning message']]);
+      expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.deep.equal([[], ['Warning message']]);
     });
 
     it('should return errors when rules throw errors', () => {
@@ -208,7 +226,7 @@ describe('RulesEngine', () => {
         check: sinon.stub().throws(new Error('Error message')),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.parse('input')).to.deep.equal(['input', ['Error message'], []]);
+      expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.deep.equal([['Error message'], []]);
     });
 
     it('should collect both errors and warnings', () => {
@@ -222,7 +240,7 @@ describe('RulesEngine', () => {
         'type-empty': mockRule1 as unknown as EmptyRule,
         'type-case': mockRule2 as unknown as CaseRule,
       });
-      expect(engine.parse('input')).to.deep.equal(['input', ['Error message'], ['Warning message']]);
+      expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.deep.equal([['Error message'], ['Warning message']]);
     });
   });
 

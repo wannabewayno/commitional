@@ -64,7 +64,7 @@ describe('AmplifyCompletion Integration Tests', () => {
 
       // Act
       amplify.user('Tell me about TypeScript');
-      const result = await amplify.text();
+      const result = await amplify.text().catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);
@@ -116,7 +116,7 @@ describe('AmplifyCompletion Integration Tests', () => {
       const result = await amplify.json('Person', {
         name: 'string',
         age: 'number',
-      });
+      }).catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);
