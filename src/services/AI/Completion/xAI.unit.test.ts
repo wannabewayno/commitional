@@ -92,7 +92,7 @@ describe('xAICompletion Unit Tests', () => {
 
       // Act
       xAI.user('Tell me about TypeScript');
-      const result = await xAI.text();
+      const result = await xAI.text().catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);
@@ -151,7 +151,7 @@ describe('xAICompletion Unit Tests', () => {
       const result = await xAI.json('Person', {
         name: 'string',
         age: 'number',
-      });
+      }).catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);
@@ -167,7 +167,7 @@ describe('xAICompletion Unit Tests', () => {
       const result = await xAI.json('Person', {
         name: 'string',
         age: 'number',
-      }).catch(err => err);;
+      }).catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);
@@ -194,7 +194,7 @@ describe('xAICompletion Unit Tests', () => {
       const result = await xAI.json('Person', {
         name: 'string',
         age: 'number',
-      });
+      }).catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);

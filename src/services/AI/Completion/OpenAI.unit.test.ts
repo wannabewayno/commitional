@@ -4,7 +4,7 @@ import Completion from './index.js';
 import OpenAICompletionProvider, { type OpenAICompletion, type IOpenAICompletion } from './OpenAI.js';
 import axios from 'axios';
 
-describe('OpenAICompletion Integration Tests', () => {
+describe('OpenAI Completion Integration Tests', () => {
   let OpenAICompletion: OpenAICompletion;
   let openai: IOpenAICompletion;
   let httpPostStub: sinon.SinonStub;
@@ -92,7 +92,7 @@ describe('OpenAICompletion Integration Tests', () => {
 
       // Act
       openai.user('Tell me about TypeScript');
-      const result = await openai.text();
+      const result = await openai.text().catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);
@@ -151,7 +151,7 @@ describe('OpenAICompletion Integration Tests', () => {
       const result = await openai.json('Person', {
         name: 'string',
         age: 'number',
-      });
+      }).catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);
@@ -194,7 +194,7 @@ describe('OpenAICompletion Integration Tests', () => {
       const result = await openai.json('Person', {
         name: 'string',
         age: 'number',
-      });
+      }).catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);

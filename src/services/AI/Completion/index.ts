@@ -149,7 +149,7 @@ export default function Provider(http: HttpClientProvider) {
           const res = await apiCall();
           
           const validated = validate ? validate(res) : res as R;
-          if (validated instanceof Error) throw new ValidationError('Validation failed', validated.message, validated);
+          if (validated instanceof Error) throw new ValidationError(validated.message, '', validated);
           
           return validated;
         } catch (e: unknown) {

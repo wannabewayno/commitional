@@ -86,7 +86,7 @@ export const Provider = ({ git, rulesEngine, log }: Dependencies) => {
     const type = promptFactory('type');
     const subject = promptFactory('subject');
     const body = promptFactory('body');
-    const footer = promptFactory('footer');
+    const footer = promptFactory('footers');
 
     await PromptFlow.build()
       .addBreak('Commit')

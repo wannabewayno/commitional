@@ -4,7 +4,7 @@ import Completion from './index.js';
 import AmplifyCompletionProvider, { type AmplifyCompletion, type IAmplifyCompletion } from './Amplify.js';
 import axios from 'axios';
 
-describe('AmplifyCompletion Integration Tests', () => {
+describe('Amplify Completion Integration Tests', () => {
   let AmplifyCompletion: AmplifyCompletion;
   let amplify: IAmplifyCompletion;
   let httpPostStub: sinon.SinonStub;
@@ -100,7 +100,7 @@ describe('AmplifyCompletion Integration Tests', () => {
       const result = await amplify.json('Person', {
         name: 'string',
         age: 'number',
-      });
+      }).catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);

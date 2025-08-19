@@ -35,10 +35,11 @@ describe('MaxLineLengthRule', () => {
       expect(lines?.every(line => line.length <= 10)).to.be.true;
     });
 
-    it('should preserve paragraphs', () => {
+    it.only('should preserve paragraphs', () => {
       const rule = new MaxLineLengthRule('body', RuleConfigSeverity.Error, 'always', 10);
       const [errors, fixed] = rule.fix(['First paragraph\n\nSecond paragraph']);
       expect(errors).to.be.null;
+      console.log(fixed);
       expect(fixed[0]?.includes('\n\n')).to.be.true;
     });
   });
@@ -85,7 +86,7 @@ describe('MaxLineLengthRule', () => {
       const rule = new MaxLineLengthRule('body', RuleConfigSeverity.Error, 'always', 20);
       const [output1, errors1, warnings1] = rule.check(['Short'], false);
       const [output2, errors2, warnings2] = rule.check(['Short'], true);
-      
+
       expect(errors1).to.be.null;
       expect(warnings1).to.be.null;
       expect(output1).to.deep.equal(['Short']);

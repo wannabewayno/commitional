@@ -5,12 +5,12 @@ import TypePrompt from './TypePrompt.js';
 import SubjectPrompt from './SubjectPrompt.js';
 import BodyPrompt from './BodyPrompt.js';
 import { oraPromise } from 'ora';
-import type { CommitPart } from '../RulesEngine/index.js';
 import type CommitMessage from '../CommitMessage/index.js';
 import { green } from 'yoctocolors';
 import type Diff from '../services/Git/Diff.js';
 import Highlighter from '../lib/highlighter.js';
 import FooterPrompt from './FooterPrompt.js';
+import type { CommitPart } from '../CommitMessage/index.js';
 
 /**
  * Factory function that creates appropriate prompt instances based on commit part
@@ -29,7 +29,7 @@ export function PromptFactory(rules: RulesEngine) {
         return new SubjectPrompt(rules);
       case 'body':
         return new BodyPrompt(rules);
-      case 'footer':
+      case 'footers':
         return new FooterPrompt(rules);
       default:
         throw new Error(`Unknown commit part: ${commitPart}`);

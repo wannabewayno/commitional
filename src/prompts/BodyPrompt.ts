@@ -76,11 +76,11 @@ export default class BodyPrompt extends BasePrompt {
     );
 
     // set the commit's body
-    commit.body = await this.tryAiCompletion(completion);
+    commit.body = await completion.json('body', { value: 'string' }).then(({ value }) => value)
   }
 
   async prompt(commit: CommitMessage): Promise<void> {
-    const inMemoryCommit = commit.clone();
+    const scope = this.rules.omit('exists', 'allow-multiple');
 
     // Ensure we have an editor command
     await this.checkEditor();
@@ -93,25 +93,22 @@ export default class BodyPrompt extends BasePrompt {
       validate: value => {
         // Trim comments
         const content = value.replace(/^#.+$/gm, '').trim();
-        inMemoryCommit.body = content;
 
-        const [errors] = this.rules.parse(inMemoryCommit, 'fix');
-
-        // Invalid, return a list of errors
+        const [, errors] = scope.validate(content);
         if (errors.length) return errors.join('\n');
-
-        // otherwise must be valid
         return true;
-      },
+      }
     });
 
-    // Remove any comments from the commit body
+    // Remove any comments and assign to commit body
     commit.body = answer.replace(/^#.+$/gm, '').trim();
-    this.rules.parse(commit, 'fix');
+
+    // Re-validate to fix anything that was picked up during validation.
+    scope.validate(commit);
   }
 
   private defaultMessage(commit: CommitMessage) {
-    const [errors] = this.rules.parse(commit, 'fix');
+    const [errors] = this.rules.validate(commit, 'fix');
 
     // If there are any errors construct an error message with list of errors
     // The user's commit body is in breach of the rules and these show the user how to address it.
@@ -119,10 +116,8 @@ export default class BodyPrompt extends BasePrompt {
       ? ['The following errors were found with the commit body'].concat(errors.map(v => `- ${v}`))
       : [];
 
-    // Guidelines
-    // Get these from all rules and describe them.
-    // Place this under a few lines to write in
-
+    const generalRules = this.rules.generalRules();
+    
     // Look for a maxLineLength rule.
     // const [maxLineLengthRule] = this.rules.getRulesOfType('max-line-length');
     // const maxLineLength = maxLineLengthRule?.value ?? null;
@@ -134,7 +129,7 @@ export default class BodyPrompt extends BasePrompt {
       ...errorMessage,
     );
 
-    return [comments, commit.body, '# Rules and guidelines here'].join('\n\n');
+    return [comments, commit.body, generalRules].join('\n\n');
   }
 
   private comment(...lines: string[]) {

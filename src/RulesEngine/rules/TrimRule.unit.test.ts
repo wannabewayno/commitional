@@ -95,7 +95,7 @@ describe('TrimRule', () => {
 
     it('should not apply fix when fix=false', () => {
       const [output, errors, warnings] = rule.check([' leading space '], false);
-      expect(output).to.deep.equal([' leading space']);
+      expect(output).to.deep.equal([' leading space ']);
       expect(errors).to.deep.equal({ 0: 'the subject must have leading or trailing whitespace' });
       expect(warnings).to.be.null;
     });
@@ -114,7 +114,7 @@ describe('TrimRule', () => {
     it('should return warning when fix=false and input invalid with WARNING level', () => {
       const warningRule = new TrimRule('subject', RuleConfigSeverity.Warning, 'always');
       const [output, errors, warnings] = warningRule.check([' leading space '], false);
-      expect(output).to.deep.equal([' leading space']);
+      expect(output).to.deep.equal([' leading space ']);
       expect(errors).to.be.null;
       expect(warnings).to.deep.equal({ 0: 'the subject must have leading or trailing whitespace' });
     });

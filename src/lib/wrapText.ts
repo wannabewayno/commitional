@@ -26,9 +26,11 @@ export default function wrapText(text: string, limit: number): string {
   const lines: string[] = [];
 
   while (text.length > limit) {
+    console.log({ text });
     const tail = text.slice(limit);
 
     const [partial, head] = /^\w/.test(tail) ? extract(text.slice(0, limit), /\w+$/) : ['', text.slice(0, limit)];
+    console.log({ partial, head, tail });
 
     if (head) lines.push(head.trim());
 

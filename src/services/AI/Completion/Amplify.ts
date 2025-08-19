@@ -114,8 +114,21 @@ export default function Provider(Completion: Completion) {
     }
 
     private buildMessages(): CompletionRequest['messages'] {
-      const messages = [...this.messages] as CompletionRequest['messages'];
+      const messages: CompletionRequest['messages'] = [];
       if (this.systemMessage) messages.unshift({ role: 'system', content: this.systemMessage });
+      this.messages.forEach((message) => {
+        if (message.role === 'user') {
+          messages.push({
+            role: 'user',
+            content: [{ type: 'text', text: message.content }],
+          });
+        } else if (message.role === 'assistant') {
+          messages.push({
+            role: 'assistant',
+            content: message.content,
+          });
+        }
+      });
 
       return messages;
     }

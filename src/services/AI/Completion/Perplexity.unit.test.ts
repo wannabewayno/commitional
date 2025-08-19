@@ -4,7 +4,7 @@ import Completion from './index.js';
 import PerplexityCompletionProvider, { type PerplexityCompletion, type IPerplexityCompletion } from './Perplexity.js';
 import axios from 'axios';
 
-describe('PerplexityCompletion Unit Tests', () => {
+describe('Perplexity Completion Unit Tests', () => {
   let PerplexityCompletion: PerplexityCompletion;
   let Perplexity: IPerplexityCompletion;
   let httpPostStub: sinon.SinonStub;
@@ -92,7 +92,7 @@ describe('PerplexityCompletion Unit Tests', () => {
 
       // Act
       Perplexity.user('Tell me about TypeScript');
-      const result = await Perplexity.text();
+      const result = await Perplexity.text().catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);
@@ -151,7 +151,7 @@ describe('PerplexityCompletion Unit Tests', () => {
       const result = await Perplexity.json('Person', {
         name: 'string',
         age: 'number',
-      });
+      }).catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);
@@ -167,7 +167,7 @@ describe('PerplexityCompletion Unit Tests', () => {
       const result = await Perplexity.json('Person', {
         name: 'string',
         age: 'number',
-      }).catch(err => err);;
+      }).catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);
@@ -194,7 +194,7 @@ describe('PerplexityCompletion Unit Tests', () => {
       const result = await Perplexity.json('Person', {
         name: 'string',
         age: 'number',
-      });
+      }).catch(err => err);
 
       // Assert
       expect(result).to.be.instanceOf(Error);

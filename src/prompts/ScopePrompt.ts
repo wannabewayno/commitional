@@ -20,27 +20,28 @@ export default class ScopePrompt extends BasePrompt {
   }
 
   async prompt(commit: CommitMessage): Promise<void> {
-    const inMemoryCommit = commit.clone();
-    inMemoryCommit.setStyle((scope) => red(scope));
+    const scope = this.rules.omit('exists', 'allow-multiple');
 
     // TODO: Scope enums will need to be expanded to look at the file system in order to deduce allowed scopes (only if an enum is set)
-    await input({
-      message: "Scope of the change you're committing:",
-      default: inMemoryCommit.scope,
+    // const [enumRule] = scope.getRulesOfType('enum');
+    
+    const [validScope] = await input({
+      message: "Scope of commit:",
+      default: commit.scope,
       prefill: 'editable',
-      validate: value => {
-        inMemoryCommit.scope = value;
-        const [errors] = this.rules.validate(inMemoryCommit);
-        if (errors.length) {
-          inMemoryCommit.style('scope');
-          return errors.join('\n');
-        }
-        inMemoryCommit.unstyle('scope');
-        return true;
-      },
-      transformer: () => inMemoryCommit.scope,
-    });
+          validate: value => {
+            const [, errors] = scope.validate(value);
+            if (errors.length) return errors.join('\n');
+            return true;
+          },
+          transformer: (value) => {
+            const [fixed, errors] = scope.validate(value);
+            if (!fixed) return '';
+            return errors.length ? red(fixed) : fixed;
+          },
+        }).then(scope.validate);
 
-    commit.scope = inMemoryCommit.scope;
+    commit.scope = validScope;
+    scope.validate(commit);
   }
 }

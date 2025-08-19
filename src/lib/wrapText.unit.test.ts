@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import wrapText from './wrapText.js';
 
-describe('wrapText', () => {
+describe.only('wrapText', () => {
   describe('Error Handling', () => {
     it('should throw error for wrapping less than 1', () => {
       expect(() => wrapText('This could never be wrapped!', 0)).to.throw('Limit must be greater than 1');
@@ -25,6 +25,14 @@ describe('wrapText', () => {
       const result = wrapText('Hello world', 11);
 
       expect(result).to.equal('Hello world');
+    });
+  });
+
+  describe('Should preserve paragraphs', () => {
+    it('should preserve paragraphs', () => {
+      const result = wrapText('This is a paragraph.\n\nThis is another paragraph.', 20);
+
+      expect(result).to.equal('This is a paragraph.\n\nThis is another\nparagraph.');
     });
   });
 

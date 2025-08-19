@@ -52,33 +52,32 @@ export default class TypePrompt extends BasePrompt {
   }
 
   async prompt(commit: CommitMessage): Promise<void> {
-    const [enumRule] = this.rules.getRulesOfType('enum');
-    const _commit = commit.clone();
-    _commit.setStyle(red, 'type');
+    const scope = this.rules.omit('exists', 'allow-multiple');
+    const [enumRule] = scope.getRulesOfType('enum');
 
-    enumRule
+    const [validType] = enumRule
       ? await select<string>({
           message: "Select the type of change that you're committing:",
           choices: enumRule.value,
-          default: _commit.type,
-        })
+          default: commit.type,
+        }).then(v => [v])
       : await input({
           message: "Type of change that you're committing:",
-          default: _commit.type,
+          default: commit.type,
           prefill: 'editable',
           validate: value => {
-            _commit.type = value;
-            const [errors] = this.rules.validate(_commit);
-            if (errors.length) {
-              _commit.style('type');
-              return errors.join('\n');
-            }
-            _commit.unstyle('type');
+            const [, errors] = scope.validate(value);
+            if (errors.length) return errors.join('\n');
             return true;
           },
-          transformer: () => _commit.type,
-        });
+          transformer: (value) => {
+            const [fixed, errors] = scope.validate(value);
+            if (!fixed) return '';
+            return errors.length ? red(fixed) : fixed;
+          },
+        }).then(scope.validate);
 
-    commit.type = _commit.type;
+    commit.type = validType;
+    scope.validate(commit);
   }
 }

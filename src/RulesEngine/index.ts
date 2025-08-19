@@ -58,6 +58,12 @@ export type RuleType = RuleTypeWithValue | RuleTypeWithoutValue;
 export type RuleString = `${RuleScope}-${RuleType}`;
 export type RuleTypeString<Type extends RuleType = RuleType> = `${string}-${Type}`;
 
+type ValidateReturnType<T> =  T extends CommitMessage
+  ? [errors: string[], warnings: string[]]
+  : T extends string[]
+    ? [fixes: string[], errors: string[], warnings: string[]]
+    : [fix: string, error: string[], warning: string[]]
+
 type RuleMapping = {
   'leading-blank': LeadingBlankRule;
   empty: EmptyRule;
@@ -203,8 +209,9 @@ export default class RulesEngine<const Config extends Rules = Rules> {
    * @param behaviour - 'validate' or 'fix'
    * @returns [errors, warnings] - Arrays of error and warning messages
    */
-  validate<T extends CommitMessage | string[]>(input: T, behaviour: 'validate' | 'fix' = 'fix'): T extends CommitMessage ? [errors: string[], warnings: string[]] : [fixes: string[], errors: string[], warnings: string[]] {
-    if (Array.isArray(input)) return this.validateParts(input, behaviour) as T extends CommitMessage ? [errors: string[], warnings: string[]] : [fixes: string[], errors: string[], warnings: string[]]
+  validate<T extends CommitMessage | string[] | string>(input: T, behaviour: 'validate' | 'fix' = 'fix'): ValidateReturnType<T> {
+    if (typeof input === 'string') return this.validateParts([input], behaviour) as ValidateReturnType<T>;
+    if (Array.isArray(input)) return this.validateParts(input, behaviour) as ValidateReturnType<T>;
     
     const scopedErrors: string[] = [];
     const scopedWarnings: string[] = [];
@@ -229,7 +236,7 @@ export default class RulesEngine<const Config extends Rules = Rules> {
       scopedWarnings.push(...warnings.list());
     }
 
-    return [scopedErrors, scopedWarnings] as T extends CommitMessage ? [errors: string[], warnings: string[]] : [fixes: string[], errors: string[], warnings: string[]]
+    return [scopedErrors, scopedWarnings] as ValidateReturnType<T>;
   }
 
   /**
