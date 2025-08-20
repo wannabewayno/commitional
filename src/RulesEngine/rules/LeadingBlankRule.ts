@@ -7,23 +7,13 @@ export class LeadingBlankRule extends BaseRule {
   }
 
   private validateLeadingBlank(input: string): boolean {
-    const lines = input.split('\n');
-    const hasLeadingBlank = lines.length > 0 && lines[0]?.trim() === '';
+    const hasLeadingBlank = /^[\s]*\n/.test(input);
     return this.applicable === 'always' ? hasLeadingBlank : !hasLeadingBlank;
   }
 
   fix(parts: string[]): [null | Record<number, string>, string[]] {
     const fixed = parts.map(part => {
-      if (this.applicable === 'always' && !this.validateLeadingBlank(part)) {
-        return `\n${part}`;
-      }
-
-      if (this.applicable === 'never' && this.validateLeadingBlank(part)) {
-        const lines = part.split('\n');
-        return lines.slice(1).join('\n');
-      }
-
-      return part;
+      return this.applicable === 'never' ? part.trimStart() : part.replace(/^[^\n]/, v => `\n${v}`);
     });
     
     return [null, fixed];

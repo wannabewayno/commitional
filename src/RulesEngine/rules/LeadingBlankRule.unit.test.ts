@@ -71,7 +71,7 @@ describe('LeadingBlankRule', () => {
       const neverRule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'never');
       
       // Valid input
-      const [output1, errors1, warnings1] = neverRule.check(['This is a message']);
+      const [output1, errors1, warnings1] = neverRule.check(['This is a message'], false);
       expect(output1).to.deep.equal(['This is a message']);
       expect(errors1).to.be.null;
       expect(warnings1).to.be.null;
