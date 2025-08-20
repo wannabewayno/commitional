@@ -1,5 +1,18 @@
 import extract from './extract.js';
 
+function trimSpaces(text: string) {
+  return text.replace(/^ +| +$/g, '');
+}
+
+class Paragraph {
+  constructor(public content = '') {}
+
+  line(line: string) {
+    if (!line.startsWith('\n')) line = `\n${line}`;
+    this.content += line;
+  }
+}
+
 /**
  * Wraps text to fit within a specified character limit by breaking at word boundaries.
  *
@@ -23,24 +36,22 @@ import extract from './extract.js';
 export default function wrapText(text: string, limit: number): string {
   if (limit < 1) throw new Error('Limit must be greater than 1');
 
-  const lines: string[] = [];
+  const paragraph = new Paragraph();
 
   while (text.length > limit) {
-    console.log({ text });
     const tail = text.slice(limit);
 
     const [partial, head] = /^\w/.test(tail) ? extract(text.slice(0, limit), /\w+$/) : ['', text.slice(0, limit)];
-    console.log({ partial, head, tail });
 
-    if (head) lines.push(head.trim());
+    if (head) paragraph.line(trimSpaces(head));
 
     if (partial.length === limit) {
-      lines.push(partial.trim());
+      paragraph.line(trimSpaces(partial));
       text = tail;
-    } else text = (partial + tail).trim();
+    } else text = trimSpaces(partial + tail);
   }
   // Push what ever is left over as the last line.
-  lines.push(text.trim());
+  paragraph.line(text.trim());
 
-  return lines.join('\n');
+  return paragraph.content.trim();
 }

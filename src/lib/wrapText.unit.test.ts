@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import wrapText from './wrapText.js';
 
-describe.only('wrapText', () => {
+describe('wrapText', () => {
   describe('Error Handling', () => {
     it('should throw error for wrapping less than 1', () => {
       expect(() => wrapText('This could never be wrapped!', 0)).to.throw('Limit must be greater than 1');
