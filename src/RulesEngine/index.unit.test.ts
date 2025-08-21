@@ -69,26 +69,20 @@ describe('RulesEngine', () => {
   describe('validate', () => {
     it('should return true when input passes all rules', () => {
       const mockRule = {
-        validate: sinon.stub().returns(true),
+        scope: 'type',
+        check: sinon.stub().returns(['valid input', null, null]),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.validate(CommitMessage.fromJSON({ subject: 'valid input' }))).to.be.true;
+      expect(engine.validate(CommitMessage.fromJSON({ subject: 'valid input' }))).to.deep.equal([[],[]]);
     });
 
     it('should return false when input fails a rule', () => {
       const mockRule = {
-        validate: sinon.stub().returns(false),
+        scope: 'type',
+        check: sinon.stub().returns(['invalid input', { 0: 'failed' }, null]),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.validate(CommitMessage.fromJSON({ subject: 'invalid input' }))).to.be.false;
-    });
-
-    it('should return false when a rule throws an error', () => {
-      const mockRule = {
-        validate: sinon.stub().returns(false),
-      };
-      const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.be.false;
+      expect(engine.validate(CommitMessage.fromJSON({ subject: 'invalid input' }), 'validate')).to.deep.equal([['[type] failed'],[]]);
     });
   });
 
@@ -174,29 +168,21 @@ describe('RulesEngine', () => {
     });
   });
 
-  describe('parse', () => {
+  describe('validate', () => {
     it('should apply fixes from rules', () => {
       const mockRule = {
-        check: sinon.stub().returns('fixed input'),
+        check: sinon.stub().returns(['fixed input', null, null]),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
       expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.deep.equal([[], []]);
-    });
-
-    it('should handle rules that throw errors', () => {
-      const mockRule = {
-        check: sinon.stub().throws(new Error('Rule error')),
-      };
-      const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.deep.equal([['Rule error'], []]);
     });
 
     it('should apply multiple fixes in sequence', () => {
       const mockRule1 = {
-        check: sinon.stub().returns('first fix'),
+        check: sinon.stub().returns(['first fix', null, null]),
       };
       const mockRule2 = {
-        check: sinon.stub().returns('second fix'),
+        check: sinon.stub().returns(['second fix', null, null]),
       };
       const engine = new RulesEngine({
         'type-empty': mockRule1 as unknown as EmptyRule,
@@ -205,42 +191,21 @@ describe('RulesEngine', () => {
       expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.deep.equal([[], []]);
     });
 
-    it('should return empty errors array and empty warnings array when input passes all rules', () => {
-      const mockRule = {
-        check: sinon.stub().returns('valid input'),
-      };
-      const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.validate(CommitMessage.fromJSON({ subject: 'valid input' }))).to.deep.equal([[], []]);
-    });
-
-    it('should return warnings when rules return errors', () => {
-      const mockRule = {
-        check: sinon.stub().returns(new Error('Warning message')),
-      };
-      const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.deep.equal([[], ['Warning message']]);
-    });
-
-    it('should return errors when rules throw errors', () => {
-      const mockRule = {
-        check: sinon.stub().throws(new Error('Error message')),
-      };
-      const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.deep.equal([['Error message'], []]);
-    });
-
     it('should collect both errors and warnings', () => {
       const mockRule1 = {
-        check: sinon.stub().returns(new Error('Warning message')),
+        scope: 'Rule1Scope',
+        check: sinon.stub().returns([['input'], null, { 0: 'Warning message' }]),
       };
       const mockRule2 = {
-        check: sinon.stub().throws(new Error('Error message')),
+        scope: 'Rule2Scope',
+        check: sinon.stub().returns([['input'], { 0: 'Error message' }, null]),
       };
       const engine = new RulesEngine({
         'type-empty': mockRule1 as unknown as EmptyRule,
         'type-case': mockRule2 as unknown as CaseRule,
       });
-      expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.deep.equal([['Error message'], ['Warning message']]);
+      // console.log(engine.validate(CommitMessage.fromJSON({ subject: 'input' })))
+      expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.deep.equal([['[Rule2Scope] Error message'], ['[Rule1Scope] Warning message']]);
     });
   });
 

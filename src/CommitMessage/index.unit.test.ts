@@ -269,7 +269,7 @@ describe('CommitMessage', () => {
         scope: 'api',
         subject: 'add new feature',
         body: 'Test body',
-        footer: ['Closes: #123'],
+        footers: ['Closes: #123'],
       });
     });
   });
@@ -281,7 +281,7 @@ describe('CommitMessage', () => {
         scope: 'api',
         subject: 'add feature',
         body: 'Test body',
-        footer: ['Closes: #123'],
+        footers: ['Closes: #123'],
       };
 
       const commit = CommitMessage.fromJSON(json);
