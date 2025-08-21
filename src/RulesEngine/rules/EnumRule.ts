@@ -2,18 +2,22 @@ import { BaseRuleWithValue } from './BaseRule.js';
 
 export class EnumRule extends BaseRuleWithValue<string[]> {
   validate(parts: string[]): null | Record<number, string> {
-    const errs = Object.fromEntries(parts.map((part, idx) => {
-      // Can't validate empty input, assume it's valid
-      if (!part) return [idx, false];
-      
-      const isValid = this.applicable === 'always' 
-        ? this.value.includes(part)
-        : !this.value.includes(part);
-        
-      return [idx, !isValid && this.enumErrorMessage()];
-    }).filter(([, err]) => err));
-    
-    return Object.keys(errs).length ? errs : null;
+    const errs = parts.reduce(
+      (errors, part, idx) => {
+        // Can't validate empty input, assume it's valid
+        if (!part) return errors;
+
+        const isValid = this.value.includes(part);
+        const valid = this.applicable === 'always' ? isValid : !isValid;
+
+        if (!valid) errors[idx] = this.enumErrorMessage();
+
+        return errors;
+      },
+      {} as Record<number, string>,
+    );
+
+    return this.errorOrNull(errs);
   }
 
   fix(parts: string[]): [null | Record<number, string>, string[]] {

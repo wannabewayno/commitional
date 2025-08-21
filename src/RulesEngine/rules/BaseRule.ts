@@ -22,7 +22,7 @@ export abstract class BaseRule {
    * @param parts Array of strings to fix
    * @returns Array of fixed strings (same length as input)
    */
-  abstract fix(parts: string[]): [errors: null | Record<number, string>, fixed: string[]]
+  abstract fix(parts: string[]): [errors: null | Record<number, string>, fixed: string[]];
 
   /**
    * Check if the input parts pass the rule by first validating and optionally fixing
@@ -30,10 +30,13 @@ export abstract class BaseRule {
    * @param fix Whether to attempt fixing invalid parts
    * @returns Array of results: null if valid, string if warning, Error if error
    */
-  check(input: string[], fix = true): [output: string[], err: null | Record<number, string>, warnings: null | Record<number, string>] {
+  check(
+    input: string[],
+    fix = true,
+  ): [output: string[], err: null | Record<number, string>, warnings: null | Record<number, string>] {
     // TODO: Disabled should never occur, this should be parsed at config time and simply not ingested.
     // Disabled, return early
-    if (this.level === RuleConfigSeverity.Disabled) return [input, null, null]
+    if (this.level === RuleConfigSeverity.Disabled) return [input, null, null];
 
     // fix or validate
     const [err, fixed] = fix ? this.fix(input) : [this.validate(input)];
@@ -45,6 +48,10 @@ export abstract class BaseRule {
     // Otherwise we encountered some errors.
     if (this.level === RuleConfigSeverity.Warning) return [output, null, err];
     return [output, err, null];
+  }
+
+  protected errorOrNull<const T extends Record<number, string>>(errors: T): null | T {
+    return Object.keys(errors).length ? errors : null;
   }
 }
 
