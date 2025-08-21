@@ -31,7 +31,7 @@ describe('CaseRule', () => {
       const result1 = rule.validate(['HELLO WORLD']);
       const result2 = rule.validate(['Hello World']);
       expect(result1).to.be.null;
-      expect(result2).to.deep.equal({ 0: 'the subject must always be in upper-case' });
+      expect(result2).to.deep.equal({ 0: 'the subject must always be in UPPER-CASE' });
     });
 
     it('should validate sentence case text correctly', () => {
@@ -39,7 +39,7 @@ describe('CaseRule', () => {
       const result1 = rule.validate(['Hello world']);
       const result2 = rule.validate(['hello World']);
       expect(result1).to.be.null;
-      expect(result2).to.deep.equal({ 0: 'the subject must always be in sentence-case' });
+      expect(result2).to.deep.equal({ 0: 'the subject must always be in Sentence case' });
     });
 
     it('should validate multiple case types correctly', () => {
