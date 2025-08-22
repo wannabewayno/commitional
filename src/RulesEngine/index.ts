@@ -20,7 +20,7 @@ import loadConfig from '../config/index.js';
 import { zip } from '../lib/zip.js';
 
 class ValidationErrors {
-  errs: { [idx: number]: string[]; } = {};
+  errs: { [idx: number]: string[] } = {};
 
   constructor(public prefix?: string) {}
 
@@ -28,19 +28,18 @@ class ValidationErrors {
     for (const idx in errors) {
       if (!this.errs[idx]) this.errs[idx] = [];
       // biome-ignore lint/style/noNonNullAssertion: we're literally looping through it's own keys, it exists.
-      this.errs[idx].push(this.prefix ? `[${this.prefix}] ${errors[idx]!}`: errors[idx]!);
+      this.errs[idx].push(this.prefix ? `[${this.prefix}:${idx}] ${errors[idx]!}` : errors[idx]!);
     }
   }
 
   list() {
     return Object.values(this.errs).flat();
   }
-
 }
 
 export type RulesConfig = CommitlintConfig['rules'];
 
-export type RuleScope = CommitPart | 'trailer' | 'footer'
+export type RuleScope = CommitPart | 'trailer' | 'footer';
 
 export type RuleTypeWithoutValue = 'leading-blank' | 'empty' | 'trim' | 'exclamation-mark';
 
@@ -52,17 +51,17 @@ export type RuleTypeWithValue =
   | 'case'
   | 'enum'
   | 'allow-multiple'
-  | 'exists'
+  | 'exists';
 
 export type RuleType = RuleTypeWithValue | RuleTypeWithoutValue;
 export type RuleString = `${RuleScope}-${RuleType}`;
 export type RuleTypeString<Type extends RuleType = RuleType> = `${string}-${Type}`;
 
-type ValidateReturnType<T> =  T extends CommitMessage
+type ValidateReturnType<T> = T extends CommitMessage
   ? [errors: string[], warnings: string[]]
   : T extends string[]
     ? [fixes: string[], errors: string[], warnings: string[]]
-    : [fix: string, error: string[], warning: string[]]
+    : [fix: string, error: string[], warning: string[]];
 
 type RuleMapping = {
   'leading-blank': LeadingBlankRule;
@@ -76,7 +75,7 @@ type RuleMapping = {
   case: CaseRule;
   enum: EnumRule;
   'allow-multiple': AllowMultipleRule;
-  'exists': ExistsRule
+  exists: ExistsRule;
 };
 
 // Extract rule types from config keys
@@ -109,12 +108,15 @@ export default class RulesEngine<const Config extends Rules = Rules> {
 
   constructor(private readonly rules: Config) {
     // collect rules by scopes
-    this.scopes = this.listRules().reduce((scopes, rule) => {
-      const { scope } = rule;
-      if (!scopes[scope]) scopes[scope] = [];
-      scopes[scope].push(rule);
-      return scopes;
-    }, {} as Record<RuleScope, BaseRule[]>);
+    this.scopes = this.listRules().reduce(
+      (scopes, rule) => {
+        const { scope } = rule;
+        if (!scopes[scope]) scopes[scope] = [];
+        scopes[scope].push(rule);
+        return scopes;
+      },
+      {} as Record<RuleScope, BaseRule[]>,
+    );
   }
 
   private listRules(): BaseRule[] {
@@ -126,13 +128,20 @@ export default class RulesEngine<const Config extends Rules = Rules> {
    */
   private getRelevantCommitParts(commit: CommitMessage, scope: RuleScope): string[] {
     switch (scope) {
-      case 'scope': return commit.scopes;
-      case 'subject': return [commit.subject];
-      case 'type': return [commit.type];
-      case 'body': return [commit.body];
-      case 'footer': return commit.footers.map(v => v.replace(/^[^:]+:/,''));
-      case 'trailer': return commit.trailers; // footer tokens only
-      case 'footers': return commit.footers;
+      case 'scope':
+        return commit.scopes;
+      case 'subject':
+        return [commit.subject];
+      case 'type':
+        return [commit.type];
+      case 'body':
+        return [commit.body];
+      case 'footer':
+        return commit.footers.map(v => v.replace(/^[^:]+:/, ''));
+      case 'trailer':
+        return commit.trailers; // footer tokens only
+      case 'footers':
+        return commit.footers;
     }
   }
 
@@ -141,16 +150,16 @@ export default class RulesEngine<const Config extends Rules = Rules> {
    */
   private setRelevantCommitParts(commit: CommitMessage, scope: RuleScope, parts: string[]): void {
     switch (scope) {
-      case 'scope': 
+      case 'scope':
         commit.scopes = parts.filter(Boolean);
         break;
-      case 'subject': 
+      case 'subject':
         commit.subject = parts[0] ?? '';
         break;
-      case 'type': 
+      case 'type':
         commit.type = parts[0] ?? '';
         break;
-      case 'body': 
+      case 'body':
         commit.body = parts[0] ?? '';
         break;
       case 'footer': {
@@ -159,19 +168,22 @@ export default class RulesEngine<const Config extends Rules = Rules> {
         break;
       }
       case 'trailer': {
-        const newFooters = zip(commit.trailers, parts).reduce((footers, [existing, incoming]) => {
-          // Remove the old footer.
-          const deletedFooter = commit.footer(existing, null);
+        const newFooters = zip(commit.trailers, parts).reduce(
+          (footers, [existing, incoming]) => {
+            // Remove the old footer.
+            const deletedFooter = commit.footer(existing, null);
 
-          // if not removing any footers, re-add them back in (preserves the order)
-          if (deletedFooter && incoming !== null) footers.push({ token: incoming, text: deletedFooter.text });
+            // if not removing any footers, re-add them back in (preserves the order)
+            if (deletedFooter && incoming !== null) footers.push({ token: incoming, text: deletedFooter.text });
 
-          // We need to keep order
-          return footers;
-        }, [] as { token: string, text: string }[]);
+            // We need to keep order
+            return footers;
+          },
+          [] as { token: string; text: string }[],
+        );
 
         // Now that all footers have been removed, re-add
-        newFooters.forEach(({ token, text }) => commit.footer(token, text))
+        newFooters.forEach(({ token, text }) => commit.footer(token, text));
         break;
       }
       case 'footers':
@@ -184,7 +196,10 @@ export default class RulesEngine<const Config extends Rules = Rules> {
   /**
    * Parse string array against current rules with optional fixing
    */
-  private validateParts(inputs: string[], behaviour: 'validate' | 'fix'): [outputs: string[], errors: string[], warnings: string[]] {
+  private validateParts(
+    inputs: string[],
+    behaviour: 'validate' | 'fix',
+  ): [outputs: string[], errors: string[], warnings: string[]] {
     const shouldFix = behaviour === 'fix';
 
     const errors = new ValidationErrors();
@@ -209,10 +224,16 @@ export default class RulesEngine<const Config extends Rules = Rules> {
    * @param behaviour - 'validate' or 'fix'
    * @returns [errors, warnings] - Arrays of error and warning messages
    */
-  validate<T extends CommitMessage | string[] | string>(input: T, behaviour: 'validate' | 'fix' = 'fix'): ValidateReturnType<T> {
-    if (typeof input === 'string') return this.validateParts([input], behaviour) as ValidateReturnType<T>;
+  validate<T extends CommitMessage | string[] | string>(
+    input: T,
+    behaviour: 'validate' | 'fix' = 'fix',
+  ): ValidateReturnType<T> {
+    if (typeof input === 'string') {
+      const [[output], errors, warnings] = this.validateParts([input], behaviour);
+      return [output, errors, warnings] as ValidateReturnType<T>;
+    }
     if (Array.isArray(input)) return this.validateParts(input, behaviour) as ValidateReturnType<T>;
-    
+
     const scopedErrors: string[] = [];
     const scopedWarnings: string[] = [];
     const shouldFix = behaviour === 'fix';
@@ -262,7 +283,7 @@ export default class RulesEngine<const Config extends Rules = Rules> {
    * Narrows the scope of the current rules to the selected scope(s)
    * Creates a new RulesEngine instance containing only rules that apply to the specified scope(s).
    * This allows for targeted validation of specific scopes.
-   * 
+   *
    * @param scope - The scope to filter rules by for (e.g. 'type', 'subject', 'scope', etc)
    * @returns A new RulesEngine instance containing only rules that apply to the specified scope(s)
    */
@@ -283,7 +304,7 @@ export default class RulesEngine<const Config extends Rules = Rules> {
    * Filters rules to only include the specified types(s)
    * Creates a new RulesEngine instance containing only rules that contain the selected type(s).
    * This allows for specific rules to be tested.
-   * 
+   *
    * @param scope - The type to filter rules by for (e.g. 'enum', 'exists', 'empty', etc...)
    * @returns A new RulesEngine instance containing only rules for the specified type(s)
    */
@@ -304,7 +325,7 @@ export default class RulesEngine<const Config extends Rules = Rules> {
    * Filters the current rules to NOT contain the specified type(s)
    * Creates a new RulesEngine instance omitting any types specified.
    * This allows for specific rules to be tested.
-   * 
+   *
    * @param scope - The type(s) of rules to omit (e.g. 'enum', 'exists', 'empty', etc...)
    * @returns A new RulesEngine instance without the omitted rules.
    */
@@ -330,19 +351,20 @@ export default class RulesEngine<const Config extends Rules = Rules> {
    *   - forbidden: string[] - Array of commit parts that must not be included
    */
   allowedCommitProps(): { required: CommitPart[]; optional: CommitPart[]; forbidden: CommitPart[] } {
-    
     // Assume everything is optional unless otherwise required or forbidden
     const optional = new Set<CommitPart>(['type', 'subject', 'scope', 'body', 'footers']);
-    
+
     /*
       'Exists' and 'Empty' rules govern the required/optional/forbidden behaviour
       ? treat 'trailer' and 'footer' separately as they reference subtypes within footer structure.
     */
-    const emptyRules = this.listRules().filter(rule => rule instanceof EmptyRule && !['trailer', 'footer'].includes(rule.scope));
+    const emptyRules = this.listRules().filter(
+      rule => rule instanceof EmptyRule && !['trailer', 'footer'].includes(rule.scope),
+    );
 
     const ruleToString = (rule: BaseRule) => {
       const name = rule.scope as CommitPart; // We have filtered out 'trailer' and 'footer' rules above
-      optional.delete(name); 
+      optional.delete(name);
       return name;
     };
 
@@ -365,7 +387,6 @@ export default class RulesEngine<const Config extends Rules = Rules> {
     */
     const [trailerExists] = this.narrow('trailer').getRulesOfType('exists');
     if (trailerExists) required.add('footers');
-    
 
     return { required: [...required], optional: [...optional], forbidden: [...forbidden] };
   }
@@ -408,8 +429,8 @@ export default class RulesEngine<const Config extends Rules = Rules> {
           */
           const [trailerExists] = this.narrow('trailer').getRulesOfType('exists');
 
-          if (trailerExists) footerStructure.push(...trailerExists.value.map(trailer => `<${trailer}>: <footer>`))
-          else footerStructure.push('<token>: <footer>')
+          if (trailerExists) footerStructure.push(...trailerExists.value.map(trailer => `<${trailer}>: <footer>`));
+          else footerStructure.push('<token>: <footer>');
 
           commitStructure[rule] = footerStructure;
         } else {
@@ -423,7 +444,7 @@ export default class RulesEngine<const Config extends Rules = Rules> {
       optional.forEach(rule => {
         if (rule === 'footers') {
           const footerStructure = commitStructure.footers ?? [];
-          footerStructure.push('[optional footer(s)]');
+          footerStructure.push('[optional: footer(s)]');
           commitStructure[rule] = footerStructure;
         } else {
           commitStructure[rule] = `[optional ${rule}]`;
@@ -454,21 +475,23 @@ export default class RulesEngine<const Config extends Rules = Rules> {
     // Separate out Empty rules
     const nonEmptyRules = rules.filter(rule => !(rule instanceof EmptyRule));
 
-    (['type', 'scope', 'subject', 'header', 'body', 'footers', 'footer', 'trailer'] as RuleScope[]).reduce((rules, part) => {
-      // find all rules for the type.
-      const [applicableRules, otherRules] = separate(rules, rule => rule.scope.startsWith(part));
+    (['type', 'scope', 'subject', 'header', 'body', 'footers', 'footer', 'trailer'] as RuleScope[]).reduce(
+      (rules, part) => {
+        // find all rules for the type.
+        const [applicableRules, otherRules] = separate(rules, rule => rule.scope.startsWith(part));
 
-      if (applicableRules.length) {
-        ruleDescriptions.push(`### ${capitalize(part)}`);
-        ruleDescriptions.push(`- Rules configured for ${part}`);
-      }
+        if (applicableRules.length) ruleDescriptions.push(`### ${capitalize(part)}`);
+        applicableRules.forEach(rule => ruleDescriptions.push(`- ${rule.describe()}`));
 
-      // There's no "rule" for this, so it's a begrudging special case
-      if (part === 'subject') ruleDescriptions.push('- The subject must be written in imperative mood (Fix, not Fixed / Fixes etc.)');
+        // There's no "rule" for this, so it's a begrudging special case
+        if (part === 'subject')
+          ruleDescriptions.push('- The subject must be written in imperative mood (Fix, not Fixed / Fixes etc.)');
 
-      // return the other rules to continue
-      return otherRules;
-    }, nonEmptyRules);
+        // return the other rules to continue
+        return otherRules;
+      },
+      nonEmptyRules,
+    );
 
     return ruleDescriptions.join('\n');
   }

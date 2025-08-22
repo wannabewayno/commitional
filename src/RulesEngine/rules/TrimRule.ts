@@ -2,7 +2,9 @@ import { BaseRule } from './BaseRule.js';
 
 export class TrimRule extends BaseRule {
   validate(parts: string[]): null | Record<number, string> {
-    const errs = Object.fromEntries(parts.map((part, idx) => [idx, !this.validateTrim(part) && this.trimErrorMessage()]).filter(([, err]) => err));
+    const errs = Object.fromEntries(
+      parts.map((part, idx) => [idx, !this.validateTrim(part) && this.describe()]).filter(([, err]) => err),
+    );
     return Object.keys(errs).length ? errs : null;
   }
 
@@ -17,8 +19,8 @@ export class TrimRule extends BaseRule {
     return [errs, fixed];
   }
 
-  private trimErrorMessage(): string {
+  describe(): string {
     const modifier = this.applicable === 'always' ? 'must' : 'must not';
-    return `the ${this.scope} ${modifier} have leading or trailing whitespace`;
+    return `The ${this.scope} ${modifier} have leading or trailing whitespace`;
   }
 }

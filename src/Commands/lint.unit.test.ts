@@ -80,11 +80,7 @@ describe('Lint Cmd', () => {
 
     it('should log errors for invalid commit from file', async () => {
       const mockCommit = sinon.createStubInstance(CommitMessage);
-      mockCommit.process.returns([
-        mockCommit,
-        false,
-        [{ type: 'subject', filter: undefined, errors: ['Subject too long'], warnings: [] }],
-      ]);
+      mockCommit.process.returns([mockCommit, false, ['[subject:0] Subject too long']]);
       mockCommit.setStyle.returns(undefined);
       mockCommit.style.returns(mockCommit);
       mockCommit.toString.returns('feat: this subject is way too long for the rules');
@@ -210,11 +206,7 @@ describe('Lint Cmd', () => {
       validCommit.process.returns([validCommit, true, []]);
 
       const invalidCommit = sinon.createStubInstance(CommitMessage);
-      invalidCommit.process.returns([
-        invalidCommit,
-        false,
-        [{ type: 'type', filter: undefined, errors: ['Type missing'], warnings: [] }],
-      ]);
+      invalidCommit.process.returns([invalidCommit, false, ['[type:0] Type missing']]);
       invalidCommit.setStyle.returns(undefined);
       invalidCommit.style.returns(invalidCommit);
       invalidCommit.toString.returns('invalid commit');
@@ -281,10 +273,7 @@ describe('Lint Cmd', () => {
       mockCommit.process.returns([
         mockCommit,
         false,
-        [
-          { type: 'subject', filter: undefined, errors: ['Subject too long', 'Invalid format'], warnings: [] },
-          { type: 'type', filter: undefined, errors: ['Invalid type'], warnings: [] },
-        ],
+        ['[subject:0] Subject too long', '[subject:0] Invalid format', '[type:0] Invalid type'],
       ]);
       mockCommit.setStyle.returns(undefined);
       mockCommit.style.returns(mockCommit);
@@ -294,14 +283,14 @@ describe('Lint Cmd', () => {
       await lintCmd('commit-msg.txt', {});
 
       expect(mockCommit.setStyle.called).to.be.true;
-      expect(mockCommit.style.calledTwice).to.be.true;
+      expect(mockCommit.style.calledThrice).to.be.true;
       expect(mockLogError.called).to.be.true;
 
       const loggedMessage = mockLogError.firstCall.args[0];
-      expect(loggedMessage).to.include('subject');
+      expect(loggedMessage).to.include('[subject]');
       expect(loggedMessage).to.include('- Subject too long');
       expect(loggedMessage).to.include('- Invalid format');
-      expect(loggedMessage).to.include('type');
+      expect(loggedMessage).to.include('[type]');
       expect(loggedMessage).to.include('- Invalid type');
 
       expect(mockExit.calledWith(1)).to.be.true;
@@ -378,11 +367,7 @@ describe('Lint Cmd', () => {
       validCommit1.process.returns([validCommit1, true, []]);
 
       const invalidCommit = sinon.createStubInstance(CommitMessage);
-      invalidCommit.process.returns([
-        invalidCommit,
-        false,
-        [{ type: 'subject', filter: undefined, errors: ['Subject missing'], warnings: [] }],
-      ]);
+      invalidCommit.process.returns([invalidCommit, false, ['[subject:0] Subject missing']]);
       invalidCommit.setStyle.returns(undefined);
       invalidCommit.style.returns(invalidCommit);
       invalidCommit.toString.returns('invalid');

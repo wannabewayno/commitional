@@ -23,17 +23,17 @@ describe('TrimRule', () => {
       const result3 = rule.validate([' both sides ']);
       const result4 = rule.validate(['\ttab character']);
       const result5 = rule.validate(['newline\n']);
-      
-      expect(result1).to.deep.equal({ 0: 'the subject must have leading or trailing whitespace' });
-      expect(result2).to.deep.equal({ 0: 'the subject must have leading or trailing whitespace' });
-      expect(result3).to.deep.equal({ 0: 'the subject must have leading or trailing whitespace' });
-      expect(result4).to.deep.equal({ 0: 'the subject must have leading or trailing whitespace' });
-      expect(result5).to.deep.equal({ 0: 'the subject must have leading or trailing whitespace' });
+
+      expect(result1).to.deep.equal({ 0: 'The subject must have leading or trailing whitespace' });
+      expect(result2).to.deep.equal({ 0: 'The subject must have leading or trailing whitespace' });
+      expect(result3).to.deep.equal({ 0: 'The subject must have leading or trailing whitespace' });
+      expect(result4).to.deep.equal({ 0: 'The subject must have leading or trailing whitespace' });
+      expect(result5).to.deep.equal({ 0: 'The subject must have leading or trailing whitespace' });
     });
 
     it('should validate multiple parts', () => {
       const result = rule.validate(['clean', ' dirty ', 'also clean']);
-      expect(result).to.deep.equal({ 1: 'the subject must have leading or trailing whitespace' });
+      expect(result).to.deep.equal({ 1: 'The subject must have leading or trailing whitespace' });
     });
   });
 
@@ -42,7 +42,7 @@ describe('TrimRule', () => {
       const [errors1, fixed1] = rule.fix([' leading space']);
       const [errors2, fixed2] = rule.fix(['trailing space ']);
       const [errors3, fixed3] = rule.fix([' both sides ']);
-      
+
       expect(errors1).to.be.null;
       expect(fixed1).to.deep.equal(['leading space']);
       expect(errors2).to.be.null;
@@ -75,7 +75,7 @@ describe('TrimRule', () => {
     it('should fix invalid inputs', () => {
       const [output1, errors1, warnings1] = rule.check([' leading space']);
       const [output2, errors2, warnings2] = rule.check(['trailing space ']);
-      
+
       expect(output1).to.deep.equal(['leading space']);
       expect(errors1).to.be.null;
       expect(warnings1).to.be.null;
@@ -96,7 +96,7 @@ describe('TrimRule', () => {
     it('should not apply fix when fix=false', () => {
       const [output, errors, warnings] = rule.check([' leading space '], false);
       expect(output).to.deep.equal([' leading space ']);
-      expect(errors).to.deep.equal({ 0: 'the subject must have leading or trailing whitespace' });
+      expect(errors).to.deep.equal({ 0: 'The subject must have leading or trailing whitespace' });
       expect(warnings).to.be.null;
     });
 
@@ -116,7 +116,7 @@ describe('TrimRule', () => {
       const [output, errors, warnings] = warningRule.check([' leading space '], false);
       expect(output).to.deep.equal([' leading space ']);
       expect(errors).to.be.null;
-      expect(warnings).to.deep.equal({ 0: 'the subject must have leading or trailing whitespace' });
+      expect(warnings).to.deep.equal({ 0: 'The subject must have leading or trailing whitespace' });
     });
   });
 });

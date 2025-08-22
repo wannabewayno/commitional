@@ -3,9 +3,7 @@ import { BaseRule } from './BaseRule.js';
 export class ExclamationMarkRule extends BaseRule {
   validate(parts: string[]): null | Record<number, string> {
     const errs = Object.fromEntries(
-      parts
-        .map((part, idx) => [idx, !this.validateExclamationMark(part) && this.exclamationMarkErrorMessage()])
-        .filter(([, err]) => err),
+      parts.map((part, idx) => [idx, !this.validateExclamationMark(part) && this.describe()]).filter(([, err]) => err),
     );
     return this.errorOrNull(errs);
   }
@@ -20,7 +18,7 @@ export class ExclamationMarkRule extends BaseRule {
 
     const fixed = parts.map((part, index) => {
       if (!part.includes(':')) {
-        errors[index] = this.exclamationMarkErrorMessage();
+        errors[index] = this.describe();
         return part;
       }
       return this.applicable === 'always'
@@ -31,8 +29,8 @@ export class ExclamationMarkRule extends BaseRule {
     return [this.errorOrNull(errors), fixed];
   }
 
-  private exclamationMarkErrorMessage(): string {
+  describe(): string {
     const modifier = this.applicable === 'always' ? 'must' : 'must not';
-    return `the ${this.scope} ${modifier} have an exclamation mark before the colon`;
+    return `The ${this.scope} ${modifier} have an exclamation mark before the colon`;
   }
 }

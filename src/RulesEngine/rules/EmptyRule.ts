@@ -2,7 +2,9 @@ import { BaseRule } from './BaseRule.js';
 
 export class EmptyRule extends BaseRule {
   validate(parts: string[]): null | Record<number, string> {
-    const errs = Object.fromEntries(parts.map((part, idx) => [idx, !this.validateEmpty(part) && this.emptyErrorMessage()]).filter(([, err]) => err));
+    const errs = Object.fromEntries(
+      parts.map((part, idx) => [idx, !this.validateEmpty(part) && this.describe()]).filter(([, err]) => err),
+    );
     return Object.keys(errs).length ? errs : null;
   }
 
@@ -16,11 +18,13 @@ export class EmptyRule extends BaseRule {
     if (this.applicable === 'always') return [null, parts.map(() => '')];
 
     // Can't fix if applicable is 'never' and input is empty - return original
-    const errs = Object.fromEntries(parts.map((part, idx) => [idx, !this.validateEmpty(part) && this.emptyErrorMessage()]).filter(([, err]) => err));
+    const errs = Object.fromEntries(
+      parts.map((part, idx) => [idx, !this.validateEmpty(part) && this.describe()]).filter(([, err]) => err),
+    );
     return [Object.keys(errs).length ? errs : null, parts];
   }
 
-  private emptyErrorMessage(): string {
-    return `the ${this.scope} must ${this.applicable} be empty`;
+  describe(): string {
+    return `The ${this.scope} must ${this.applicable} be empty`;
   }
 }

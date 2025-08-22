@@ -1,5 +1,5 @@
 import { BaseRuleWithValue, type RuleConfigCondition, type RuleConfigSeverity } from './BaseRule.js';
-import type { RuleScope} from '../index.js';
+import type { RuleScope } from '../index.js';
 import capitalize from '../../lib/capitalize.js';
 import kebabCase from '../../lib/kebabCase.js';
 import splitByWord from '../../lib/splitByWord.js';
@@ -14,7 +14,16 @@ export type CaseType =
   | 'snake-case'
   | 'start-case';
 
-const knownCases: CaseType[] = ['lower-case', 'upper-case', 'camel-case', 'kebab-case', 'pascal-case', 'sentence-case', 'snake-case', 'start-case'];
+const knownCases: CaseType[] = [
+  'lower-case',
+  'upper-case',
+  'camel-case',
+  'kebab-case',
+  'pascal-case',
+  'sentence-case',
+  'snake-case',
+  'start-case',
+];
 
 export class CaseRule extends BaseRuleWithValue<CaseType[]> {
   constructor(name: RuleScope, level: RuleConfigSeverity, applicable: RuleConfigCondition, value: CaseType | CaseType[]) {
@@ -23,7 +32,9 @@ export class CaseRule extends BaseRuleWithValue<CaseType[]> {
   }
 
   validate(parts: string[]): null | Record<number, string> {
-    const errs = Object.fromEntries(parts.map((part, idx) => [idx, !this.validateCase(part) && this.caseErrorMessage()]).filter(([, err]) => err));
+    const errs = Object.fromEntries(
+      parts.map((part, idx) => [idx, !this.validateCase(part) && this.describe()]).filter(([, err]) => err),
+    );
     return Object.keys(errs).length ? errs : null;
   }
 
@@ -47,11 +58,11 @@ export class CaseRule extends BaseRuleWithValue<CaseType[]> {
     const fixed = parts.map(part => {
       // Nothing to fix, return as-is
       if (!part) return part;
-      
+
       // fix the case
       return this.fixCase(part, caseType);
     });
-    
+
     return [null, fixed];
   }
 
@@ -88,8 +99,8 @@ export class CaseRule extends BaseRuleWithValue<CaseType[]> {
     }
   }
 
-  private caseErrorMessage(): string {
-    const message = ['the', this.scope, 'must', this.applicable, 'be in'];
+  describe(): string {
+    const message = ['The', this.scope, 'must', this.applicable, 'be in'];
     if (this.value.length === 1) {
       const caseStr = this.value[0] as CaseType;
       message.push(this.fixCase(caseStr, caseStr));

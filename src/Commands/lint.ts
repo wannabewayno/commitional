@@ -1,10 +1,11 @@
 import { readFile, writeFile } from 'node:fs/promises';
-import CommitMessage from '../CommitMessage/index.js';
-import RulesEngine from '../RulesEngine/index.js';
+import CommitMessage, { type CommitPart } from '../CommitMessage/index.js';
+import RulesEngine, { type RuleScope } from '../RulesEngine/index.js';
 import { exit } from 'node:process';
 import Git from '../services/Git/index.js';
 import { red } from 'yoctocolors';
 import filterMap from '../lib/filterMap.js';
+import extract from '../lib/extract.js';
 
 interface LintOpts {
   fix?: boolean;
@@ -25,6 +26,23 @@ type LintCmd = (commitMsgArg: string, opts: LintOpts) => Promise<void>;
 
 const isHash = (str: string) => /^[0-9a-f]{7,}$/.test(str);
 const isInteger = (str: string) => /^\d+$/.test(str);
+
+function scopeToCommitPart(scope: RuleScope): CommitPart {
+  switch (scope) {
+    case 'body':
+      return 'body';
+    case 'footer':
+    case 'trailer':
+    case 'footers':
+      return 'footers';
+    case 'subject':
+      return 'subject';
+    case 'scope':
+      return 'scope';
+    case 'type':
+      return 'type';
+  }
+}
 
 /**
  * Lints a commit message
@@ -62,19 +80,35 @@ export const Provider = ({ git, readFile, writeFile, exit, logError }: Dependenc
     const results = commits.map(({ msg }) => {
       const [commit, valid, errorsAndWarnings] = CommitMessage.fromString(msg).process(rulesEngine, behaviour);
 
-      const errorSections: string[] = [];
       if (!valid) {
+        const errorSections: Record<string, string[]> = {};
         commit.setStyle(red);
 
-        errorsAndWarnings.forEach(({ type, filter, errors }) => {
-          if (errors.length > 0) {
-            commit.style(type, filter);
-            errorSections.push(`${type}\n${errors.map(error => `- ${error}`).join('\n')}`);
-          }
+        errorsAndWarnings.forEach((error: string) => {
+          const [label, errMsg] = extract(error, /\[\w+:\d\]/);
+          const [scope, filter] = label.slice(1, -1).split(':');
+
+          const commitPart = scopeToCommitPart(scope as RuleScope);
+
+          commit.style(commitPart, filter);
+
+          errorSections[commitPart] ??= [];
+          errorSections[commitPart].push(errMsg);
         });
+
+        const errorMessages = Object.entries(errorSections).reduce((errMsg, section) => {
+          const [commitPart, errors] = section;
+
+          errMsg.push([`[${commitPart}]`, errors.map((error: string) => `- ${error.trim()}`).join('\n')].join('\n'));
+
+          return errMsg;
+        }, [] as string[]);
+
+        // Construct error Message
+        return { commit, error: errorMessages.join('\n\n') };
       }
 
-      return { commit, error: errorSections.length ? errorSections.join('\n\n') : null };
+      return { commit, error: null };
     });
 
     const allValid = !results.some(result => result.error);

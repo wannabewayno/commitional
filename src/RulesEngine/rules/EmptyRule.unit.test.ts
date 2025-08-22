@@ -22,7 +22,7 @@ describe('EmptyRule', () => {
     it('should invalidate non-empty parts when applicable is always', () => {
       const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'always');
       const result = rule.validate(['Hello', '']);
-      expect(result).to.deep.equal({ 0: 'the subject must always be empty' });
+      expect(result).to.deep.equal({ 0: 'The subject must always be empty' });
     });
 
     it('should validate non-empty parts when applicable is never', () => {
@@ -34,7 +34,7 @@ describe('EmptyRule', () => {
     it('should invalidate empty parts when applicable is never', () => {
       const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'never');
       const result = rule.validate(['', 'Hello']);
-      expect(result).to.deep.equal({ 0: 'the subject must never be empty' });
+      expect(result).to.deep.equal({ 0: 'The subject must never be empty' });
     });
   });
 
@@ -51,7 +51,7 @@ describe('EmptyRule', () => {
       const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'never');
       const original = ['', 'Hello'];
       const [errors, fixed] = rule.fix(original);
-      expect(errors).to.deep.equal({ 0: 'the subject must never be empty' });
+      expect(errors).to.deep.equal({ 0: 'The subject must never be empty' });
       expect(fixed).to.deep.equal(original);
     });
   });
@@ -72,7 +72,7 @@ describe('EmptyRule', () => {
       // Empty parts should fail with 'never'
       const [output1, errors1, warnings1] = rule.check(['', 'Hello']);
       expect(output1).to.deep.equal(['', 'Hello']);
-      expect(errors1).to.deep.equal({ 0: 'the subject must never be empty' });
+      expect(errors1).to.deep.equal({ 0: 'The subject must never be empty' });
       expect(warnings1).to.be.null;
 
       // Non-empty parts should pass with 'never'
@@ -87,14 +87,14 @@ describe('EmptyRule', () => {
       const [output, errors, warnings] = rule.check(['', 'Hello']);
       expect(output).to.deep.equal(['', 'Hello']);
       expect(errors).to.be.null;
-      expect(warnings).to.deep.equal({ 0: 'the subject must never be empty' });
+      expect(warnings).to.deep.equal({ 0: 'The subject must never be empty' });
     });
 
     it('should return errors when level is ERROR and cannot fix', () => {
       const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'never');
       const [output, errors, warnings] = rule.check(['', 'Hello']);
       expect(output).to.deep.equal(['', 'Hello']);
-      expect(errors).to.deep.equal({ 0: 'the subject must never be empty' });
+      expect(errors).to.deep.equal({ 0: 'The subject must never be empty' });
       expect(warnings).to.be.null;
     });
   });
@@ -112,7 +112,7 @@ describe('EmptyRule', () => {
       const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'always');
       const [output, errors, warnings] = rule.check(['Hello', 'World'], false);
       expect(output).to.deep.equal(['Hello', 'World']);
-      expect(errors).to.deep.equal({ 0: 'the subject must always be empty', 1: 'the subject must always be empty' });
+      expect(errors).to.deep.equal({ 0: 'The subject must always be empty', 1: 'The subject must always be empty' });
       expect(warnings).to.be.null;
     });
 
@@ -133,7 +133,7 @@ describe('EmptyRule', () => {
       const [output, errors, warnings] = rule.check(['Hello'], false);
       expect(output).to.deep.equal(['Hello']);
       expect(errors).to.be.null;
-      expect(warnings).to.deep.equal({ 0: 'the subject must always be empty' });
+      expect(warnings).to.deep.equal({ 0: 'The subject must always be empty' });
     });
   });
 });

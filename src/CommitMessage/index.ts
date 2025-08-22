@@ -3,10 +3,9 @@ import filterMap from '../lib/filterMap.js';
 import type RulesEngine from '../RulesEngine/index.js';
 import CommitMessageFooter from './CommitMessageFooter.js';
 import CommitMessageHeader from './CommitMessageHeader.js';
-import type { ErrorsAndWarnings } from './interfaces.js';
 import Text, { type StyleFn } from './Text.js';
 
-export type CommitPart = 'type' | 'subject' | 'scope' | 'body' | 'footers'
+export type CommitPart = 'type' | 'subject' | 'scope' | 'body' | 'footers';
 
 export interface CommitMessageHeaderOpts {
   type?: string;
@@ -25,9 +24,9 @@ export interface CommitJSON {
 }
 
 export interface CommitMessageOpts {
-  header?: CommitMessageHeader,
-  body?: string,
-  footers?: CommitMessageFooter[]
+  header?: CommitMessageHeader;
+  body?: string;
+  footers?: CommitMessageFooter[];
 }
 
 /**
@@ -40,8 +39,8 @@ export default class CommitMessage {
   private _body: Text = new Text();
   private readonly _footers: CommitMessageFooter[];
 
-  constructor({ header , body = '', footers = [] }: CommitMessageOpts = {}) {
-    this._header = header ??  new CommitMessageHeader();
+  constructor({ header, body = '', footers = [] }: CommitMessageOpts = {}) {
+    this._header = header ?? new CommitMessageHeader();
     this.body = body;
     this._footers = footers;
   }
@@ -82,9 +81,9 @@ export default class CommitMessage {
    * If provided with two arguments, will either create or edit a footer with the provided message
    * If message is null, will remove the footer
    * If provided with no second argument, acts as a getter for that footer.
-   * @param token 
-   * @param message 
-   * @returns 
+   * @param token
+   * @param message
+   * @returns
    */
   footer(token: string, message?: string | null) {
     // find if the footer already exists
@@ -103,7 +102,7 @@ export default class CommitMessage {
       // remove it
       const [removed] = this._footers.splice(footerIdx, 1);
       return removed;
-    } 
+    }
 
     return this._footers.find(footer => footer.token === token);
   }
@@ -123,7 +122,7 @@ export default class CommitMessage {
         break;
       default:
         // Set all styles
-        (['body', 'footer', 'type', 'scope', 'subject'] as CommitPart[]).forEach(part => this.setStyle(style, part));
+        (['body', 'footers', 'type', 'scope', 'subject'] as const).forEach(part => this.setStyle(style, part));
     }
   }
 
@@ -145,7 +144,7 @@ export default class CommitMessage {
         break;
       default:
         // Set all styles
-        (['body', 'footer', 'type', 'scope', 'subject'] as CommitPart[]).forEach(part => this.style(part));
+        (['body', 'footers', 'type', 'scope', 'subject'] as const).forEach(part => this.style(part));
     }
     return this;
   }
@@ -168,7 +167,7 @@ export default class CommitMessage {
         break;
       default:
         // unstyle all
-        (['body', 'footer', 'type', 'scope', 'subject'] as CommitPart[]).forEach(part => this.unstyle(part));
+        (['body', 'footers', 'type', 'scope', 'subject'] as const).forEach(part => this.unstyle(part));
     }
 
     return this;
@@ -219,12 +218,12 @@ export default class CommitMessage {
     this.addScope(...scopes);
   }
 
-  get addScope() {
-    return this._header.addScope;
+  addScope(...scopes: string[]) {
+    return this._header.addScope(...scopes);
   }
 
-  get delScope() {
-    return this._header.delScope;
+  delScope(scope: string) {
+    return this._header.delScope(scope);
   }
 
   toJSON(): CommitJSON {
@@ -241,7 +240,7 @@ export default class CommitMessage {
     return new CommitMessage({
       header: this._header.clone(),
       body: this._body.value,
-      footers: this._footers.map(v => v.clone())
+      footers: this._footers.map(v => v.clone()),
     });
   }
 
@@ -254,31 +253,23 @@ export default class CommitMessage {
   process(
     rulesEngine: RulesEngine,
     behaviour: 'validate' | 'fix' = 'fix',
-  ): [processedCommit: CommitMessage, valid: boolean, info: ErrorsAndWarnings[]] {
+  ): [processedCommit: CommitMessage, valid: boolean, info: string[]] {
     // Create a clone of the commit to leave original untouched when behaviour is set to 'fix'
     const commit = this.clone();
 
-    const errorsAndWarnings: ErrorsAndWarnings[] = [];
-
-    const [errors] = rulesEngine.validate(commit, behaviour);
-
-    // TODO: Group errors and warnining into categories
+    const [errors, warnings] = rulesEngine.validate(commit, behaviour);
 
     // Construct an error message for the whole commit.
-    return [
-      commit,
-      !errors.length,
-      errorsAndWarnings,
-    ];
+    return [commit, !errors.length, errors.concat(warnings)];
   }
 
   static fromJSON({ type, scope, body, footers = [], subject }: CommitJSON) {
     const header = new CommitMessageHeader({ type, scope, subject });
-  
+
     return new CommitMessage({
       header,
       body,
-      footers: filterMap(footers, footer => fallbackOnErr(CommitMessageFooter.fromString(footer), undefined))
+      footers: filterMap(footers, footer => fallbackOnErr(CommitMessageFooter.fromString(footer), undefined)),
     });
   }
 

@@ -2,10 +2,10 @@ import { BaseRuleWithValue } from './BaseRule.js';
 
 export class AllowMultipleRule extends BaseRuleWithValue<string> {
   validate(inputs: string[]): null | Record<number, string> {
-    if (this.applicable === 'always') return null
-    
+    if (this.applicable === 'always') return null;
+
     const [, ...rest] = inputs;
-    if (rest.length) return Object.fromEntries(rest.map((_, i) => [i + 1, this.allowMultipleErrorMessage()]));
+    if (rest.length) return Object.fromEntries(rest.map((_, i) => [i + 1, this.describe()]));
     return null;
   }
 
@@ -16,7 +16,7 @@ export class AllowMultipleRule extends BaseRuleWithValue<string> {
     return [null, parts.slice(0, 1)];
   }
 
-  private allowMultipleErrorMessage(): string {
+  describe(): string {
     return `Multiple ${this.scope}s aren't allowed`;
   }
 }

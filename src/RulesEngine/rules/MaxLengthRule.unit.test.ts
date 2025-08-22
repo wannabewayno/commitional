@@ -21,7 +21,7 @@ describe('MaxLengthRule', () => {
     it('should invalidate text exceeding max length', () => {
       const rule = new MaxLengthRule('subject', RuleConfigSeverity.Error, 'always', 5);
       const result = rule.validate(['Hello World']);
-      expect(result).to.deep.equal({ 0: 'the subject must not exceed 5 characters' });
+      expect(result).to.deep.equal({ 0: 'The subject must not exceed 5 characters' });
     });
 
     it('should validate text exactly at max length', () => {
@@ -39,14 +39,14 @@ describe('MaxLengthRule', () => {
     it('should validate multiple parts', () => {
       const rule = new MaxLengthRule('subject', RuleConfigSeverity.Error, 'always', 5);
       const result = rule.validate(['Hello', 'Hi', 'Hello World']);
-      expect(result).to.deep.equal({ 2: 'the subject must not exceed 5 characters' });
+      expect(result).to.deep.equal({ 2: 'The subject must not exceed 5 characters' });
     });
 
     it('should handle never applicable correctly', () => {
       const rule = new MaxLengthRule('subject', RuleConfigSeverity.Error, 'never', 5);
       const result1 = rule.validate(['Hi']); // Short should be invalid
       const result2 = rule.validate(['Hello World']); // Long should be valid
-      expect(result1).to.deep.equal({ 0: 'the subject must not exceed 5 characters' });
+      expect(result1).to.deep.equal({ 0: 'The subject must not exceed 5 characters' });
       expect(result2).to.be.null;
     });
   });
@@ -78,7 +78,7 @@ describe('MaxLengthRule', () => {
       const rule = new MaxLengthRule('subject', RuleConfigSeverity.Error, 'never', 5);
       const original = ['Hi', 'Hello World'];
       const [errors, fixed] = rule.fix(original);
-      expect(errors).to.deep.equal({ 0: 'the subject must not exceed 5 characters' });
+      expect(errors).to.deep.equal({ 0: 'The subject must not exceed 5 characters' });
       expect(fixed).to.deep.equal(original);
     });
   });
@@ -107,7 +107,7 @@ describe('MaxLengthRule', () => {
       // Short text should fail with 'never'
       const [output1, errors1, warnings1] = rule.check(['Hi']);
       expect(output1).to.deep.equal(['Hi']);
-      expect(errors1).to.deep.equal({ 0: 'the subject must not exceed 5 characters' });
+      expect(errors1).to.deep.equal({ 0: 'The subject must not exceed 5 characters' });
       expect(warnings1).to.be.null;
 
       // Long text should pass with 'never'
@@ -129,7 +129,7 @@ describe('MaxLengthRule', () => {
       const rule = new MaxLengthRule('subject', RuleConfigSeverity.Error, 'never', 10);
       const [output, errors, warnings] = rule.check(['Hi']);
       expect(output).to.deep.equal(['Hi']);
-      expect(errors).to.deep.equal({ 0: 'the subject must not exceed 10 characters' });
+      expect(errors).to.deep.equal({ 0: 'The subject must not exceed 10 characters' });
       expect(warnings).to.be.null;
     });
   });
@@ -147,7 +147,7 @@ describe('MaxLengthRule', () => {
       const rule = new MaxLengthRule('subject', RuleConfigSeverity.Error, 'always', 5);
       const [output, errors, warnings] = rule.check(['Hello World'], false);
       expect(output).to.deep.equal(['Hello World']);
-      expect(errors).to.deep.equal({ 0: 'the subject must not exceed 5 characters' });
+      expect(errors).to.deep.equal({ 0: 'The subject must not exceed 5 characters' });
       expect(warnings).to.be.null;
     });
 
@@ -168,7 +168,7 @@ describe('MaxLengthRule', () => {
       const [output, errors, warnings] = rule.check(['Hello World'], false);
       expect(output).to.deep.equal(['Hello World']);
       expect(errors).to.be.null;
-      expect(warnings).to.deep.equal({ 0: 'the subject must not exceed 5 characters' });
+      expect(warnings).to.deep.equal({ 0: 'The subject must not exceed 5 characters' });
     });
   });
 });

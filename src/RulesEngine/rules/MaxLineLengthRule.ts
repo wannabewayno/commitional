@@ -3,7 +3,9 @@ import { BaseRuleWithValue } from './BaseRule.js';
 
 export class MaxLineLengthRule extends BaseRuleWithValue<number> {
   validate(parts: string[]): null | Record<number, string> {
-    const errs = Object.fromEntries(parts.map((part, idx) => [idx, !this.validateMaxLineLength(part) && this.maxLengthErrorMessage()]).filter(([, err]) => err));
+    const errs = Object.fromEntries(
+      parts.map((part, idx) => [idx, !this.validateMaxLineLength(part) && this.describe()]).filter(([, err]) => err),
+    );
     return Object.keys(errs).length ? errs : null;
   }
 
@@ -17,7 +19,7 @@ export class MaxLineLengthRule extends BaseRuleWithValue<number> {
     return [null, fixed];
   }
 
-  private maxLengthErrorMessage(): string {
-    return `the ${this.scope} must be wrapped at ${this.value} characters`;
+  describe(): string {
+    return `The ${this.scope} must be wrapped at ${this.value} characters`;
   }
 }

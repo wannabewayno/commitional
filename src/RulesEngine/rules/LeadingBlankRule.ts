@@ -2,7 +2,9 @@ import { BaseRule } from './BaseRule.js';
 
 export class LeadingBlankRule extends BaseRule {
   validate(parts: string[]): null | Record<number, string> {
-    const errs = Object.fromEntries(parts.map((part, idx) => [idx, !this.validateLeadingBlank(part) && this.LeadingBlankErrorMessage()]).filter(([, err]) => err));
+    const errs = Object.fromEntries(
+      parts.map((part, idx) => [idx, !this.validateLeadingBlank(part) && this.describe()]).filter(([, err]) => err),
+    );
     return Object.keys(errs).length ? errs : null;
   }
 
@@ -15,11 +17,11 @@ export class LeadingBlankRule extends BaseRule {
     const fixed = parts.map(part => {
       return this.applicable === 'never' ? part.trimStart() : part.replace(/^[^\n]/, v => `\n${v}`);
     });
-    
+
     return [null, fixed];
   }
 
-  private LeadingBlankErrorMessage(): string {
-    return `the ${this.scope} must ${this.applicable} begin with a blank line`;
+  describe(): string {
+    return `The ${this.scope} must ${this.applicable} begin with a blank line`;
   }
 }

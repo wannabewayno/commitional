@@ -20,12 +20,12 @@ describe('FullStopRule', () => {
 
     it('should invalidate text not ending with the specified character', () => {
       const rule = new FullStopRule('subject', RuleConfigSeverity.Error, 'always', '.');
-      expect(rule.validate(['Hello'])).to.deep.equal({ 0: 'the subject must end with a full stop' });
+      expect(rule.validate(['Hello'])).to.deep.equal({ 0: 'The subject must end with a full stop' });
     });
 
     it('should handle empty input', () => {
       const rule = new FullStopRule('subject', RuleConfigSeverity.Error, 'always', '.');
-      expect(rule.validate([''])).to.deep.equal({ 0: 'the subject must end with a full stop' });
+      expect(rule.validate([''])).to.deep.equal({ 0: 'The subject must end with a full stop' });
     });
   });
 
@@ -94,14 +94,14 @@ describe('FullStopRule', () => {
       const [output, errors, warnings] = rule.check(['Hello'], false); // Don't fix
       expect(output).to.deep.equal(['Hello']);
       expect(errors).to.be.null;
-      expect(warnings).to.deep.equal({ 0: 'the subject must end with a full stop' });
+      expect(warnings).to.deep.equal({ 0: 'The subject must end with a full stop' });
     });
 
     it('should return errors when level is ERROR and validation fails without fix', () => {
       const rule = new FullStopRule('subject', RuleConfigSeverity.Error, 'always', '.');
       const [output, errors, warnings] = rule.check(['Hello'], false); // Don't fix
       expect(output).to.deep.equal(['Hello']);
-      expect(errors).to.deep.equal({ 0: 'the subject must end with a full stop' });
+      expect(errors).to.deep.equal({ 0: 'The subject must end with a full stop' });
       expect(warnings).to.be.null;
     });
   });

@@ -19,8 +19,8 @@ class CliHelpers {
     const I = this.cliete;
 
     await I.press.down.until.I.spot(`❯ ${token}`);
-    await I.press.enter.and.wait.until.I.spot(`?  ${token}: `);
-    await I.press.backspace.until.I.spot(new RegExp(`\\?  ${token}:$`));
+    await I.press.enter.and.wait.until.I.spot(`? ${token}: `);
+    await I.press.backspace.until.I.spot(new RegExp(`\\? ${token}:$`));
     await I.type(newText).and.press.enter.and.wait.until.I.spot('? Commit or Edit');
   }
 
@@ -29,7 +29,7 @@ class CliHelpers {
 
     await I.press.down.until.I.spot(`❯ ${token}`);
     await I.press.enter.and.wait.until.I.spot(`${token}:`);
-    await I.press.backspace.until.I.spot(new RegExp(`\\?  ${token}:$`));
+    await I.press.backspace.until.I.spot(new RegExp(`\\? ${token}:$`));
     await I.press.enter.and.wait.until.I.spot('? Commit or Edit');
   }
 }
@@ -140,7 +140,7 @@ describe('Interactive Commit Flow', () => {
 
     // Edit scope
     await I.press.down.until.I.spot('❯ scope');
-    await I.press.enter.and.wait.until.I.spot('? Scope of the change');
+    await I.press.enter.and.wait.until.I.spot('? Scope of commit');
     await I.type('test').and.press.enter.and.wait.until.I.spot('fix(test): Edit commits');
 
     // Edit subject

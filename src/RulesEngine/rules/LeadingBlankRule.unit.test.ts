@@ -12,8 +12,10 @@ describe('LeadingBlankRule', () => {
 
     it('should not validate when input does not begin with a blank line', () => {
       const rule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'always');
-      expect(rule.validate(['This is a message'])).to.deep.equal({ 0: 'the subject must always begin with a blank line' });
-      expect(rule.validate(['This is a message\nWith multiple lines'])).to.deep.equal({ 0: 'the subject must always begin with a blank line' });
+      expect(rule.validate(['This is a message'])).to.deep.equal({ 0: 'The subject must always begin with a blank line' });
+      expect(rule.validate(['This is a message\nWith multiple lines'])).to.deep.equal({
+        0: 'The subject must always begin with a blank line',
+      });
     });
   });
 
@@ -27,11 +29,11 @@ describe('LeadingBlankRule', () => {
 
     it('should fix by removing the blank line when applicable is never', () => {
       const rule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'never');
-      
+
       const [errors1, fixed1] = rule.fix(['\nThis is a message']);
       expect(errors1).to.be.null;
       expect(fixed1).to.deep.equal(['This is a message']);
-      
+
       const [errors2, fixed2] = rule.fix(['  \nThis is a message']);
       expect(errors2).to.be.null;
       expect(fixed2).to.deep.equal(['This is a message']);
@@ -53,13 +55,13 @@ describe('LeadingBlankRule', () => {
   describe('check()', () => {
     it('should handle check method correctly for always condition', () => {
       const alwaysRule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'always');
-      
+
       // Valid input
       const [output1, errors1, warnings1] = alwaysRule.check(['\nThis is a message']);
       expect(output1).to.deep.equal(['\nThis is a message']);
       expect(errors1).to.be.null;
       expect(warnings1).to.be.null;
-      
+
       // Invalid input that gets fixed
       const [output2, errors2, warnings2] = alwaysRule.check(['This is a message']);
       expect(output2).to.deep.equal(['\nThis is a message']);
@@ -69,13 +71,13 @@ describe('LeadingBlankRule', () => {
 
     it('should handle check method correctly for never condition', () => {
       const neverRule = new LeadingBlankRule('subject', RuleConfigSeverity.Error, 'never');
-      
+
       // Valid input
       const [output1, errors1, warnings1] = neverRule.check(['This is a message'], false);
       expect(output1).to.deep.equal(['This is a message']);
       expect(errors1).to.be.null;
       expect(warnings1).to.be.null;
-      
+
       // Invalid input that gets fixed
       const [output2, errors2, warnings2] = neverRule.check(['\nThis is a message']);
       expect(output2).to.deep.equal(['This is a message']);

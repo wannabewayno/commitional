@@ -2,7 +2,9 @@ import { BaseRuleWithValue } from './BaseRule.js';
 
 export class FullStopRule extends BaseRuleWithValue<string> {
   validate(parts: string[]): null | Record<number, string> {
-    const errs = Object.fromEntries(parts.map((part, idx) => [idx, !this.validateFullStop(part) && this.fullStopErrorMessage()]).filter(([, err]) => err));
+    const errs = Object.fromEntries(
+      parts.map((part, idx) => [idx, !this.validateFullStop(part) && this.describe()]).filter(([, err]) => err),
+    );
     return Object.keys(errs).length ? errs : null;
   }
 
@@ -23,7 +25,7 @@ export class FullStopRule extends BaseRuleWithValue<string> {
 
       return part;
     });
-    
+
     return [null, fixed];
   }
 
@@ -95,8 +97,8 @@ export class FullStopRule extends BaseRuleWithValue<string> {
     return `${article} ${text}`;
   }
 
-  private fullStopErrorMessage(): string {
+  describe(): string {
     const modifier = this.applicable === 'always' ? 'must' : 'must not';
-    return `the ${this.scope} ${modifier} end with ${this.indefiniteArticle(this.symbolName)}`;
+    return `The ${this.scope} ${modifier} end with ${this.indefiniteArticle(this.symbolName)}`;
   }
 }

@@ -14,14 +14,16 @@ export class ExistsRule extends BaseRuleWithValue<string[]> {
         return { 0: `Missing required values: ${missingValues.join(', ')}` };
       }
     } else {
-      const errs = Object.fromEntries(parts.map((part, idx) => [idx, this.value.includes(part.trim()) && `Forbidden value: ${part} - ${this.existsErrorMessage()}`]).filter(([, err]) => err));
+      const errs = Object.fromEntries(
+        parts
+          .map((part, idx) => [idx, this.value.includes(part.trim()) && `Forbidden value: ${part} - ${this.describe()}`])
+          .filter(([, err]) => err),
+      );
       if (Object.keys(errs).length > 0) return errs;
     }
-    
+
     return null;
   }
-
-
 
   fix(parts: string[]): [null | Record<number, string>, string[]] {
     if (this.applicable === 'always') {
@@ -35,14 +37,14 @@ export class ExistsRule extends BaseRuleWithValue<string[]> {
     return [null, fixed];
   }
 
-  private existsErrorMessage(): string {
+  describe(): string {
     const message = [
-      'the',
+      'The',
       `${this.scope}${this.value.length > 1 ? 's' : ''}`,
       this.value.join(', '),
       'must',
       this.applicable,
-      'exist'
+      'exist',
     ];
 
     return message.join(' ');

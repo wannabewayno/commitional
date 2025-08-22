@@ -10,14 +10,14 @@ class TestRule extends BaseRule {
     level: RuleConfigSeverity,
     applicable: RuleConfigCondition = 'always',
     private shouldValidate = true,
-    private canFix = true
+    private canFix = true,
   ) {
     super(scope, level, applicable);
   }
 
   validate(parts: string[]): null | Record<number, string> {
     if (this.shouldValidate) return null;
-    const errs = Object.fromEntries(parts.map((_, idx) => [idx, this.getErrorMessage()]));
+    const errs = Object.fromEntries(parts.map((_, idx) => [idx, this.describe()]));
     return Object.keys(errs).length ? errs : null;
   }
 
@@ -27,7 +27,7 @@ class TestRule extends BaseRule {
     return [errors, fixed];
   }
 
-  private getErrorMessage(): string {
+  describe(): string {
     return `test error for ${this.scope}`;
   }
 }
@@ -40,6 +40,10 @@ class TestRuleWithValue extends BaseRuleWithValue<string> {
 
   fix(parts: string[]): [null | Record<number, string>, string[]] {
     return [null, parts];
+  }
+
+  describe(): string {
+    return 'TestRuleWithValue';
   }
 }
 
@@ -69,7 +73,7 @@ describe('BaseRule', () => {
     it('should return error mapping when shouldValidate is false', () => {
       const rule = new TestRule('subject', RuleConfigSeverity.Error, 'always', false);
       const result = rule.validate(['test', 'parts']);
-      expect(result).to.deep.equal({ 0: 'test error for subject', 1: 'test error for subject' });
+      expect(result).to.deep.equal({ 0: 'Test error for subject', 1: 'Test error for subject' });
     });
   });
 
@@ -120,14 +124,14 @@ describe('BaseRule', () => {
       const [output, errors, warnings] = rule.check(['test']);
       expect(output).to.deep.equal(['test']);
       expect(errors).to.be.null;
-      expect(warnings).to.deep.equal({ 0: 'test error for subject' });
+      expect(warnings).to.deep.equal({ 0: 'Test error for subject' });
     });
 
     it('should return errors when level is Error and fix fails', () => {
       const rule = new TestRule('subject', RuleConfigSeverity.Error, 'always', false, false);
       const [output, errors, warnings] = rule.check(['test']);
       expect(output).to.deep.equal(['test']);
-      expect(errors).to.deep.equal({ 0: 'test error for subject' });
+      expect(errors).to.deep.equal({ 0: 'Test error for subject' });
       expect(warnings).to.be.null;
     });
 
@@ -135,7 +139,7 @@ describe('BaseRule', () => {
       const rule = new TestRule('subject', RuleConfigSeverity.Error, 'always', false, true);
       const [output, errors, warnings] = rule.check(['test'], false);
       expect(output).to.deep.equal(['test']);
-      expect(errors).to.deep.equal({ 0: 'test error for subject' });
+      expect(errors).to.deep.equal({ 0: 'Test error for subject' });
       expect(warnings).to.be.null;
     });
   });

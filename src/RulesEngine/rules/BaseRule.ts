@@ -11,6 +11,12 @@ export abstract class BaseRule {
   ) {}
 
   /**
+   * Get a description of the rule
+   * @returns Description of the rule
+   */
+  abstract describe(): string;
+
+  /**
    * Check if the input parts pass the rule
    * @param parts Array of strings to validate
    * @returns Array where null = valid, string = error message

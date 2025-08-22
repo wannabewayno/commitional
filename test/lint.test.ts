@@ -57,8 +57,8 @@ describe('Lint Command E2E Tests', () => {
             '---',
             'bug: Fix things',
             '',
-            'type',
-            "- the type can only be one of: 'feat', 'fix', 'docs' or 'chore'",
+            '[type]',
+            "- The type can only be one of: 'feat', 'fix', 'docs' or 'chore'",
             '',
           );
 
@@ -75,8 +75,8 @@ describe('Lint Command E2E Tests', () => {
             '---',
             'bug: Fix things',
             '',
-            'type',
-            "- the type can only be one of: 'feat', 'fix', 'docs' or 'chore'",
+            '[type]',
+            "- The type can only be one of: 'feat', 'fix', 'docs' or 'chore'",
             '',
           );
 
@@ -99,14 +99,14 @@ describe('Lint Command E2E Tests', () => {
             '---',
             'bug: Fix things final',
             '',
-            'type',
-            "- the type can only be one of: 'feat', 'fix', 'docs' or 'chore'",
+            '[type]',
+            "- The type can only be one of: 'feat', 'fix', 'docs' or 'chore'",
             '',
             '---',
             'bug: Fix things again',
             '',
-            'type',
-            "- the type can only be one of: 'feat', 'fix', 'docs' or 'chore'",
+            '[type]',
+            "- The type can only be one of: 'feat', 'fix', 'docs' or 'chore'",
             '',
           );
 
@@ -129,8 +129,8 @@ describe('Lint Command E2E Tests', () => {
             '---',
             'bug: Fix things final',
             '',
-            'type',
-            "- the type can only be one of: 'feat', 'fix', 'docs' or 'chore'",
+            '[type]',
+            "- The type can only be one of: 'feat', 'fix', 'docs' or 'chore'",
             '',
           );
 
@@ -144,14 +144,14 @@ describe('Lint Command E2E Tests', () => {
             '---',
             'bug: Fix things final',
             '',
-            'type',
-            "- the type can only be one of: 'feat', 'fix', 'docs' or 'chore'",
+            '[type]',
+            "- The type can only be one of: 'feat', 'fix', 'docs' or 'chore'",
             '',
             '---',
             'bug: Fix things again',
             '',
-            'type',
-            "- the type can only be one of: 'feat', 'fix', 'docs' or 'chore'",
+            '[type]',
+            "- The type can only be one of: 'feat', 'fix', 'docs' or 'chore'",
             '',
           );
 
@@ -180,8 +180,8 @@ describe('Lint Command E2E Tests', () => {
             '---',
             'feat: fixable commit',
             '',
-            'subject',
-            '- the subject must always be in Sentence case',
+            '[subject]',
+            '- The subject must always be in Sentence case',
             '',
           );
 

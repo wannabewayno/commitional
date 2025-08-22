@@ -74,7 +74,7 @@ export const Provider = ({ git, rulesEngine, log }: Dependencies) => {
     }
 
     // go and set the style for each part
-    (['type', 'scope', 'subject', 'body', 'footer'] as CommitPart[]).forEach(commitPart =>
+    (['type', 'scope', 'subject', 'body', 'footers'] as const).forEach(commitPart =>
       commit.setStyle((value: string) => highlighter(value, commitPart), commitPart),
     );
 
@@ -94,7 +94,7 @@ export const Provider = ({ git, rulesEngine, log }: Dependencies) => {
       .addHandler('scope', () => scope.prompt(commit.unstyle()).then(() => false))
       .addHandler('subject', () => subject.prompt(commit.unstyle()).then(() => false))
       .addHandler('body', () => body.prompt(commit.unstyle()).then(() => false))
-      .addHandler('footer', async (choice, choices) => {
+      .addHandler('footers', async (choice, choices) => {
         const footersBefore = commit.footers.length;
 
         await footer.prompt(commit.unstyle(), choice.value);
@@ -109,8 +109,9 @@ export const Provider = ({ git, rulesEngine, log }: Dependencies) => {
           const createdFooter = commit.footer(token);
           if (createdFooter) createdFooter.setStyle(highlighter); // assign styles to emphaize it when selected
 
-          choices.splice(-1, 0, `footer:${token}`);
+          choices.splice(-1, 0, `footers:${token}`);
         } else if (footersAfter < footersBefore) {
+          // Less footers now then before, the user must have deleted a footer. remove it from our choices.
           choices.splice(choice.index, 1);
         }
 
@@ -150,9 +151,9 @@ export const Provider = ({ git, rulesEngine, log }: Dependencies) => {
           'subject',
           'body',
           ...footers,
-          'footer:add footer',
+          'footers:add footer',
           'breaking',
-        ].concat(),
+        ],
         {
           banner: choice => {
             // Reset previous styles

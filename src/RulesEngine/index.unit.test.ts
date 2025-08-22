@@ -31,13 +31,13 @@ describe('RulesEngine', () => {
 
     it('should describe in plain english the rules the engine enforces.', () => {
       expect(rules.describe()).to.equal(`## Commit message standard
-Commit messages must have a subject and type, may have a body or footer and must not contain a scope
+Commit messages must have a subject and type, may have a body or footers and must not contain a scope
 \`\`\`txt
 <type>: <subject>
 
 [optional body]
 
-[optional <Token>: <Message>]
+[optional: footer(s)]
 \`\`\`
 
 ## General Rules
@@ -73,7 +73,7 @@ describe('RulesEngine', () => {
         check: sinon.stub().returns(['valid input', null, null]),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.validate(CommitMessage.fromJSON({ subject: 'valid input' }))).to.deep.equal([[],[]]);
+      expect(engine.validate(CommitMessage.fromJSON({ subject: 'valid input' }))).to.deep.equal([[], []]);
     });
 
     it('should return false when input fails a rule', () => {
@@ -82,7 +82,10 @@ describe('RulesEngine', () => {
         check: sinon.stub().returns(['invalid input', { 0: 'failed' }, null]),
       };
       const engine = new RulesEngine({ 'type-empty': mockRule as unknown as EmptyRule });
-      expect(engine.validate(CommitMessage.fromJSON({ subject: 'invalid input' }), 'validate')).to.deep.equal([['[type] failed'],[]]);
+      expect(engine.validate(CommitMessage.fromJSON({ subject: 'invalid input' }), 'validate')).to.deep.equal([
+        ['[type:0] failed'],
+        [],
+      ]);
     });
   });
 
@@ -91,7 +94,7 @@ describe('RulesEngine', () => {
       const emptyRule = new EmptyRule('type', RuleConfigSeverity.Error, 'never');
       const maxLengthRule = new MaxLengthRule('subject', RuleConfigSeverity.Error, 'always', 100);
       const minLengthRule = new MinLengthRule('subject', RuleConfigSeverity.Error, 'always', 5);
-      const enumRule = new EnumRule('type', RuleConfigSeverity.Error, 'always', ['feat', 'fix', 'docs'])
+      const enumRule = new EnumRule('type', RuleConfigSeverity.Error, 'always', ['feat', 'fix', 'docs']);
 
       const engine = new RulesEngine({
         'type-empty': emptyRule,
@@ -109,7 +112,7 @@ describe('RulesEngine', () => {
       const emptyRule = new EmptyRule('type', RuleConfigSeverity.Error, 'never');
       const maxLengthRule = new MaxLengthRule('subject', RuleConfigSeverity.Error, 'always', 100);
       const minLengthRule = new MinLengthRule('subject', RuleConfigSeverity.Error, 'always', 5);
-      const enumRule = new EnumRule('type', RuleConfigSeverity.Error, 'always', ['feat', 'fix', 'docs'])
+      const enumRule = new EnumRule('type', RuleConfigSeverity.Error, 'always', ['feat', 'fix', 'docs']);
 
       const engine = new RulesEngine({
         'type-empty': emptyRule,
@@ -205,7 +208,10 @@ describe('RulesEngine', () => {
         'type-case': mockRule2 as unknown as CaseRule,
       });
       // console.log(engine.validate(CommitMessage.fromJSON({ subject: 'input' })))
-      expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.deep.equal([['[Rule2Scope] Error message'], ['[Rule1Scope] Warning message']]);
+      expect(engine.validate(CommitMessage.fromJSON({ subject: 'input' }))).to.deep.equal([
+        ['[Rule2Scope:0] Error message'],
+        ['[Rule1Scope:0] Warning message'],
+      ]);
     });
   });
 

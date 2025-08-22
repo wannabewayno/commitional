@@ -21,10 +21,7 @@ type Handler = (selected: Choice, choices: (string | Separator)[]) => boolean | 
  * Allows creating interactive command-line flows where users can select
  * from multiple options until choosing to break the chain
  */
-export default class PromptFlow<const HandlerMap extends { [name: string]: Handler }> {
-  /**
-   * Symbol used to break out of the prompt flow chain
-   */
+export default class PromptFlow<const HandlerMap extends Record<string, Handler>> {
   static Separator(separator?: string): Separator {
     return new Separator(separator);
   }
@@ -81,14 +78,14 @@ export default class PromptFlow<const HandlerMap extends { [name: string]: Handl
   }
 }
 
-class PromptFlowBuilder<const HandlerMap extends { [name: string]: Handler }> {
+class PromptFlowBuilder<const HandlerMap extends Record<string, Handler>> {
   constructor(private handlerMap: HandlerMap) {}
 
-  addHandler(name: string, handler: Handler) {
+  addHandler<const Name extends string>(name: Name, handler: Handler) {
     return new PromptFlowBuilder({ ...this.handlerMap, [name]: handler });
   }
 
-  addBreak(name: string) {
+  addBreak<const Name extends string>(name: Name) {
     return new PromptFlowBuilder({ ...this.handlerMap, [name]: () => true });
   }
 

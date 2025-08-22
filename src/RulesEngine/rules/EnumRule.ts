@@ -10,7 +10,7 @@ export class EnumRule extends BaseRuleWithValue<string[]> {
         const isValid = this.value.includes(part);
         const valid = this.applicable === 'always' ? isValid : !isValid;
 
-        if (!valid) errors[idx] = this.enumErrorMessage();
+        if (!valid) errors[idx] = this.describe();
 
         return errors;
       },
@@ -28,10 +28,10 @@ export class EnumRule extends BaseRuleWithValue<string[]> {
     return [errs, parts];
   }
 
-  private enumErrorMessage(): string {
+  describe(): string {
     const value = [...this.value];
     const last = value.pop();
-    const message = ['the', this.scope];
+    const message = ['The', this.scope];
 
     if (this.applicable === 'never') message.push("can't be any of:");
     else message.push('can only be one of:');

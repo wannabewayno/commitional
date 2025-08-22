@@ -24,24 +24,23 @@ export default class ScopePrompt extends BasePrompt {
 
     // TODO: Scope enums will need to be expanded to look at the file system in order to deduce allowed scopes (only if an enum is set)
     // const [enumRule] = scope.getRulesOfType('enum');
-    
+
     const [validScope] = await input({
-      message: "Scope of commit:",
+      message: 'Scope of commit:',
       default: commit.scope,
       prefill: 'editable',
-          validate: value => {
-            const [, errors] = scope.validate(value);
-            if (errors.length) return errors.join('\n');
-            return true;
-          },
-          transformer: (value) => {
-            const [fixed, errors] = scope.validate(value);
-            if (!fixed) return '';
-            return errors.length ? red(fixed) : fixed;
-          },
-        }).then(scope.validate);
+      validate: value => {
+        const [, errors] = scope.validate(value);
+        if (errors.length) return errors.join('\n');
+        return true;
+      },
+      transformer: value => {
+        const [fixed, errors] = scope.validate(value);
+        if (!fixed) return '';
+        return errors.length ? red(fixed) : fixed;
+      },
+    }).then(answer => scope.validate(answer));
 
     commit.scope = validScope;
-    scope.validate(commit);
   }
 }

@@ -23,7 +23,7 @@ describe('CaseRule', () => {
       const result1 = rule.validate(['hello world']);
       const result2 = rule.validate(['Hello World']);
       expect(result1).to.be.null;
-      expect(result2).to.deep.equal({ 0: 'the subject must always be in lower-case' });
+      expect(result2).to.deep.equal({ 0: 'The subject must always be in lower-case' });
     });
 
     it('should validate uppercase text correctly', () => {
@@ -31,7 +31,7 @@ describe('CaseRule', () => {
       const result1 = rule.validate(['HELLO WORLD']);
       const result2 = rule.validate(['Hello World']);
       expect(result1).to.be.null;
-      expect(result2).to.deep.equal({ 0: 'the subject must always be in UPPER-CASE' });
+      expect(result2).to.deep.equal({ 0: 'The subject must always be in UPPER-CASE' });
     });
 
     it('should validate sentence case text correctly', () => {
@@ -39,7 +39,7 @@ describe('CaseRule', () => {
       const result1 = rule.validate(['Hello world']);
       const result2 = rule.validate(['hello World']);
       expect(result1).to.be.null;
-      expect(result2).to.deep.equal({ 0: 'the subject must always be in Sentence case' });
+      expect(result2).to.deep.equal({ 0: 'The subject must always be in Sentence case' });
     });
 
     it('should validate multiple case types correctly', () => {
@@ -49,7 +49,7 @@ describe('CaseRule', () => {
       const result3 = rule.validate(['hello world']);
       expect(result1).to.be.null;
       expect(result2).to.be.null;
-      expect(result3).to.deep.equal({ 0: 'the subject must always be in either PascalCase or Sentence case' });
+      expect(result3).to.deep.equal({ 0: 'The subject must always be in either PascalCase or Sentence case' });
     });
 
     it('should handle empty input', () => {
@@ -61,7 +61,7 @@ describe('CaseRule', () => {
     it('should validate multiple parts', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
       const result = rule.validate(['hello', 'WORLD', 'test']);
-      expect(result).to.deep.equal({ 1: 'the subject must always be in lower-case' });
+      expect(result).to.deep.equal({ 1: 'The subject must always be in lower-case' });
     });
   });
 
@@ -165,7 +165,7 @@ describe('CaseRule', () => {
       const rule = new CaseRule('subject', RuleConfigSeverity.Error, 'always', 'lower-case');
       const [output, errors, warnings] = rule.check(['Hello World'], false);
       expect(output).to.deep.equal(['Hello World']);
-      expect(errors).to.deep.equal({ 0: 'the subject must always be in lower-case' });
+      expect(errors).to.deep.equal({ 0: 'The subject must always be in lower-case' });
       expect(warnings).to.be.null;
     });
 
@@ -186,7 +186,7 @@ describe('CaseRule', () => {
       const [output, errors, warnings] = rule.check(['Hello World'], false);
       expect(output).to.deep.equal(['Hello World']);
       expect(errors).to.be.null;
-      expect(warnings).to.deep.equal({ 0: 'the subject must always be in lower-case' });
+      expect(warnings).to.deep.equal({ 0: 'The subject must always be in lower-case' });
     });
   });
 });

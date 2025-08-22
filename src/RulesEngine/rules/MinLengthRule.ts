@@ -2,7 +2,9 @@ import { BaseRuleWithValue } from './BaseRule.js';
 
 export class MinLengthRule extends BaseRuleWithValue<number> {
   validate(parts: string[]): null | Record<number, string> {
-    const errs = Object.fromEntries(parts.map((part, idx) => [idx, !this.validateMinLength(part) && this.minLengthErrorMessage()]).filter(([, err]) => err));
+    const errs = Object.fromEntries(
+      parts.map((part, idx) => [idx, !this.validateMinLength(part) && this.describe()]).filter(([, err]) => err),
+    );
     return Object.keys(errs).length ? errs : null;
   }
 
@@ -17,7 +19,7 @@ export class MinLengthRule extends BaseRuleWithValue<number> {
     return [errs, parts];
   }
 
-  private minLengthErrorMessage(): string {
-    return `the ${this.scope} must be at least ${this.value} characters`;
+  describe(): string {
+    return `The ${this.scope} must be at least ${this.value} characters`;
   }
 }

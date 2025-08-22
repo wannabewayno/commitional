@@ -2,7 +2,9 @@ import { BaseRuleWithValue } from './BaseRule.js';
 
 export class MaxLengthRule extends BaseRuleWithValue<number> {
   validate(parts: string[]): null | Record<number, string> {
-    const errs = Object.fromEntries(parts.map((part, idx) => [idx, !this.validateMaxLength(part) && this.maxLineLengthErrorMessage()]).filter(([, err]) => err));
+    const errs = Object.fromEntries(
+      parts.map((part, idx) => [idx, !this.validateMaxLength(part) && this.describe()]).filter(([, err]) => err),
+    );
     return Object.keys(errs).length ? errs : null;
   }
 
@@ -16,12 +18,12 @@ export class MaxLengthRule extends BaseRuleWithValue<number> {
       const errs = this.validate(parts);
       return [errs, parts];
     }
-    
+
     const fixed = parts.map(part => part.substring(0, this.value));
     return [null, fixed];
   }
 
-  private maxLineLengthErrorMessage(): string {
-    return `the ${this.scope} must not exceed ${this.value} characters`;
+  describe(): string {
+    return `The ${this.scope} must not exceed ${this.value} characters`;
   }
 }

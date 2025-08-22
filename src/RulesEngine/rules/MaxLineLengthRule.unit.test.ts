@@ -17,7 +17,7 @@ describe('MaxLineLengthRule', () => {
 
     it('should invalidate text with lines exceeding limit', () => {
       const rule = new MaxLineLengthRule('body', RuleConfigSeverity.Error, 'always', 5);
-      expect(rule.validate(['Hello World'])).to.deep.equal({ 0: 'the body must be wrapped at 5 characters' });
+      expect(rule.validate(['Hello World'])).to.deep.equal({ 0: 'The body must be wrapped at 5 characters' });
     });
 
     it('should handle empty input', () => {
@@ -77,7 +77,7 @@ describe('MaxLineLengthRule', () => {
       const rule = new MaxLineLengthRule('body', RuleConfigSeverity.Error, 'always', 10);
       const [output, errors, warnings] = rule.check(['This is a very long line'], false);
       expect(output).to.deep.equal(['This is a very long line']);
-      expect(errors).to.deep.equal({ 0: 'the body must be wrapped at 10 characters' });
+      expect(errors).to.deep.equal({ 0: 'The body must be wrapped at 10 characters' });
       expect(warnings).to.be.null;
     });
 
@@ -100,7 +100,7 @@ describe('MaxLineLengthRule', () => {
       const [output, errors, warnings] = rule.check(['This is a very long line'], false);
       expect(output).to.deep.equal(['This is a very long line']);
       expect(errors).to.be.null;
-      expect(warnings).to.deep.equal({ 0: 'the body must be wrapped at 10 characters' });
+      expect(warnings).to.deep.equal({ 0: 'The body must be wrapped at 10 characters' });
     });
   });
 });

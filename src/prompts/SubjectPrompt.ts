@@ -41,14 +41,13 @@ export default class SubjectPrompt extends BasePrompt {
         if (errors.length) return errors.join('\n');
         return true;
       },
-      transformer: (value) => {
+      transformer: value => {
         const [fixed, errors] = scope.validate(value);
         if (!fixed) return '';
         return errors.length ? red(fixed) : fixed;
       },
-    }).then(scope.validate);
+    }).then(answer => scope.validate(answer));
 
     commit.subject = validSubject;
-    scope.validate(commit);
   }
 }
