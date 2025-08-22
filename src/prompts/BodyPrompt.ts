@@ -76,7 +76,7 @@ export default class BodyPrompt extends BasePrompt {
     );
 
     // set the commit's body
-    commit.body = await completion.json('body', { value: 'string' }).then(({ value }) => value)
+    commit.body = await completion.json('body', { value: 'string' }).then(({ value }) => value);
   }
 
   async prompt(commit: CommitMessage): Promise<void> {
@@ -97,14 +97,14 @@ export default class BodyPrompt extends BasePrompt {
         const [, errors] = scope.validate(content);
         if (errors.length) return errors.join('\n');
         return true;
-      }
+      },
     });
 
-    // Remove any comments and assign to commit body
-    commit.body = answer.replace(/^#.+$/gm, '').trim();
+    // Remove any comments and validate
+    const [body] = scope.validate(answer.replace(/^#.+$/gm, '').trim());
 
-    // Re-validate to fix anything that was picked up during validation.
-    scope.validate(commit);
+    // Assign to commit body
+    commit.body = body;
   }
 
   private defaultMessage(commit: CommitMessage) {
@@ -117,7 +117,7 @@ export default class BodyPrompt extends BasePrompt {
       : [];
 
     const generalRules = this.rules.generalRules();
-    
+
     // Look for a maxLineLength rule.
     // const [maxLineLengthRule] = this.rules.getRulesOfType('max-line-length');
     // const maxLineLength = maxLineLengthRule?.value ?? null;
