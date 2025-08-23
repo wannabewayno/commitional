@@ -1,9 +1,9 @@
 import type TestGitRepo from './TestGitRepo.js';
 import { stringify } from 'yaml';
 
-type RuleLevel = 0 | 1 | 2;
-type RuleCondition = 'always' | 'never';
-type RuleConfig = [RuleLevel, RuleCondition, ...unknown[]];
+export type RuleLevel = 0 | 1 | 2;
+export type RuleCondition = 'always' | 'never';
+export type RuleConfig = [RuleLevel, RuleCondition, ...unknown[]];
 
 export default class CommitlintConfigBuilder {
   private rules: Record<string, RuleConfig> = {};
@@ -122,6 +122,22 @@ export default class CommitlintConfigBuilder {
     return {
       rules: this.rules,
     };
+  }
+
+  writeJSON(filename = '.commitlintrc.json'): void {
+    const config = {
+      rules: this.rules,
+    };
+    const content = JSON.stringify(config, null, 2);
+    this.repo.addFile(filename, content);
+  }
+
+  writeYAML(filename = '.commitlintrc.yaml'): void {
+    const config = {
+      rules: this.rules,
+    };
+    const content = stringify(config);
+    this.repo.addFile(filename, content);
   }
 
   // Reset builder
