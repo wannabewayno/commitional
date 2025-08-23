@@ -19,7 +19,7 @@
     "test": "npm run build && c8 mocha **/*.test.ts",
     "test:unit": "mocha **/*.unit.test.ts",
     "test:int": "mocha **/*.int.test.ts",
-    "test:e2e": "npm run build && mocha ./test/*.test.ts",
+    "test:e2e": "npm run build && mocha ./test/**/*.test.ts",
     "test:coverage": "c8 --all --clean mocha \"**/*.unit.test.ts\"",
     "coverage:report": "c8 report --reporter=text --reporter=html",
     "coverage:ci": "c8 report --reporter=text | grep -E 'All files' | grep -oE '[0-9]{2}.[0-9]{2}' ",
