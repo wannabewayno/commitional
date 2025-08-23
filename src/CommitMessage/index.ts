@@ -37,7 +37,7 @@ export default class CommitMessage {
   private _breakingChangeMessage = '';
   private _isBreaking = false;
   private _body: Text = new Text();
-  private readonly _footers: CommitMessageFooter[];
+  private _footers: CommitMessageFooter[];
 
   constructor({ header, body = '', footers = [] }: CommitMessageOpts = {}) {
     this._header = header ?? new CommitMessageHeader();
@@ -89,7 +89,7 @@ export default class CommitMessage {
     // find if the footer already exists
     const footerIdx = this._footers.findIndex(footer => footer.token === token);
 
-    if (message) {
+    if (typeof message === 'string') {
       // If it doesn't exist, create one
       const footer = this._footers[footerIdx] ?? new CommitMessageFooter(token, message);
       if (footerIdx === -1) this._footers.push(footer);
@@ -179,6 +179,14 @@ export default class CommitMessage {
 
   get footers() {
     return this._footers.map(v => v.toString());
+  }
+
+  set footers(footers: string[]) {
+    this._footers = footers.reduce((valid, v) => {
+      const footer = CommitMessageFooter.fromString(v);
+      if (footer instanceof CommitMessageFooter) valid.push(footer);
+      return valid;
+    }, [] as CommitMessageFooter[]);
   }
 
   get header() {

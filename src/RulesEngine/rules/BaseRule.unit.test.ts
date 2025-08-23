@@ -24,11 +24,11 @@ class TestRule extends BaseRule {
   fix(parts: string[]): [null | Record<number, string>, string[]] {
     const fixed = this.canFix ? parts.map(part => `fixed-${part}`) : parts;
     const errors = this.validate(fixed);
-    return [errors, fixed];
+    return [this.canFix ? null : errors, fixed];
   }
 
   describe(): string {
-    return `test error for ${this.scope}`;
+    return `Test error for ${this.scope}`;
   }
 }
 
@@ -105,7 +105,7 @@ describe('BaseRule', () => {
 
     it('should return original input when validate passes', () => {
       const rule = new TestRule('subject', RuleConfigSeverity.Error, 'always', true);
-      const [output, errors, warnings] = rule.check(['test']);
+      const [output, errors, warnings] = rule.check(['test'], false);
       expect(output).to.deep.equal(['test']);
       expect(errors).to.be.null;
       expect(warnings).to.be.null;

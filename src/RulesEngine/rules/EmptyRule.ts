@@ -2,6 +2,7 @@ import { BaseRule } from './BaseRule.js';
 
 export class EmptyRule extends BaseRule {
   validate(parts: string[]): null | Record<number, string> {
+    if (parts.length === 0) return this.applicable === 'always' ? null : { 0: this.describe() };
     const errs = Object.fromEntries(
       parts.map((part, idx) => [idx, !this.validateEmpty(part) && this.describe()]).filter(([, err]) => err),
     );
@@ -15,7 +16,7 @@ export class EmptyRule extends BaseRule {
 
   fix(parts: string[]): [null | Record<number, string>, string[]] {
     // If applicable is 'always', we can fix by setting empty strings
-    if (this.applicable === 'always') return [null, parts.map(() => '')];
+    if (this.applicable === 'always') return [null, []];
 
     // Can't fix if applicable is 'never' and input is empty - return original
     const errs = Object.fromEntries(

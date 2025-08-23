@@ -11,12 +11,12 @@ export class ExistsRule extends BaseRuleWithValue<string[]> {
     if (this.applicable === 'always') {
       const missingValues = this.value.filter(v => !parts.includes(v.trim()));
       if (missingValues.length > 0) {
-        return { 0: `Missing required values: ${missingValues.join(', ')}` };
+        return { 0: this.describe() };
       }
     } else {
       const errs = Object.fromEntries(
         parts
-          .map((part, idx) => [idx, this.value.includes(part.trim()) && `Forbidden value: ${part} - ${this.describe()}`])
+          .map((part, idx) => [idx, this.value.includes(part.trim()) && `Forbidden value: '${part}' - ${this.describe()}`])
           .filter(([, err]) => err),
       );
       if (Object.keys(errs).length > 0) return errs;
@@ -41,7 +41,7 @@ export class ExistsRule extends BaseRuleWithValue<string[]> {
     const message = [
       'The',
       `${this.scope}${this.value.length > 1 ? 's' : ''}`,
-      this.value.join(', '),
+      this.value.map(v => `'${v}'`).join(', '),
       'must',
       this.applicable,
       'exist',

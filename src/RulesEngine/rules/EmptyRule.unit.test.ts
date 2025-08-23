@@ -44,7 +44,7 @@ describe('EmptyRule', () => {
       const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'always');
       const [errors, fixed] = rule.fix(['Hello', 'World']);
       expect(errors).to.be.null;
-      expect(fixed).to.deep.equal(['', '']);
+      expect(fixed).to.deep.equal([]);
     });
 
     it('should return original parts with errors when applicable is never', () => {
@@ -61,7 +61,7 @@ describe('EmptyRule', () => {
     it('should return fixed parts when applicable is always and can fix', () => {
       const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'always');
       const [output, errors, warnings] = rule.check(['Hello', 'World']);
-      expect(output).to.deep.equal(['', '']);
+      expect(output).to.deep.equal([]);
       expect(errors).to.be.null;
       expect(warnings).to.be.null;
     });
@@ -103,7 +103,7 @@ describe('EmptyRule', () => {
     it('should apply fix when fix=true', () => {
       const rule = new EmptyRule('subject', RuleConfigSeverity.Error, 'always');
       const [output, errors, warnings] = rule.check(['Hello', 'World'], true);
-      expect(output).to.deep.equal(['', '']);
+      expect(output).to.deep.equal([]);
       expect(errors).to.be.null;
       expect(warnings).to.be.null;
     });
@@ -123,7 +123,7 @@ describe('EmptyRule', () => {
       expect(output1).to.deep.equal(['', '']);
       expect(errors1).to.be.null;
       expect(warnings1).to.be.null;
-      expect(output2).to.deep.equal(['', '']);
+      expect(output2).to.deep.equal([]);
       expect(errors2).to.be.null;
       expect(warnings2).to.be.null;
     });

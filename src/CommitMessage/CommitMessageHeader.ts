@@ -47,7 +47,7 @@ export default class CommitMessageHeader {
       scope: this.scopes,
       subject: this._subject.value,
       scopeDelimiter: this.scopeDelimiter,
-    })
+    });
   }
 
   setStyle(style: StyleFn, commitPart?: Extract<CommitPart, 'type' | 'subject' | 'scope'>) {
@@ -167,7 +167,7 @@ export default class CommitMessageHeader {
 
   static fromString(header: string) {
     // Extract the type and or scope. the rest must be the subject
-    const match = header.match(/^(?<type>\w+)?(?:\((?<scope>.*?)\))?: ?(?<subject>.*)$/);
+    const match = header.match(/^(?<type>[^:()]+)?(?:\((?<scope>.*?)\))?: ?(?<subject>.*)$/);
 
     if (!match || !match.groups) return new CommitMessageHeader({ subject: header });
 

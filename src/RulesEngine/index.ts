@@ -137,7 +137,7 @@ export default class RulesEngine<const Config extends Rules = Rules> {
       case 'body':
         return [commit.body];
       case 'footer':
-        return commit.footers.map(v => v.replace(/^[^:]+:/, ''));
+        return commit.footers.map(v => v.replace(/^[^:]+: /, ''));
       case 'trailer':
         return commit.trailers; // footer tokens only
       case 'footers':
@@ -164,17 +164,23 @@ export default class RulesEngine<const Config extends Rules = Rules> {
         break;
       case 'footer': {
         // zip with footer values back with their tokens and edit.
-        zip(commit.trailers, parts).forEach(([token, message]) => commit.footer(token, message));
+        zip(commit.trailers, parts, { defaultA: '', defaultB: null }).forEach(([token, message]) =>
+          commit.footer(token, message),
+        );
         break;
       }
       case 'trailer': {
-        const newFooters = zip(commit.trailers, parts).reduce(
+        const newFooters = zip(commit.trailers, parts, { defaultA: null }).reduce(
           (footers, [existing, incoming]) => {
-            // Remove the old footer.
-            const deletedFooter = commit.footer(existing, null);
+            // There's a new footer at this index that didn't exist before, mark it to add.
+            if (existing === null && incoming !== null) footers.push({ token: incoming, text: '' });
+            else if (existing !== null) {
+              // Remove the old footer.
+              const deletedFooter = commit.footer(existing, null);
 
-            // if not removing any footers, re-add them back in (preserves the order)
-            if (deletedFooter && incoming !== null) footers.push({ token: incoming, text: deletedFooter.text });
+              // if not removing any footers, re-add them back in (preserves the order)
+              if (deletedFooter && incoming !== null) footers.push({ token: incoming, text: deletedFooter.text });
+            }
 
             // We need to keep order
             return footers;
@@ -182,13 +188,12 @@ export default class RulesEngine<const Config extends Rules = Rules> {
           [] as { token: string; text: string }[],
         );
 
-        // Now that all footers have been removed, re-add
+        // Now that all footers have been removed, re-add the ones we intend on keeping
         newFooters.forEach(({ token, text }) => commit.footer(token, text));
         break;
       }
       case 'footers':
-        // This case might need special handling - for now, treat as footer values
-        zip(commit.trailers, parts).forEach(([token, message]) => commit.footer(token, message));
+        commit.footers = parts;
         break;
     }
   }
@@ -253,6 +258,7 @@ export default class RulesEngine<const Config extends Rules = Rules> {
 
       // If fixing is enabled, apply fixes back to commit
       if (shouldFix) this.setRelevantCommitParts(input, scope as RuleScope, results);
+
       scopedErrors.push(...errors.list());
       scopedWarnings.push(...warnings.list());
     }
@@ -572,6 +578,7 @@ export default class RulesEngine<const Config extends Rules = Rules> {
         if (!Array.isArray(value)) break;
         return new EnumRule(ruleName, level, condition, value) as RuleMapping[T];
       case 'full-stop':
+        if (!value) value === '.';
         if (typeof value !== 'string') break;
         return new FullStopRule(ruleName, level, condition, value) as RuleMapping[T];
       case 'leading-blank':
@@ -584,8 +591,9 @@ export default class RulesEngine<const Config extends Rules = Rules> {
       case 'exclamation-mark':
         return new ExclamationMarkRule(ruleName, level, condition) as RuleMapping[T];
       case 'allow-multiple':
+        if (!value) value === ',';
         if (typeof value !== 'string') break;
-        return new AllowMultipleRule(ruleName, level, condition, value ? value : ',') as RuleMapping[T];
+        return new AllowMultipleRule(ruleName, level, condition, value) as RuleMapping[T];
     }
     return;
   }

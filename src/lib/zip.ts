@@ -3,10 +3,10 @@ interface ZipOpts<DefaultA, DefaultB> {
   defaultB?: DefaultB;
 }
 
-// @ts-ignore
 export function zip<A, B, C = undefined, D = C>(
   a: A[],
   b: B[],
+  // @ts-ignore
   { defaultA, defaultB = defaultA }: ZipOpts<C, D> = {},
 ): [A | C, B | D][] {
   const length = Math.max(a.length, b.length);
