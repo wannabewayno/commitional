@@ -83,7 +83,7 @@ The following environment variables can be configured to tell commitional how to
 | COMMITIONAL_{{Service}}_KEY        | Your API key                                                                                       |                                |
 | COMMITIONAL_{{Service}}_URL        | The base url of the service's api endpoint                                                         | Current public api endpoint    |
 | COMMITIONAL_{{Service}}_PREFERENCE | Priority level for using this service (lower numbers have higher priority, 0 disables the service) | 1                              |
-| COMMITIONAL_{{Service}}_MODEL     | The model identifier to use for this service                                                       | Service-specific default       |
+| COMMITIONAL_{{Service}}_MODEL      | The model identifier to use for this service                                                       | Service-specific default       |
  
 **Allowed Services**
 - OpenAI
