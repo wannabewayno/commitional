@@ -60,6 +60,7 @@
     "arktype": "^2.1.20",
     "axios": "^1.9.0",
     "commander": "^11.1.0",
+    "glob": "^11.0.0",
     "inquirer-select-with-banner": "^1.0.0",
     "ora": "^8.2.0",
     "simple-git": "~3.27.0",
