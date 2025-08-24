@@ -5,12 +5,14 @@ export interface CommitMessageHeaderOpts {
   type?: string;
   subject?: string;
   scope?: string | string[];
+  namespace?: string;
   scopeDelimiter?: string;
 }
 
 // Type, scope and subject are all optional. validation is not the purpose of this class
 export default class CommitMessageHeader {
   private _type: Text;
+  private _namespace: Text = new Text();
   private _scopeText: Text = new Text();
   private readonly _scope: string[] = [];
   private _subject: Text;
@@ -20,6 +22,7 @@ export default class CommitMessageHeader {
 
   constructor(opts: CommitMessageHeaderOpts = {}) {
     this._type = new Text(opts.type ?? '');
+    this._namespace = new Text(opts.namespace ?? '');
     this._subject = new Text(opts.subject ?? '');
     this.scopeDelimiter = opts.scopeDelimiter ?? ',';
     this.addScope(...(Array.isArray(opts.scope) ? opts.scope : opts.scope ? opts.scope.split(this.scopeDelimiter) : []));
@@ -41,19 +44,31 @@ export default class CommitMessageHeader {
     return this._subject.toString();
   }
 
+  set namespace(value: string) {
+    this._namespace.value = value.trim();
+  }
+
+  get namespace() {
+    return this._namespace.toString();
+  }
+
   clone(): CommitMessageHeader {
     return new CommitMessageHeader({
       type: this._type.value,
+      namespace: this._namespace.value,
       scope: this.scopes,
       subject: this._subject.value,
       scopeDelimiter: this.scopeDelimiter,
     });
   }
 
-  setStyle(style: StyleFn, commitPart?: Extract<CommitPart, 'type' | 'subject' | 'scope'>) {
+  setStyle(style: StyleFn, commitPart?: Extract<CommitPart, 'type' | 'subject' | 'scope' | 'namespace'>) {
     switch (commitPart) {
       case 'type':
         this._type.setStyle(style);
+        break;
+      case 'namespace':
+        this._namespace.setStyle(style);
         break;
       case 'scope':
         this._scopeText.setStyle(style);
@@ -70,6 +85,9 @@ export default class CommitMessageHeader {
       case 'type':
         this._type.style();
         break;
+      case 'namespace':
+        this._namespace.style();
+        break;
       case 'scope':
         this._scopeText.style();
         break;
@@ -84,6 +102,9 @@ export default class CommitMessageHeader {
     switch (commitPart) {
       case 'type':
         this._type.unstyle();
+        break;
+      case 'namespace':
+        this._namespace.unstyle();
         break;
       case 'scope':
         this._scopeText.unstyle();
@@ -149,12 +170,26 @@ export default class CommitMessageHeader {
   toString(): string {
     const subject = this.subject;
     const scope = this.scope;
+    const namespace = this.namespace;
     const type = this.type;
     const header: string[] = [];
+
     if (subject) header.unshift(this.subject);
-    if (scope || type) {
+    if (scope || namespace || type) {
       header.unshift(this.separator);
-      if (scope) header.unshift(`(${scope})`);
+
+      // Handle namespace>scope format
+      if (namespace || scope) {
+        let scopePart = '';
+        if (namespace) {
+          scopePart = namespace;
+          if (scope) scopePart += `>${scope}`;
+        } else if (scope) {
+          scopePart = scope;
+        }
+        header.unshift(`(${scopePart})`);
+      }
+
       if (type) header.unshift(type);
     }
 
@@ -166,13 +201,30 @@ export default class CommitMessageHeader {
   }
 
   static fromString(header: string) {
-    // Extract the type and or scope. the rest must be the subject
-    const match = header.match(/^(?<type>[^:()]+)?(?:\((?<scope>.*?)\))?: ?(?<subject>.*)$/);
+    // Extract the type, namespace, scope, and subject
+    const match = header.match(/^(?<type>[^:()]+)?(?:\((?<namespaceScope>.*?)\))?: ?(?<subject>.*)$/);
 
     if (!match || !match.groups) return new CommitMessageHeader({ subject: header });
 
-    const { type, scope, subject } = match.groups;
-    return new CommitMessageHeader({ type, scope, subject });
+    const { type, namespaceScope, subject } = match.groups;
+
+    // Parse namespace>scope format
+    let namespace = '';
+    let scope = '';
+
+    if (namespaceScope) {
+      if (namespaceScope.includes('>')) {
+        const parts = namespaceScope.split('>');
+        namespace = parts[0] || '';
+        scope = parts.slice(1).join('>');
+      } else {
+        // No '>' found - could be namespace or traditional scope
+        // For now, treat as traditional scope for backward compatibility
+        scope = namespaceScope;
+      }
+    }
+
+    return new CommitMessageHeader({ type, namespace, scope, subject });
   }
 }
 

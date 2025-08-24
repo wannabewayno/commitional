@@ -41,6 +41,8 @@ function scopeToCommitPart(scope: RuleScope): CommitPart {
       return 'scope';
     case 'type':
       return 'type';
+    case 'namespace':
+      return 'namespace';
   }
 }
 

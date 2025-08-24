@@ -142,6 +142,8 @@ export default class RulesEngine<const Config extends Rules = Rules> {
         return commit.trailers; // footer tokens only
       case 'footers':
         return commit.footers;
+      case 'namespace':
+        return [commit.namespace];
     }
   }
 
