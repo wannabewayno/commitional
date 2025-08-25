@@ -26,7 +26,7 @@ describe('Namespace E2E Tests', () => {
     it('should accept commit with namespace only', async () => {
       repo.addTsFile('apps/myapp/feature', 'export const feature = true;', { stage: true });
 
-      repo.addTextFile('commit_message', 'feat(myapp): add new feature');
+      repo.addTextFile('commit_message', '[myapp] feat: add new feature');
       const I = await Cliete.openTerminal('commitional lint commit_message.txt');
 
       await I.wait.for.the.process.to.exit.with.exit.code.zero;
@@ -36,7 +36,7 @@ describe('Namespace E2E Tests', () => {
     it('should accept commit with namespace and scope', async () => {
       repo.addTsFile('apps/myapp/auth', 'export const auth = true;', { stage: true });
 
-      repo.addTextFile('commit_message', 'feat(myapp>auth): add login system');
+      repo.addTextFile('commit_message', '[myapp] feat(auth): add login system');
       const I = await Cliete.openTerminal('commitional lint commit_message.txt');
 
       await I.wait.for.the.process.to.exit.with.exit.code.zero;
@@ -44,9 +44,9 @@ describe('Namespace E2E Tests', () => {
     });
 
     it('should accept commit with libs namespace', async () => {
-      repo.addTextFile('libs/shared/utils.ts', 'export const utils = true;', { stage: true });
+      repo.addTsFile('libs/shared/utils', 'export const utils = true;', { stage: true });
 
-      repo.addTextFile('commit_message', 'feat(shared): add utility functions');
+      repo.addTextFile('commit_message', '[shared] feat: add utility functions');
       const I = await Cliete.openTerminal('commitional lint commit_message.txt');
 
       await I.wait.for.the.process.to.exit.with.exit.code.zero;
@@ -87,15 +87,33 @@ describe('Namespace E2E Tests', () => {
       await I.wait.until.the.process.exits.with.nonZero.exit.code;
     });
 
-    it('should reject commit with wrong namespace', async () => {
-      repo.addTsFile('apps/myapp/feature', 'export const feature = true;', { stage: true });
+    it('should reject namespaced commit for root files', async () => {
+      repo.addFile('README.txt', 'export const feature = true;', { stage: true });
 
-      repo.addFile('commit_message', 'feat(otherapp): add new feature');
+      repo.addFile('commit_message', '[myapp] feat: add new feature');
       const I = await Cliete.openTerminal('commitional lint commit_message.txt');
 
       await I.wait.until.I.see(
         '---',
-        'feat(otherapp): add new feature',
+        '[myapp] feat: add new feature',
+        '',
+        '[namespace]',
+        '- Files not apart of namespace "myapp"',
+        '',
+      );
+
+      await I.wait.until.the.process.exits.with.nonZero.exit.code;
+    });
+
+    it('should reject commit with wrong namespace', async () => {
+      repo.addTsFile('apps/myapp/feature', 'export const feature = true;', { stage: true });
+
+      repo.addFile('commit_message', '[otherapp] feat: add new feature');
+      const I = await Cliete.openTerminal('commitional lint commit_message.txt');
+
+      await I.wait.until.I.see(
+        '---',
+        '[otherapp] feat: add new feature',
         '',
         '[namespace]',
         '- Files in apps/myapp require namespace "myapp", got "otherapp"',
@@ -109,12 +127,12 @@ describe('Namespace E2E Tests', () => {
       repo.addTsFile('apps/myapp/feature', 'export const feature = true;', { stage: true });
       repo.addTsFile('libs/shared/utils', 'export const utils = true;', { stage: true });
 
-      repo.addTextFile('commit_message', 'feat(myapp): add feature and utils');
+      repo.addTextFile('commit_message', '[myapp] feat: add feature and utils');
       const I = await Cliete.openTerminal('commitional lint commit_message.txt');
 
       await I.wait.until.I.see(
         '---',
-        'feat(myapp): add feature and utils',
+        '[myapp] feat: add feature and utils',
         '',
         '[namespace]',
         '- Commit spans multiple namespaces: myapp, shared',
@@ -127,12 +145,12 @@ describe('Namespace E2E Tests', () => {
     it('should reject invalid namespace not in enum', async () => {
       repo.addTsFile('apps/myapp/feature', 'export const feature = true;', { stage: true });
 
-      repo.addTextFile('commit_message', 'feat(invalidns): add new feature');
+      repo.addTextFile('commit_message', '[invalidns] feat: add new feature');
       const I = await Cliete.openTerminal('commitional lint commit_message.txt');
 
       await I.wait.until.I.see(
         '---',
-        'feat(invalidns): add new feature',
+        '[invalidns] feat: add new feature',
         '',
         '[namespace]',
         '- Namespace must be one of: myapp, shared',
@@ -140,17 +158,6 @@ describe('Namespace E2E Tests', () => {
       );
 
       await I.wait.until.the.process.exits.with.nonZero.exit.code;
-    });
-
-    it('should not handle complex nested scopes', async () => {
-      repo.addTsFile('apps/myapp/feature', 'export const feature = true;', { stage: true });
-
-      repo.addFile('commit_message', 'feat(myapp>auth>session): add session management');
-      const I = await Cliete.openTerminal('commitional lint commit_message.txt');
-
-      await I.wait.for.the.process.to.exit.with.nonZero.exit.code;
-      await I.spot('[namespace]');
-      await I.spot('- Not allowed!');
     });
   });
 
@@ -162,17 +169,27 @@ describe('Namespace E2E Tests', () => {
     it('should parse namespace only format', async () => {
       repo.addTsFile('apps/myapp/feature', 'export const feature = true;', { stage: true });
 
-      repo.addFile('commit_message', 'feat(myapp): add feature');
+      repo.addFile('commit_message', '[myapp] feat: add feature');
       const I = await Cliete.openTerminal('commitional lint commit_message.txt');
 
       await I.wait.for.the.process.to.exit.with.exit.code.zero;
       await I.see('');
     });
 
-    it('should parse namespace>scope format', async () => {
+    it('should parse namespace with scope format', async () => {
       repo.addTsFile('apps/myapp/auth', 'export const auth = true;', { stage: true });
 
-      repo.addTextFile('commit_message', 'feat(myapp>auth): add login');
+      repo.addTextFile('commit_message', '[myapp] feat(auth): add login');
+      const I = await Cliete.openTerminal('commitional lint commit_message.txt');
+
+      await I.wait.for.the.process.to.exit.with.exit.code.zero;
+      await I.see('');
+    });
+
+    it('should parse traditional scope format (backward compatibility)', async () => {
+      repo.addTsFile('apps/myapp/feature', 'export const feature = true;', { stage: true });
+
+      repo.addFile('commit_message', 'feat(auth): add feature');
       const I = await Cliete.openTerminal('commitional lint commit_message.txt');
 
       await I.wait.for.the.process.to.exit.with.exit.code.zero;
