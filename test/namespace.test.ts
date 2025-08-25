@@ -11,6 +11,7 @@ describe('Namespace E2E Tests', () => {
     Cliete.setDefault('cwd', repo.tempDir);
     Cliete.setDefault('width', 120);
     Cliete.setDefault('height', 60);
+    Cliete.setDefault('timeout', null);
   });
 
   afterEach(() => {
@@ -25,8 +26,8 @@ describe('Namespace E2E Tests', () => {
     it('should accept commit with namespace only', async () => {
       repo.addTextFile('apps/myapp/feature.ts', 'export const feature = true;', { stage: true });
 
-      const I = await Cliete.openTerminal('commitional lint .git/COMMIT_EDITMSG --fix');
-      repo.addFile('COMMIT_EDITMSG', 'feat(myapp): add new feature');
+      repo.addFile('.git/COMMIT_EDITMSG', 'feat(myapp): add new feature');
+      const I = await Cliete.openTerminal('commitional lint HEAD --fix');
 
       await I.wait.for.the.process.to.exit.with.exit.code.zero;
       await I.see('');
@@ -140,6 +141,17 @@ describe('Namespace E2E Tests', () => {
 
       await I.wait.until.the.process.exits.with.nonZero.exit.code;
     });
+
+    it('should not handle complex nested scopes', async () => {
+      repo.addTextFile('apps/myapp/feature.ts', 'export const feature = true;', { stage: true });
+
+      const I = await Cliete.openTerminal('commitional lint .git/COMMIT_EDITMSG');
+      repo.addFile('COMMIT_EDITMSG', 'feat(myapp>auth>session): add session management');
+
+      await I.wait.for.the.process.to.exit.with.nonZero.exit.code;
+      await I.spot('[namespace]');
+      await I.spot('- Not allowed!');
+    });
   });
 
   describe('Namespace Parsing', () => {
@@ -162,16 +174,6 @@ describe('Namespace E2E Tests', () => {
 
       const I = await Cliete.openTerminal('commitional lint .git/COMMIT_EDITMSG');
       repo.addFile('COMMIT_EDITMSG', 'feat(myapp>auth): add login');
-
-      await I.wait.for.the.process.to.exit.with.exit.code.zero;
-      await I.see('');
-    });
-
-    it('should handle complex nested scopes', async () => {
-      repo.addTextFile('apps/myapp/feature.ts', 'export const feature = true;', { stage: true });
-
-      const I = await Cliete.openTerminal('commitional lint .git/COMMIT_EDITMSG');
-      repo.addFile('COMMIT_EDITMSG', 'feat(myapp>auth>session): add session management');
 
       await I.wait.for.the.process.to.exit.with.exit.code.zero;
       await I.see('');

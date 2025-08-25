@@ -155,6 +155,9 @@ export default class RulesEngine<const Config extends Rules = Rules> {
       case 'scope':
         commit.scopes = parts.filter(Boolean);
         break;
+      case 'namespace':
+        commit.namespace = parts[0] ?? '';
+        break;
       case 'subject':
         commit.subject = parts[0] ?? '';
         break;
@@ -360,7 +363,7 @@ export default class RulesEngine<const Config extends Rules = Rules> {
    */
   allowedCommitProps(): { required: CommitPart[]; optional: CommitPart[]; forbidden: CommitPart[] } {
     // Assume everything is optional unless otherwise required or forbidden
-    const optional = new Set<CommitPart>(['type', 'subject', 'scope', 'body', 'footers']);
+    const optional = new Set<CommitPart>(['type', 'subject', 'scope', 'namespace', 'body', 'footers']);
 
     /*
       'Exists' and 'Empty' rules govern the required/optional/forbidden behaviour
@@ -483,7 +486,7 @@ export default class RulesEngine<const Config extends Rules = Rules> {
     // Separate out Empty rules
     const nonEmptyRules = rules.filter(rule => !(rule instanceof EmptyRule));
 
-    (['type', 'scope', 'subject', 'header', 'body', 'footers', 'footer', 'trailer'] as RuleScope[]).reduce(
+    (['type', 'namespace', 'scope', 'subject', 'header', 'body', 'footers', 'footer', 'trailer'] as RuleScope[]).reduce(
       (rules, part) => {
         // find all rules for the type.
         const [applicableRules, otherRules] = separate(rules, rule => rule.scope.startsWith(part));
