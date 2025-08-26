@@ -336,7 +336,7 @@ describe('CommitMessage', () => {
     });
 
     it('should parse namespace only commit message', () => {
-      const message = 'feat(myapp>): add new feature';
+      const message = '[myapp] feat: add new feature';
       const commit = CommitMessage.fromString(message);
 
       expect(commit).to.be.instanceOf(CommitMessage);
@@ -347,7 +347,7 @@ describe('CommitMessage', () => {
     });
 
     it('should parse namespace with scope commit message', () => {
-      const message = 'feat(myapp>auth): add login system';
+      const message = '[myapp] feat(auth): add login system';
       const commit = CommitMessage.fromString(message);
 
       expect(commit).to.be.instanceOf(CommitMessage);
@@ -355,17 +355,6 @@ describe('CommitMessage', () => {
       expect(commit.namespace).to.equal('myapp');
       expect(commit.scope).to.equal('auth');
       expect(commit.subject).to.equal('add login system');
-    });
-
-    it('should parse namespace with nested scope commit message', () => {
-      const message = 'feat(myapp>auth>session): add session management';
-      const commit = CommitMessage.fromString(message);
-
-      expect(commit).to.be.instanceOf(CommitMessage);
-      expect(commit.type).to.equal('feat');
-      expect(commit.namespace).to.equal('myapp');
-      expect(commit.scope).to.equal('auth>session');
-      expect(commit.subject).to.equal('add session management');
     });
 
     it('should parse scoped commit message', () => {
@@ -492,7 +481,7 @@ describe('CommitMessage', () => {
     it('should format commit with namespace', () => {
       const namespaceHeader = new CommitMessageHeader({ type: 'feat', namespace: 'myapp', subject: 'add feature' });
       const commit = new CommitMessage({ header: namespaceHeader });
-      expect(commit.toString()).to.equal('feat(myapp): add feature');
+      expect(commit.toString()).to.equal('[myapp] feat: add feature');
     });
 
     it('should format commit with namespace and scope', () => {
@@ -503,7 +492,7 @@ describe('CommitMessage', () => {
         subject: 'add login',
       });
       const commit = new CommitMessage({ header: namespaceHeader });
-      expect(commit.toString()).to.equal('feat(myapp>auth): add login');
+      expect(commit.toString()).to.equal('[myapp] feat(auth): add login');
     });
   });
 

@@ -63,7 +63,7 @@ describe('CommitMessageHeader - Namespace Support', () => {
         subject: 'add feature',
       });
 
-      expect(header.toString()).to.equal('feat(myapp): add feature');
+      expect(header.toString()).to.equal('[myapp] feat: add feature');
     });
 
     it('should format namespace with scope', () => {
@@ -74,18 +74,7 @@ describe('CommitMessageHeader - Namespace Support', () => {
         subject: 'add login',
       });
 
-      expect(header.toString()).to.equal('feat(myapp>auth): add login');
-    });
-
-    it('should format namespace with nested scope', () => {
-      const header = new CommitMessageHeader({
-        type: 'feat',
-        namespace: 'myapp',
-        scope: 'auth>session',
-        subject: 'add session management',
-      });
-
-      expect(header.toString()).to.equal('feat(myapp>auth>session): add session management');
+      expect(header.toString()).to.equal('[myapp] feat(auth): add login');
     });
 
     it('should format traditional scope without namespace', () => {
@@ -109,8 +98,8 @@ describe('CommitMessageHeader - Namespace Support', () => {
   });
 
   describe('fromString', () => {
-    it('should parse namespace only format with explicit separator', () => {
-      const header = CommitMessageHeader.fromString('feat(myapp>): add feature');
+    it('should parse bracket namespace only format', () => {
+      const header = CommitMessageHeader.fromString('[myapp] feat: add feature');
 
       expect(header.type).to.equal('feat');
       expect(header.namespace).to.equal('myapp');
@@ -118,17 +107,8 @@ describe('CommitMessageHeader - Namespace Support', () => {
       expect(header.subject).to.equal('add feature');
     });
 
-    it('should treat single value as scope for backward compatibility', () => {
-      const header = CommitMessageHeader.fromString('feat(myapp): add feature');
-
-      expect(header.type).to.equal('feat');
-      expect(header.namespace).to.equal('');
-      expect(header.scope).to.equal('myapp');
-      expect(header.subject).to.equal('add feature');
-    });
-
-    it('should parse namespace with scope format', () => {
-      const header = CommitMessageHeader.fromString('feat(myapp>auth): add login');
+    it('should parse bracket namespace with scope format', () => {
+      const header = CommitMessageHeader.fromString('[myapp] feat(auth): add login');
 
       expect(header.type).to.equal('feat');
       expect(header.namespace).to.equal('myapp');
@@ -136,16 +116,7 @@ describe('CommitMessageHeader - Namespace Support', () => {
       expect(header.subject).to.equal('add login');
     });
 
-    it('should parse namespace with nested scope format', () => {
-      const header = CommitMessageHeader.fromString('feat(myapp>auth>session): add session management');
-
-      expect(header.type).to.equal('feat');
-      expect(header.namespace).to.equal('myapp');
-      expect(header.scope).to.equal('auth>session');
-      expect(header.subject).to.equal('add session management');
-    });
-
-    it('should parse traditional scope format', () => {
+    it('should parse traditional scope format (backward compatibility)', () => {
       const header = CommitMessageHeader.fromString('feat(auth): add feature');
 
       expect(header.type).to.equal('feat');
@@ -163,13 +134,14 @@ describe('CommitMessageHeader - Namespace Support', () => {
       expect(header.subject).to.equal('add feature');
     });
 
-    it('should handle empty namespace in namespace>scope format', () => {
-      const header = CommitMessageHeader.fromString('feat(>auth): add feature');
+    it('should handle empty brackets', () => {
+      const header = CommitMessageHeader.fromString('[] feat: add feature');
 
       expect(header.type).to.equal('feat');
       expect(header.namespace).to.equal('');
-      expect(header.scope).to.equal('auth');
+      expect(header.scope).to.equal('');
       expect(header.subject).to.equal('add feature');
+      expect(header.toString()).to.equal('feat: add feature');
     });
   });
 

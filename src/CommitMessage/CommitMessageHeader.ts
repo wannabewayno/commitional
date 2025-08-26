@@ -175,22 +175,16 @@ export default class CommitMessageHeader {
     const header: string[] = [];
 
     if (subject) header.unshift(this.subject);
-    if (scope || namespace || type) {
+    if (scope || type) {
       header.unshift(this.separator);
-
-      // Handle namespace>scope format
-      if (namespace || scope) {
-        let scopePart = '';
-        if (namespace) {
-          scopePart = namespace;
-          if (scope) scopePart += `>${scope}`;
-        } else if (scope) {
-          scopePart = scope;
-        }
-        header.unshift(`(${scopePart})`);
-      }
-
+      if (scope) header.unshift(`(${scope})`);
       if (type) header.unshift(type);
+    }
+
+    // Add namespace prefix with brackets
+    if (namespace.trim()) {
+      header.unshift(' ');
+      header.unshift(`[${namespace}]`);
     }
 
     return header.join('');
@@ -201,30 +195,20 @@ export default class CommitMessageHeader {
   }
 
   static fromString(header: string) {
-    // Extract the type, namespace, scope, and subject
-    const match = header.match(/^(?<type>[^:()]+)?(?:\((?<namespaceScope>.*?)\))?: ?(?<subject>.*)$/);
+    // Extract namespace in brackets, type, scope in parentheses, and subject
+    // Format: [namespace] type(scope): subject
+    const match = header.match(
+      /^(?:\[(?<namespace>[^\]]*)\]\s+)?(?<type>[^:()]+)?(?:\((?<scope>.*?)\))?: ?(?<subject>.*)$/,
+    );
 
     if (!match || !match.groups) return new CommitMessageHeader({ subject: header });
 
-    const { type, namespaceScope, subject } = match.groups;
+    const { namespace = '', type, scope = '', subject } = match.groups;
 
-    // Parse namespace>scope format
-    let namespace = '';
-    let scope = '';
+    // Handle empty brackets case
+    const cleanNamespace = namespace.trim();
 
-    if (namespaceScope) {
-      if (namespaceScope.includes('>')) {
-        const parts = namespaceScope.split('>');
-        namespace = parts[0] || '';
-        scope = parts.slice(1).join('>');
-      } else {
-        // No '>' found - could be namespace or traditional scope
-        // For now, treat as traditional scope for backward compatibility
-        scope = namespaceScope;
-      }
-    }
-
-    return new CommitMessageHeader({ type, namespace, scope, subject });
+    return new CommitMessageHeader({ type, namespace: cleanNamespace, scope, subject });
   }
 }
 

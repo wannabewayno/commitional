@@ -1,6 +1,6 @@
 import { simpleGit, type SimpleGit } from 'simple-git';
 import Diff from './Diff.js';
-import type { ICommit } from './interfaces.js';
+import { GitCommit } from './GitCommit.js';
 
 /**
  * Interface for git commit result
@@ -73,7 +73,7 @@ export default class Git {
     }
   }
 
-  async log(to: string | number, from?: string): Promise<ICommit[]> {
+  async log(to: string | number, from?: string): Promise<GitCommit[]> {
     const logArgs: Record<string, string | null> = {};
 
     if (typeof to === 'number') {
@@ -90,19 +90,16 @@ export default class Git {
     // fetch git commit
     const commits = await this.git.log({ ...logArgs });
 
-    return commits.all.map(
-      logItem =>
-        ({
-          hash: logItem.hash,
-          short: logItem.hash.slice(0, 7),
-          date: new Date(logItem.date),
-          msg: [logItem.message, logItem.body].filter(v => v).join('\n\n'),
-          author: {
-            name: logItem.author_name,
-            email: logItem.author_email,
-          },
-        }) as ICommit,
+    // Get files for each commit
+    const gitCommits = await Promise.all(
+      commits.all.map(async logItem => {
+        const files = await this.getFilesFromCommit(logItem.hash);
+        const message = [logItem.message, logItem.body].filter(v => v).join('\n\n');
+        return new GitCommit(logItem.hash, message, files, false);
+      }),
     );
+
+    return gitCommits;
   }
 
   /**
@@ -116,6 +113,35 @@ export default class Git {
       console.error('Error getting staged files:', error);
       return [];
     }
+  }
+
+  /**
+   * Get files changed in a specific commit
+   */
+  async getFilesFromCommit(hash: string): Promise<string[]> {
+    try {
+      const result = await this.git.show([hash, '--name-only', '--format=']);
+      return result.split('\n').filter(file => file.trim() !== '');
+    } catch (error) {
+      console.error(`Error getting files from commit ${hash}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Create GitCommit for staged files
+   */
+  async stagedCommit(): Promise<GitCommit> {
+    const files = await this.stagedFiles();
+    return new GitCommit('', '', files, true);
+  }
+
+  /**
+   * Get specific commit with files
+   */
+  async getCommit(hash: string): Promise<GitCommit> {
+    const commits = await this.log(hash);
+    return commits[0] || new GitCommit(hash, '', [], false);
   }
 
   /**

@@ -11,6 +11,7 @@ import { TrimRule } from './rules/TrimRule.js';
 import { ExclamationMarkRule } from './rules/ExclamationMarkRule.js';
 import { AllowMultipleRule } from './rules/AllowMultipleRule.js';
 import { ExistsRule } from './rules/ExistsRule.js';
+import { NamespaceAlignmentRule } from './rules/NamespaceAlignmentRule.js';
 import { type RuleConfigCondition, RuleConfigSeverity } from '@commitlint/types';
 import type { CommitlintConfig } from '../config/index.js';
 import capitalize from '../lib/capitalize.js';
@@ -18,6 +19,7 @@ import separate from '../lib/separate.js';
 import CommitMessage, { type CommitPart, type CommitJSON } from '../CommitMessage/index.js';
 import loadConfig from '../config/index.js';
 import { zip } from '../lib/zip.js';
+import type { GitContext } from './GitContext.js';
 
 class ValidationErrors {
   errs: { [idx: number]: string[] } = {};
@@ -51,7 +53,8 @@ export type RuleTypeWithValue =
   | 'case'
   | 'enum'
   | 'allow-multiple'
-  | 'exists';
+  | 'exists'
+  | 'alignment';
 
 export type RuleType = RuleTypeWithValue | RuleTypeWithoutValue;
 export type RuleString = `${RuleScope}-${RuleType}`;
@@ -76,6 +79,7 @@ type RuleMapping = {
   enum: EnumRule;
   'allow-multiple': AllowMultipleRule;
   exists: ExistsRule;
+  alignment: NamespaceAlignmentRule;
 };
 
 // Extract rule types from config keys
@@ -105,6 +109,7 @@ export type Rules<T extends RulesConfig = RulesConfig> = {
  */
 export default class RulesEngine<const Config extends Rules = Rules> {
   private readonly scopes: Record<RuleScope, BaseRule[]>;
+  private context?: GitContext;
 
   constructor(private readonly rules: Config) {
     // collect rules by scopes
@@ -121,6 +126,20 @@ export default class RulesEngine<const Config extends Rules = Rules> {
 
   private listRules(): BaseRule[] {
     return Object.values(this.rules);
+  }
+
+  /**
+   * Set git context for file-aware rule validation
+   */
+  setContext(context: GitContext): void {
+    this.context = context;
+  }
+
+  /**
+   * Clear git context
+   */
+  clearContext(): void {
+    this.context = undefined;
   }
 
   /**
@@ -219,7 +238,7 @@ export default class RulesEngine<const Config extends Rules = Rules> {
       errors.prefix = rule.scope;
       warnings.prefix = rule.scope;
 
-      const [res, errs, warns] = rule.check(inputs, shouldFix);
+      const [res, errs, warns] = rule.check(inputs, shouldFix, this.context);
       inputs = res;
       if (errs) errors.update(errs);
       if (warns) warnings.update(warns);
@@ -255,7 +274,7 @@ export default class RulesEngine<const Config extends Rules = Rules> {
 
       const scopedRules = this.scopes[scope as RuleScope];
       for (const rule of scopedRules) {
-        const [res, errs, warns] = rule.check(results, shouldFix);
+        const [res, errs, warns] = rule.check(results, shouldFix, this.context);
         results = res;
         if (errs) errors.update(errs);
         if (warns) warnings.update(warns);
@@ -599,6 +618,9 @@ export default class RulesEngine<const Config extends Rules = Rules> {
         if (!value) value === ',';
         if (typeof value !== 'string') break;
         return new AllowMultipleRule(ruleName, level, condition, value) as RuleMapping[T];
+      case 'alignment':
+        if (!Array.isArray(value)) break;
+        return new NamespaceAlignmentRule(ruleName, level, condition, value) as RuleMapping[T];
     }
     return;
   }

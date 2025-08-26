@@ -20,7 +20,7 @@ describe('Namespace E2E Tests', () => {
 
   describe('Valid Namespace Commits', () => {
     beforeEach(() => {
-      new CommitlintConfigBuilder(repo).namespaceEnum(['apps/*', 'libs/*']).namespaceEmpty('never').commitAsYaml();
+      new CommitlintConfigBuilder(repo).namespaceEnum(['apps/*', 'libs/*']).commitAsYaml();
     });
 
     it('should accept commit with namespace only', async () => {
@@ -66,7 +66,7 @@ describe('Namespace E2E Tests', () => {
 
   describe('Invalid Namespace Commits', () => {
     beforeEach(() => {
-      new CommitlintConfigBuilder(repo).namespaceEnum(['apps/*', 'libs/*']).namespaceEmpty('never').commitAsYaml();
+      new CommitlintConfigBuilder(repo).namespaceEnum(['apps/*', 'libs/*']).commitAsYaml();
     });
 
     it('should reject commit missing namespace for namespaced files', async () => {

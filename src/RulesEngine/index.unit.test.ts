@@ -33,7 +33,7 @@ describe('RulesEngine', () => {
       expect(rules.describe()).to.equal(`## Commit message standard
 Commit messages must have a subject and type, may have a namespace, body or footers and must not contain a scope
 \`\`\`txt
-<type>([optional namespace]): <subject>
+[[optional namespace]] <type>: <subject>
 
 [optional body]
 

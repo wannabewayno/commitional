@@ -46,6 +46,44 @@ Validate commit messages against your configured linting rules.
 commitional lint <target> [--fix]
 ```
 
+#### Namespace Support
+
+Commitional supports namespace-aware commit messages for monorepo workflows. Use bracket syntax to specify namespaces:
+
+**Format:** `[namespace] type(scope): subject`
+
+**Examples:**
+```bash
+# Namespace only
+[myapp] feat: add user authentication
+
+# Namespace with scope
+[myapp] feat(auth): implement login system
+
+# Traditional scope (backward compatible)
+feat(utils): add helper functions
+
+# No namespace for root files
+docs: update README
+```
+
+**Configuration:**
+Add namespace rules to your commitlint config:
+
+```yaml
+# commitlint.config.yaml
+rules:
+  namespace-enum: [2, 'always', ['apps/*', 'libs/*']]
+  namespace-empty: [2, 'never']
+```
+
+This configuration:
+- Requires namespace for files in `apps/` and `libs/` directories
+- Maps `apps/myapp/file.ts` → namespace `myapp`
+- Maps `libs/shared/util.ts` → namespace `shared`
+- Validates single-namespace commits (no mixing namespaces)
+- Allows root files without namespace
+
 **Target Options:**
 - **File path**: `commitional lint COMMIT_EDITMSG` - Lint commit message from file
 - **Commit hash**: `commitional lint a1b2c3d` - Lint specific commit (full or short hash)

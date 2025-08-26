@@ -9,7 +9,7 @@ describe('RulesEngine - Namespace Rules', () => {
         'namespace-enum': [2, 'always', ['myapp', 'shared']],
       });
 
-      const validCommit = CommitMessage.fromString('feat(myapp>auth): add login');
+      const validCommit = CommitMessage.fromString('[myapp] feat(auth): add login');
       const [errors] = rulesEngine.validate(validCommit, 'validate');
       expect(errors).to.be.empty;
     });
@@ -19,7 +19,7 @@ describe('RulesEngine - Namespace Rules', () => {
         'namespace-enum': [2, 'always', ['myapp', 'shared']],
       });
 
-      const invalidCommit = CommitMessage.fromString('feat(invalid>auth): add login');
+      const invalidCommit = CommitMessage.fromString('[invalid] feat(auth): add login');
       const [errors] = rulesEngine.validate(invalidCommit, 'validate');
       expect(errors).to.have.length.greaterThan(0);
       expect(errors[0]).to.include('namespace');
@@ -43,7 +43,7 @@ describe('RulesEngine - Namespace Rules', () => {
         'namespace-empty': [2, 'never'],
       });
 
-      const commitWithNamespace = CommitMessage.fromString('feat(myapp>auth): add login');
+      const commitWithNamespace = CommitMessage.fromString('[myapp] feat(auth): add login');
       const [errors] = rulesEngine.validate(commitWithNamespace, 'validate');
       expect(errors).to.be.empty;
     });
@@ -53,7 +53,7 @@ describe('RulesEngine - Namespace Rules', () => {
         'namespace-empty': [2, 'always'],
       });
 
-      const commitWithNamespace = CommitMessage.fromString('feat(myapp>auth): add login');
+      const commitWithNamespace = CommitMessage.fromString('[myapp] feat(auth): add login');
       const [errors] = rulesEngine.validate(commitWithNamespace, 'validate');
       expect(errors).to.have.length.greaterThan(0);
       expect(errors[0]).to.include('namespace');

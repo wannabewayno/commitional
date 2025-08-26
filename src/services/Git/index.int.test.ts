@@ -91,3 +91,50 @@ describe('Git Commit Tests', () => {
 
   afterEach(() => cleanup());
 });
+
+describe('GitCommit Integration Tests', () => {
+  let gitService: Git;
+  let git: SimpleGit;
+  const testDir = path.join(process.cwd(), 'test-gitcommit');
+
+  let cleanup: () => void;
+
+  beforeEach(async () => {
+    fs.mkdirSync(testDir, { recursive: true });
+    process.chdir(testDir);
+
+    gitService = new Git();
+    git = simpleGit();
+    await git.init();
+    await git.addConfig('user.name', 'Test User', false, 'local');
+    await git.addConfig('user.email', 'test@example.com', false, 'local');
+
+    cleanup = () => {
+      process.chdir(process.cwd());
+      fs.rmSync(testDir, { recursive: true, force: true });
+    };
+  });
+
+  it('should create staged commit with files', async () => {
+    fs.writeFileSync('test.ts', 'test content');
+    await git.add('test.ts');
+
+    const stagedCommit = await gitService.stagedCommit();
+    expect(stagedCommit.files).to.include('test.ts');
+    expect(stagedCommit.isStaged).to.be.true;
+    expect(stagedCommit.hash).to.equal('');
+  });
+
+  it('should get commit with files from hash', async () => {
+    fs.writeFileSync('feature.ts', 'feature content');
+    await git.add('feature.ts');
+    const result = await git.commit('feat: add feature');
+
+    const gitCommit = await gitService.getCommit(result.commit);
+    expect(gitCommit.files).to.include('feature.ts');
+    expect(gitCommit.isStaged).to.be.false;
+    expect(gitCommit.hash).to.equal(result.commit);
+  });
+
+  afterEach(() => cleanup());
+});
