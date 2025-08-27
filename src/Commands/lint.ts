@@ -78,12 +78,12 @@ export const Provider = ({ git, readFile, writeFile, exit, logError }: Dependenc
     const behaviour = opts.fix ? 'fix' : 'validate';
 
     // Lint all commits against the rules engine
-    const results = commits.map(gitCommit => {
+    const results = commits.map(({ commitMessage, context }) => {
       // Set context for this commit
-      rulesEngine.setContext(gitCommit.context);
+      rulesEngine.setContext(context);
 
       // Process commit message with context
-      const [processedCommit, valid, errorsAndWarnings] = gitCommit.commitMessage.process(rulesEngine, behaviour);
+      const [processedCommit, valid, errorsAndWarnings] = commitMessage.process(rulesEngine, behaviour);
 
       // Clear context
       rulesEngine.clearContext();

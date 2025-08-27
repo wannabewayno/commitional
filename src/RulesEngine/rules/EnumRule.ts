@@ -31,6 +31,9 @@ export class EnumRule extends BaseRuleWithValue<string[]> {
 
   describe(): string {
     const value = [...this.value];
+    if (value.length === 0) return `The ${this.scope} must ${this.applicable} be empty`;
+    if (value.length === 1) return `The ${this.scope} must ${this.applicable} be '${value[0]}'`;
+
     const last = value.pop();
     const message = ['The', this.scope];
 

@@ -43,6 +43,13 @@ export default class TestGitRepo {
     return this;
   }
 
+  addDir(name: string) {
+    const dirName = path.join(this.tempDir, name);
+    mkdirSync(dirName, { recursive: true });
+
+    return this;
+  }
+
   stage(name: string) {
     execSync(`git add "${name}"`, { cwd: this.tempDir });
     return this;
