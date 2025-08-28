@@ -11,22 +11,28 @@ export default class SubjectPrompt extends BasePrompt {
   }
 
   async generate(diff: Diff, commit: CommitMessage) {
-    const completion = await this.createAiCompletion().then(completion =>
-      completion.user(
-        'Generate an appropriate commit title to be included in the commit subject for the provided staged files.',
-        'The partial commit header is shown for context',
-        '## Commit Header',
-        commit.header,
-        '## Git Diff',
-        'Use the following git diff to determine a sensible title',
-        '```txt',
-        diff.toString(),
-        '```',
-      ),
+    const contextLines = [
+      'Generate an appropriate commit subject (title) for the provided staged files.',
+      'Do NOT include the commit type prefix (like "feat:", "fix:", etc.) in your response.',
+      'Only provide the descriptive subject text that comes after the colon.',
+    ];
+
+    if (commit.type) contextLines.push(`The commit type is: ${commit.type}`);
+    if (commit.scope) contextLines.push(`The commit scope is: ${commit.scope}`);
+
+    contextLines.push(
+      '## Git Diff',
+      'Use the following git diff to determine a sensible subject:',
+      '```txt',
+      diff.toString(),
+      '```',
     );
 
-    // Set the commit's subject
-    commit.subject = await completion.text();
+    const completion = await this.createAiCompletion().then(completion => completion.user(...contextLines));
+
+    // Set the commit's subject, ensuring no type prefix is included
+    const generatedSubject = await completion.text();
+    commit.subject = generatedSubject.replace(/^\w+:\s*/, ''); // Strip any accidental type prefix
   }
 
   async prompt(commit: CommitMessage): Promise<void> {
