@@ -5,12 +5,13 @@ import CommitMessageFooter from './CommitMessageFooter.js';
 import CommitMessageHeader from './CommitMessageHeader.js';
 import Text, { type StyleFn } from './Text.js';
 
-export type CommitPart = 'type' | 'subject' | 'scope' | 'body' | 'footers';
+export type CommitPart = 'type' | 'subject' | 'scope' | 'namespace' | 'body' | 'footers';
 
 export interface CommitMessageHeaderOpts {
   type?: string;
   subject?: string;
   scope?: string | string[];
+  namespace?: string;
   scopeDelimiter?: string;
 }
 
@@ -18,6 +19,7 @@ export interface CommitJSON {
   type?: string;
   subject?: string;
   scope?: string | string[];
+  namespace?: string;
   scopeDelimiter?: string;
   body?: string;
   footers?: string[];
@@ -117,6 +119,7 @@ export default class CommitMessage {
         break;
       case 'type':
       case 'scope':
+      case 'namespace':
       case 'subject':
         this._header.setStyle(style, commitPart);
         break;
@@ -139,12 +142,13 @@ export default class CommitMessage {
         break;
       case 'type':
       case 'scope':
+      case 'namespace':
       case 'subject':
         this._header.style(commitPart);
         break;
       default:
         // Set all styles
-        (['body', 'footers', 'type', 'scope', 'subject'] as const).forEach(part => this.style(part));
+        (['body', 'footers', 'type', 'scope', 'namespace', 'subject'] as const).forEach(part => this.style(part));
     }
     return this;
   }
@@ -162,12 +166,13 @@ export default class CommitMessage {
         break;
       case 'type':
       case 'scope':
+      case 'namespace':
       case 'subject':
         this._header.unstyle(commitPart);
         break;
       default:
         // unstyle all
-        (['body', 'footers', 'type', 'scope', 'subject'] as const).forEach(part => this.unstyle(part));
+        (['body', 'footers', 'type', 'scope', 'namespace', 'subject'] as const).forEach(part => this.unstyle(part));
     }
 
     return this;
@@ -226,6 +231,14 @@ export default class CommitMessage {
     this.addScope(...scopes);
   }
 
+  set namespace(namespace: string) {
+    this._header.namespace = namespace;
+  }
+
+  get namespace() {
+    return this._header.namespace;
+  }
+
   addScope(...scopes: string[]) {
     return this._header.addScope(...scopes);
   }
@@ -238,6 +251,7 @@ export default class CommitMessage {
     return {
       type: this.type,
       scope: this.scope,
+      namespace: this.namespace,
       subject: this.subject,
       body: this.body,
       footers: this.footers.map(v => v.toString()),
@@ -271,8 +285,8 @@ export default class CommitMessage {
     return [commit, !errors.length, errors.concat(warnings)];
   }
 
-  static fromJSON({ type, scope, body, footers = [], subject }: CommitJSON) {
-    const header = new CommitMessageHeader({ type, scope, subject });
+  static fromJSON({ type, scope, namespace, body, footers = [], subject }: CommitJSON) {
+    const header = new CommitMessageHeader({ type, scope, namespace, subject });
 
     return new CommitMessage({
       header,

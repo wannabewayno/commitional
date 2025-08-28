@@ -1,7 +1,8 @@
 import { BaseRuleWithValue } from './BaseRule.js';
+import type { GitContext } from '../GitContext.js';
 
 export class EnumRule extends BaseRuleWithValue<string[]> {
-  validate(parts: string[]): null | Record<number, string> {
+  validate(parts: string[], _context?: GitContext): null | Record<number, string> {
     const errs = parts.reduce(
       (errors, part, idx) => {
         // Can't validate empty input, assume it's valid
@@ -20,16 +21,19 @@ export class EnumRule extends BaseRuleWithValue<string[]> {
     return this.errorOrNull(errs);
   }
 
-  fix(parts: string[]): [null | Record<number, string>, string[]] {
+  fix(parts: string[], context?: GitContext): [null | Record<number, string>, string[]] {
     // Can't automatically fix enum issues - return original with errors
     // Could potentially use string similarity to find closest match,
     // but that's beyond the scope of a simple fix
-    const errs = this.validate(parts);
+    const errs = this.validate(parts, context);
     return [errs, parts];
   }
 
   describe(): string {
     const value = [...this.value];
+    if (value.length === 0) return `The ${this.scope} must ${this.applicable} be empty`;
+    if (value.length === 1) return `The ${this.scope} must ${this.applicable} be '${value[0]}'`;
+
     const last = value.pop();
     const message = ['The', this.scope];
 

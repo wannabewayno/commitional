@@ -1,8 +1,9 @@
 import { readFile, writeFile } from 'node:fs/promises';
-import CommitMessage, { type CommitPart } from '../CommitMessage/index.js';
+import type { CommitPart } from '../CommitMessage/index.js';
 import RulesEngine, { type RuleScope } from '../RulesEngine/index.js';
 import { exit } from 'node:process';
 import Git from '../services/Git/index.js';
+import type { GitCommit } from '../services/Git/GitCommit.js';
 import { red } from 'yoctocolors';
 import filterMap from '../lib/filterMap.js';
 import extract from '../lib/extract.js';
@@ -41,6 +42,8 @@ function scopeToCommitPart(scope: RuleScope): CommitPart {
       return 'scope';
     case 'type':
       return 'type';
+    case 'namespace':
+      return 'namespace';
   }
 }
 
@@ -49,19 +52,17 @@ function scopeToCommitPart(scope: RuleScope): CommitPart {
  * By default takes the latest commit message or
  */
 export const Provider = ({ git, readFile, writeFile, exit, logError }: Dependencies) => {
-  async function getCommits(
-    commitMsgArgs: [string, string?],
-  ): Promise<{ type: 'log' | 'file'; commits: { msg: string }[] }> {
+  async function getCommits(commitMsgArgs: [string, string?]): Promise<{ type: 'log' | 'file'; commits: GitCommit[] }> {
     if (isHash(commitMsgArgs[0])) return { type: 'log', commits: await git.log(...commitMsgArgs).catch(() => []) };
     if (isInteger(commitMsgArgs[0]))
       return { type: 'log', commits: await git.log(Number.parseInt(commitMsgArgs[0])).catch(() => []) };
-    // Otherwise assume a filepath
-    return {
-      type: 'file',
-      commits: await readFile(commitMsgArgs[0])
-        .then(msg => [{ msg }])
-        .catch(() => []),
-    };
+    // Otherwise assume a filepath - create staged commit
+    const message = await readFile(commitMsgArgs[0]).catch(() => '');
+    if (!message) return { type: 'file', commits: [] };
+
+    const stagedCommit = await git.stagedCommit();
+    stagedCommit.message = message;
+    return { type: 'file', commits: [stagedCommit] };
   }
 
   return async (commitMsgArg: string, opts: LintOpts) => {
@@ -77,12 +78,21 @@ export const Provider = ({ git, readFile, writeFile, exit, logError }: Dependenc
     const behaviour = opts.fix ? 'fix' : 'validate';
 
     // Lint all commits against the rules engine
-    const results = commits.map(({ msg }) => {
-      const [commit, valid, errorsAndWarnings] = CommitMessage.fromString(msg).process(rulesEngine, behaviour);
+    const results = commits.map(({ commitMessage, context }) => {
+      // Set context for this commit
+      rulesEngine.setContext(context);
 
-      if (!valid) {
+      // Process commit message with context
+      const [processedCommit, valid, errorsAndWarnings] = commitMessage.process(rulesEngine, behaviour);
+
+      // Clear context
+      rulesEngine.clearContext();
+
+      const isValid = valid;
+
+      if (!isValid) {
         const errorSections: Record<string, string[]> = {};
-        commit.setStyle(red);
+        processedCommit.setStyle(red);
 
         errorsAndWarnings.forEach((error: string) => {
           const [label, errMsg] = extract(error, /\[\w+:\d\]/);
@@ -90,7 +100,7 @@ export const Provider = ({ git, readFile, writeFile, exit, logError }: Dependenc
 
           const commitPart = scopeToCommitPart(scope as RuleScope);
 
-          commit.style(commitPart, filter);
+          processedCommit.style(commitPart, filter);
 
           errorSections[commitPart] ??= [];
           errorSections[commitPart].push(errMsg);
@@ -105,10 +115,10 @@ export const Provider = ({ git, readFile, writeFile, exit, logError }: Dependenc
         }, [] as string[]);
 
         // Construct error Message
-        return { commit, error: errorMessages.join('\n\n') };
+        return { commit: processedCommit, error: errorMessages.join('\n\n') };
       }
 
-      return { commit, error: null };
+      return { commit: processedCommit, error: null };
     });
 
     const allValid = !results.some(result => result.error);

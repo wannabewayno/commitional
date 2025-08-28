@@ -1,5 +1,6 @@
 import load from '@commitlint/load';
 import type { RuleConfigTuple } from '../RulesEngine/rules/BaseRule.js';
+import { preprocessNamespaceConfig } from './namespacePreprocessor.js';
 
 export type QualifiedConfig = Awaited<ReturnType<typeof load>>;
 export type CommitlintConfig = QualifiedConfig & {
@@ -63,5 +64,8 @@ export default async function loadConfig() {
     commitlintConfig.rules['scope-allow-multiple'] = [2, applicable, delimiter];
   }
 
-  return commitlintConfig as CommitlintConfig;
+  // Apply namespace preprocessing
+  preprocessNamespaceConfig(commitlintConfig as CommitlintConfig);
+
+  return commitlintConfig;
 }

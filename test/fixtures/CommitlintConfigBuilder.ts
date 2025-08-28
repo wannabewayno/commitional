@@ -61,6 +61,16 @@ export default class CommitlintConfigBuilder {
     return this;
   }
 
+  namespaceEnum(patterns: string[], condition: RuleCondition = 'always', level: RuleLevel = 2): this {
+    this.rules['namespace-enum'] = [level, condition, patterns];
+    return this;
+  }
+
+  namespaceEmpty(condition: RuleCondition = 'never', level: RuleLevel = 2): this {
+    this.rules['namespace-empty'] = [level, condition];
+    return this;
+  }
+
   footerCase(types: string[], condition: RuleCondition = 'never', level: RuleLevel = 2): this {
     this.rules['footer-case'] = [level, condition, types];
     return this;

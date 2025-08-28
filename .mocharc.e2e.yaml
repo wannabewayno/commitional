@@ -2,6 +2,6 @@ recursive: true
 retries: 0
 exit: true
 timeout: 15000
-spec: ./src/**/*.test.ts
+spec: ./test/**/*.test.ts
 require: 
-  - tsx
+- "tsx"

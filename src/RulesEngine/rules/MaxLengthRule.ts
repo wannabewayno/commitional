@@ -1,7 +1,8 @@
 import { BaseRuleWithValue } from './BaseRule.js';
+import type { GitContext } from '../GitContext.js';
 
 export class MaxLengthRule extends BaseRuleWithValue<number> {
-  validate(parts: string[]): null | Record<number, string> {
+  validate(parts: string[], _context?: GitContext): null | Record<number, string> {
     const errs = Object.fromEntries(
       parts.map((part, idx) => [idx, !this.validateMaxLength(part) && this.describe()]).filter(([, err]) => err),
     );
@@ -13,9 +14,9 @@ export class MaxLengthRule extends BaseRuleWithValue<number> {
     return this.applicable === 'always' ? isLessThanMaxLength : !isLessThanMaxLength;
   }
 
-  fix(parts: string[]): [null | Record<number, string>, string[]] {
+  fix(parts: string[], context?: GitContext): [null | Record<number, string>, string[]] {
     if (this.applicable === 'never') {
-      const errs = this.validate(parts);
+      const errs = this.validate(parts, context);
       return [errs, parts];
     }
 

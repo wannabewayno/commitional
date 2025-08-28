@@ -2,7 +2,7 @@ import { input } from '@inquirer/prompts';
 import { red } from 'yoctocolors';
 import type RulesEngine from '../RulesEngine/index.js';
 import BasePrompt from './BasePrompt.js';
-import { ScopeDeducer } from '../services/ScopeDeducer/index.js';
+import { ScopeDeducer } from '../services/NamespaceResolver/index.js';
 import type Diff from '../services/Git/Diff.js';
 import type CommitMessage from '../CommitMessage/index.js';
 

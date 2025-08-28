@@ -4,6 +4,7 @@ import { Provider } from './lint.js';
 import CommitMessage from '../CommitMessage/index.js';
 import RulesEngine from '../RulesEngine/index.js';
 import Git from '../services/Git/index.js';
+import { GitCommit } from '../services/Git/GitCommit.js';
 
 describe('Lint Cmd', () => {
   let mockGit: sinon.SinonStubbedInstance<Git>;
@@ -26,6 +27,16 @@ describe('Lint Cmd', () => {
     // Mock RulesEngine.fromConfig
     sinon.stub(RulesEngine, 'fromConfig').resolves(mockRulesEngine);
 
+    // Mock stagedCommit for file-based tests
+    mockGit.stagedCommit.resolves({
+      hash: '',
+      message: '',
+      files: [],
+      isStaged: true,
+      commitMessage: sinon.createStubInstance(CommitMessage),
+      context: { files: [], isStaged: true },
+    });
+
     lintCmd = Provider({
       git: mockGit,
       readFile: mockReadFile,
@@ -47,6 +58,16 @@ describe('Lint Cmd', () => {
     it('should read commit message from file path', async () => {
       const mockCommit = sinon.createStubInstance(CommitMessage);
       mockCommit.process.returns([mockCommit, true, []]);
+
+      mockGit.stagedCommit.resolves({
+        hash: '',
+        message: '',
+        files: [],
+        isStaged: true,
+        commitMessage: mockCommit,
+        context: { files: [], isStaged: true },
+      });
+
       sinon.stub(CommitMessage, 'fromString').returns(mockCommit);
 
       await lintCmd('commit-msg.txt', {});
@@ -60,6 +81,15 @@ describe('Lint Cmd', () => {
       mockCommit.process.returns([mockCommit, true, []]);
       mockCommit.unstyle.returns(mockCommit);
       mockCommit.toString.returns('feat: fixed commit message');
+      mockGit.stagedCommit.resolves({
+        hash: '',
+        message: '',
+        files: [],
+        isStaged: true,
+        commitMessage: mockCommit,
+        context: { files: [], isStaged: true },
+      });
+
       sinon.stub(CommitMessage, 'fromString').returns(mockCommit);
 
       await lintCmd('commit-msg.txt', { fix: true });
@@ -71,6 +101,15 @@ describe('Lint Cmd', () => {
     it('should not write to file when --fix is not used', async () => {
       const mockCommit = sinon.createStubInstance(CommitMessage);
       mockCommit.process.returns([mockCommit, true, []]);
+      mockGit.stagedCommit.resolves({
+        hash: '',
+        message: '',
+        files: [],
+        isStaged: true,
+        commitMessage: mockCommit,
+        context: { files: [], isStaged: true },
+      });
+
       sinon.stub(CommitMessage, 'fromString').returns(mockCommit);
 
       await lintCmd('commit-msg.txt', {});
@@ -84,6 +123,16 @@ describe('Lint Cmd', () => {
       mockCommit.setStyle.returns(undefined);
       mockCommit.style.returns(mockCommit);
       mockCommit.toString.returns('feat: this subject is way too long for the rules');
+
+      mockGit.stagedCommit.resolves({
+        hash: '',
+        message: '',
+        files: [],
+        isStaged: true,
+        commitMessage: mockCommit,
+        context: { files: [], isStaged: true },
+      });
+
       sinon.stub(CommitMessage, 'fromString').returns(mockCommit);
 
       await lintCmd('commit-msg.txt', {});
@@ -95,15 +144,7 @@ describe('Lint Cmd', () => {
 
   describe('Commit Hash Arguments', () => {
     it('should fetch commit by hash', async () => {
-      mockGit.log.resolves([
-        {
-          hash: '1234567890abcdef',
-          short: '1234567',
-          date: new Date(),
-          msg: 'feat: add new feature',
-          author: { name: 'Test User', email: 'test@example.com' },
-        },
-      ]);
+      mockGit.log.resolves([new GitCommit('1234567890abcdef', 'feat: add new feature', [], false)]);
       const mockCommit = sinon.createStubInstance(CommitMessage);
       mockCommit.process.returns([mockCommit, true, []]);
       sinon.stub(CommitMessage, 'fromString').returns(mockCommit);
@@ -116,15 +157,7 @@ describe('Lint Cmd', () => {
     });
 
     it('should fetch commit by full hash', async () => {
-      mockGit.log.resolves([
-        {
-          hash: '1234567890abcdef1234567890abcdef12345678',
-          short: '1234567',
-          date: new Date(),
-          msg: 'feat: add new feature',
-          author: { name: 'Test User', email: 'test@example.com' },
-        },
-      ]);
+      mockGit.log.resolves([new GitCommit('1234567890abcdef1234567890abcdef12345678', 'feat: add new feature', [], false)]);
       const mockCommit = sinon.createStubInstance(CommitMessage);
       mockCommit.process.returns([mockCommit, true, []]);
       sinon.stub(CommitMessage, 'fromString').returns(mockCommit);
@@ -136,18 +169,20 @@ describe('Lint Cmd', () => {
     });
 
     it('should not write to file when linting commit hash with --fix', async () => {
-      mockGit.log.resolves([
-        {
-          hash: '1234567890abcdef',
-          short: '1234567',
-          date: new Date(),
-          msg: 'feat: add new feature',
-          author: { name: 'Test User', email: 'test@example.com' },
-        },
-      ]);
       const mockCommit = sinon.createStubInstance(CommitMessage);
       mockCommit.process.returns([mockCommit, true, []]);
-      sinon.stub(CommitMessage, 'fromString').returns(mockCommit);
+
+      const mockGitCommit = {
+        hash: '1234567890abcdef',
+        message: 'feat: add new feature',
+        files: ['src/feature.ts'],
+        isStaged: false,
+        commitMessage: mockCommit,
+        context: { files: ['src/feature.ts'], isStaged: false },
+      };
+      mockGit.log.resolves([mockGitCommit]);
+      mockRulesEngine.setContext = sinon.stub();
+      mockRulesEngine.clearContext = sinon.stub();
 
       await lintCmd('1234567', { fix: true });
 
@@ -159,20 +194,8 @@ describe('Lint Cmd', () => {
   describe('Hash Range Arguments', () => {
     it('should fetch commits by hash range', async () => {
       mockGit.log.resolves([
-        {
-          hash: 'abc123def456',
-          short: 'abc123d',
-          date: new Date(),
-          msg: 'feat: add feature 1',
-          author: { name: 'Test User', email: 'test@example.com' },
-        },
-        {
-          hash: 'def456ghi789',
-          short: 'def456g',
-          date: new Date(),
-          msg: 'fix: fix bug 2',
-          author: { name: 'Test User', email: 'test@example.com' },
-        },
+        new GitCommit('abc123def456', 'feat: add feature 1', [], false),
+        new GitCommit('def456ghi789', 'fix: fix bug 2', [], false),
       ]);
       const mockCommit = sinon.createStubInstance(CommitMessage);
       mockCommit.process.returns([mockCommit, true, []]);
@@ -186,20 +209,8 @@ describe('Lint Cmd', () => {
 
     it('should exit with error if any commit in range is invalid', async () => {
       mockGit.log.resolves([
-        {
-          hash: 'validhash123',
-          short: 'validha',
-          date: new Date(),
-          msg: 'feat: valid commit',
-          author: { name: 'Test User', email: 'test@example.com' },
-        },
-        {
-          hash: 'invalidhash456',
-          short: 'invalid',
-          date: new Date(),
-          msg: 'invalid commit',
-          author: { name: 'Test User', email: 'test@example.com' },
-        },
+        new GitCommit('validhash123', 'feat: valid commit', [], false),
+        new GitCommit('invalidhash456', 'invalid commit', [], false),
       ]);
 
       const validCommit = sinon.createStubInstance(CommitMessage);
@@ -225,15 +236,7 @@ describe('Lint Cmd', () => {
   describe('Numeric Arguments', () => {
     it('should treat numeric strings as commit hashes', async () => {
       // Numeric strings like "123" should be treated as commit hashes, not numbers
-      mockGit.log.resolves([
-        {
-          hash: '123456789abcdef',
-          short: '1234567',
-          date: new Date(),
-          msg: 'feat: add new feature',
-          author: { name: 'Test User', email: 'test@example.com' },
-        },
-      ]);
+      mockGit.log.resolves([new GitCommit('123456789abcdef', 'feat: add new feature', [], false)]);
       const mockCommit = sinon.createStubInstance(CommitMessage);
       mockCommit.process.returns([mockCommit, true, []]);
       sinon.stub(CommitMessage, 'fromString').returns(mockCommit);
@@ -245,15 +248,7 @@ describe('Lint Cmd', () => {
     });
 
     it('should handle short numeric hashes', async () => {
-      mockGit.log.resolves([
-        {
-          hash: '1234567890abcdef',
-          short: '1234567',
-          date: new Date(),
-          msg: 'feat: add new feature',
-          author: { name: 'Test User', email: 'test@example.com' },
-        },
-      ]);
+      mockGit.log.resolves([new GitCommit('1234567890abcdef', 'feat: add new feature', [], false)]);
       const mockCommit = sinon.createStubInstance(CommitMessage);
       mockCommit.process.returns([mockCommit, true, []]);
       sinon.stub(CommitMessage, 'fromString').returns(mockCommit);
@@ -278,6 +273,16 @@ describe('Lint Cmd', () => {
       mockCommit.setStyle.returns(undefined);
       mockCommit.style.returns(mockCommit);
       mockCommit.toString.returns('invalid: this subject is way too long and violates multiple rules');
+
+      mockGit.stagedCommit.resolves({
+        hash: '',
+        message: '',
+        files: [],
+        isStaged: true,
+        commitMessage: mockCommit,
+        context: { files: [], isStaged: true },
+      });
+
       sinon.stub(CommitMessage, 'fromString').returns(mockCommit);
 
       await lintCmd('commit-msg.txt', {});
@@ -301,6 +306,16 @@ describe('Lint Cmd', () => {
 
       const mockCommit = sinon.createStubInstance(CommitMessage);
       mockCommit.process.returns([mockCommit, true, []]);
+
+      mockGit.stagedCommit.resolves({
+        hash: '',
+        message: '',
+        files: [],
+        isStaged: true,
+        commitMessage: mockCommit,
+        context: { files: [], isStaged: true },
+      });
+
       sinon.stub(CommitMessage, 'fromString').returns(mockCommit);
 
       await lintCmd('commit-msg.txt', {});
@@ -318,6 +333,16 @@ describe('Lint Cmd', () => {
       mockCommit.process.returns([mockCommit, true, []]);
       mockCommit.unstyle.returns(mockCommit);
       mockCommit.toString.returns('feat: fixed commit message');
+
+      mockGit.stagedCommit.resolves({
+        hash: '',
+        message: '',
+        files: [],
+        isStaged: true,
+        commitMessage: mockCommit,
+        context: { files: [], isStaged: true },
+      });
+
       sinon.stub(CommitMessage, 'fromString').returns(mockCommit);
 
       await lintCmd('commit-msg.txt', { fix: true });
@@ -340,27 +365,9 @@ describe('Lint Cmd', () => {
     it('should handle mixed valid and invalid commits', async () => {
       mockReadFile.throws('File does not exist');
       mockGit.log.resolves([
-        {
-          hash: 'validhash1',
-          short: 'validh1',
-          date: new Date(),
-          msg: 'feat: valid commit',
-          author: { name: 'Test User', email: 'test@example.com' },
-        },
-        {
-          hash: 'invalidhash',
-          short: 'invalid',
-          date: new Date(),
-          msg: 'invalid',
-          author: { name: 'Test User', email: 'test@example.com' },
-        },
-        {
-          hash: 'validhash2',
-          short: 'validh2',
-          date: new Date(),
-          msg: 'fix: another valid commit',
-          author: { name: 'Test User', email: 'test@example.com' },
-        },
+        new GitCommit('validhash1', 'feat: valid commit', [], false),
+        new GitCommit('invalidhash', 'invalid', [], false),
+        new GitCommit('validhash2', 'fix: another valid commit', [], false),
       ]);
 
       const validCommit1 = sinon.createStubInstance(CommitMessage);
