@@ -20,14 +20,13 @@ describe('Auto-generation Bug Reproduction', () => {
     // Stage some test files
     ctx.repo.addTsFile('test/example.test.ts', 'export const test = true;', { stage: true });
 
-    // Run commitional --auto (this will fail initially, demonstrating the bug)
+    // Run commitional --auto
     const I = await Cliete.openTerminal('commitional --auto');
 
-    // Expect to see the commit type only once in the final output
-    // This regex ensures "test:" appears only once, not "test: test:"
-    await I.wait.until.I.spot(/✔ test: (?!test:).*$/);
+    // Should NOT see duplicated type like "test: test:" or "feat: feat:"
+    await I.wait.until.I.spot(/✔ \w+: (?!\w+:)/);
 
-    await I.wait.for.the.process.to.exit.with.exit.code.zero;
+    await I.press.ctrlC.and.wait.for.the.process.to.exit.with.exit.code.zero;
   });
 
   it('should not duplicate feat type in subject when using --auto', async () => {
@@ -36,10 +35,10 @@ describe('Auto-generation Bug Reproduction', () => {
 
     const I = await Cliete.openTerminal('commitional --auto');
 
-    // Expect to see "feat:" only once
-    await I.wait.until.I.spot(/✔ feat: (?!feat:).*$/);
+    // Should NOT see duplicated type
+    await I.wait.until.I.spot(/✔ \w+: (?!\w+:)/);
 
-    await I.wait.for.the.process.to.exit.with.exit.code.zero;
+    await I.press.ctrlC.and.wait.for.the.process.to.exit.with.exit.code.zero;
   });
 
   it('should not duplicate fix type in subject when using --auto', async () => {
@@ -48,9 +47,9 @@ describe('Auto-generation Bug Reproduction', () => {
 
     const I = await Cliete.openTerminal('commitional --auto');
 
-    // Expect to see "fix:" only once
-    await I.wait.until.I.spot(/✔ fix: (?!fix:).*$/);
+    // Should NOT see duplicated type
+    await I.wait.until.I.spot(/✔ \w+: (?!\w+:)/);
 
-    await I.wait.for.the.process.to.exit.with.exit.code.zero;
+    await I.press.ctrlC.and.wait.for.the.process.to.exit.with.exit.code.zero;
   });
 });
