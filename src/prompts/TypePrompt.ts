@@ -4,7 +4,7 @@ import type RulesEngine from '../RulesEngine/index.js';
 import BasePrompt from './BasePrompt.js';
 import type Diff from '../services/Git/Diff.js';
 import { red } from 'yoctocolors';
-import CommitMessage from '../CommitMessage/index.js';
+import type CommitMessage from '../CommitMessage/index.js';
 
 export default class TypePrompt extends BasePrompt {
   constructor(rules: RulesEngine) {
@@ -39,14 +39,11 @@ export default class TypePrompt extends BasePrompt {
     );
 
     commit.type = await completion.text(type => {
-      const blankCommit = new CommitMessage();
-      blankCommit.type = type;
-
-      const [errors] = this.rules.validate(blankCommit);
+      const [fixed, errors] = this.rules.validate(type);
 
       if (errors.length) return new Error(errors.join('\n'));
 
-      return type;
+      return fixed;
     });
   }
 
