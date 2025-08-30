@@ -31,7 +31,13 @@ export default class SubjectPrompt extends BasePrompt {
     const completion = await this.createAiCompletion().then(completion => completion.user(...contextLines));
 
     // Set the commit's subject, ensuring no type prefix is included
-    const generatedSubject = await completion.text();
+    const generatedSubject = await completion.text(subject => {
+      const [fixed, errors] = this.rules.validate(subject);
+
+      if (errors.length) return new Error(errors.join('\n'));
+
+      return fixed;
+    });
     commit.subject = generatedSubject.replace(/^\w+:\s*/, ''); // Strip any accidental type prefix
   }
 

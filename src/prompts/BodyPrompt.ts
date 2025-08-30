@@ -76,7 +76,13 @@ export default class BodyPrompt extends BasePrompt {
     );
 
     // set the commit's body
-    commit.body = await completion.json('body', { value: 'string' }).then(({ value }) => value);
+    commit.body = await completion.text(body => {
+      const [fixed, errors] = this.rules.validate(body);
+
+      if (errors.length) return new Error(errors.join('\n'));
+
+      return fixed;
+    });
   }
 
   async prompt(commit: CommitMessage): Promise<void> {
