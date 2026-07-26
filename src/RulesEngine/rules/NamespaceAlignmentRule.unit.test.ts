@@ -29,7 +29,9 @@ describe('NamespaceAlignmentRule', () => {
       const result = rule.validate(['otherapp'], context);
       expect(result).to.not.be.null;
       // biome-ignore lint/style/noNonNullAssertion: It exists, we just checked for it
-      expect(result![0]).to.include('Files in apps/myapp require namespace "myapp", got "otherapp"');
+      expect(result![0]).to.include(
+        'Changes to files under apps/myapp/** require namespace "[myapp]", but "[otherapp]" was found instead',
+      );
     });
 
     it('should fail when commit spans multiple namespaces', () => {

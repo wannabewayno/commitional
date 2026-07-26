@@ -92,7 +92,7 @@ export class NamespaceResolver {
     if (fileNamespaces.length === 0 && commitNamespace) {
       const nonNamespacedFiles = files.filter(f => !f.includes('/'));
       if (nonNamespacedFiles.length > 0) {
-        errors.push(`Files not apart of namespace "${commitNamespace}"`);
+        errors.push(`Changes are not apart of namespace "[${commitNamespace}]"`);
       }
       return { valid: false, errors };
     }
@@ -103,14 +103,16 @@ export class NamespaceResolver {
       if (!commitNamespace) {
         const exampleFile = files.find(f => this.getFileNamespace(f) === requiredNamespace);
         const folderPath = exampleFile ? path.dirname(exampleFile) : requiredNamespace;
-        errors.push(`Files in ${folderPath} require namespace "${requiredNamespace}"`);
+        errors.push(`Changes to files under ${folderPath}/** require namespace "[${requiredNamespace}]"`);
         return { valid: false, errors };
       }
 
       if (commitNamespace !== requiredNamespace) {
         const exampleFile = files.find(f => this.getFileNamespace(f) === requiredNamespace);
         const folderPath = exampleFile ? path.dirname(exampleFile) : requiredNamespace;
-        errors.push(`Files in ${folderPath} require namespace "${requiredNamespace}", got "${commitNamespace}"`);
+        errors.push(
+          `Changes to files under ${folderPath}/** require namespace "[${requiredNamespace}]", but "[${commitNamespace}]" was found instead`,
+        );
         return { valid: false, errors };
       }
     }

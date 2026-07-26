@@ -6,8 +6,9 @@ import testHook from '../fixtures/testHook.js';
 function initializeRepoHooks() {
   return testHook(() => {
     const repo = new TestGitRepo();
-    repo.addDir('libs/shared').addDir('apps/myapp').addDir('libs/tools');
-    new CommitlintConfigBuilder(repo).namespaceEnum(['apps/*', 'libs/*']).commitAsYaml();
+    repo.addDir('libs/shared').addDir('apps/myapp').addDir('libs/tools').addDir('api');
+
+    new CommitlintConfigBuilder(repo).namespaceEnum(['apps/*', 'libs/*', 'api']).commitAsYaml();
 
     Cliete.setDefault('cwd', repo.tempDir);
     Cliete.setDefault('width', 120);
@@ -53,22 +54,28 @@ const VALID: ValidTestCase[] = [
 
 const INVALID: InvalidTestCase[] = [
   {
-    title: 'should reject commit missing namespace for namespaced files',
+    title: 'should reject commit missing namespace for namespaced files (wildcard configuration)',
     changes: ['apps/myapp/feature.ts'],
     commitMessage: 'feat: add new feature',
-    error: ['- Files in apps/myapp require namespace "myapp"'],
+    error: ['- Changes to files under apps/myapp/** require namespace "[myapp]"'],
+  },
+  {
+    title: 'should reject commit missing namespace for namespaced files',
+    changes: ['api/feature.ts'],
+    commitMessage: 'feat: add new feature',
+    error: ['- Changes to files under api/** require namespace "[api]"'],
   },
   {
     title: 'should reject namespaced commit for root files',
     changes: ['README.txt'],
     commitMessage: '[myapp] feat: add new feature',
-    error: ['- Files not apart of namespace "myapp"'],
+    error: ['- Changes are not apart of namespace "[myapp]"'],
   },
   {
     title: 'should reject commit with wrong namespace',
     changes: ['apps/myapp/feature.ts'],
     commitMessage: '[tools] feat: add new feature',
-    error: ['- Files in apps/myapp require namespace "myapp", got "tools"'],
+    error: ['- Changes to files under apps/myapp/** require namespace "[myapp]", but "[tools]" was found instead'],
   },
   {
     title: 'should reject commit spanning multiple namespaces',
@@ -81,8 +88,8 @@ const INVALID: InvalidTestCase[] = [
     changes: ['apps/myapp/feature.ts'],
     commitMessage: '[invalidns] feat: add new feature',
     error: [
-      "- The namespace can only be one of: 'myapp', 'shared' or 'tools'",
-      '- Files in apps/myapp require namespace "myapp", got "invalidns"',
+      "- The namespace can only be one of: 'myapp', 'shared', 'tools' or 'api'",
+      '- Changes to files under apps/myapp/** require namespace "[myapp]", but "[invalidns]" was found instead',
     ],
   },
 ];

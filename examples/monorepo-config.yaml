@@ -6,7 +6,7 @@ extends:
 
 rules:
   # Namespace configuration for monorepo
-  namespace-enum: [2, 'always', ['apps/*', 'libs/*', 'tools/*']]
+  namespace-enum: [2, 'always', ['apps/*', 'libs/*', 'tools/*', 'web']]
   namespace-empty: [2, 'never']
   
   # Standard conventional commit rules

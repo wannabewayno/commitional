@@ -14,10 +14,22 @@ describe('NamespaceResolver', () => {
       expect(namespaces).to.deep.equal(['myapp', 'shared']);
     });
 
-    it('should parse direct patterns', () => {
+    it('should parse nested direct patterns', () => {
       const resolver = new NamespaceResolver(['libs/shared']);
       const namespaces = resolver.resolveFileNamespaces(['libs/shared/util.ts']);
       expect(namespaces).to.deep.equal(['shared']);
+    });
+
+    it('should parse direct patterns', () => {
+      const resolver = new NamespaceResolver(['api']);
+      const namespaces = resolver.resolveFileNamespaces(['api/shared/util.ts']);
+      expect(namespaces).to.deep.equal(['api']);
+    });
+
+    it('should parse direct patterns with trailing slash', () => {
+      const resolver = new NamespaceResolver(['api/']);
+      const namespaces = resolver.resolveFileNamespaces(['api/shared/util.ts']);
+      expect(namespaces).to.deep.equal(['api']);
     });
   });
 
@@ -117,7 +129,7 @@ describe('NamespaceResolver', () => {
 
       const result = resolver.validateNamespaceAlignment('myapp', files);
       expect(result.valid).to.be.false;
-      expect(result.errors).to.include('Files not apart of namespace "myapp"');
+      expect(result.errors).to.include('Changes are not apart of namespace "[myapp]"');
     });
 
     it('should fail when commit missing required namespace', () => {
@@ -126,7 +138,7 @@ describe('NamespaceResolver', () => {
 
       const result = resolver.validateNamespaceAlignment('', files);
       expect(result.valid).to.be.false;
-      expect(result.errors).to.include('Files in apps/myapp require namespace "myapp"');
+      expect(result.errors).to.include('Changes to files under apps/myapp/** require namespace "[myapp]"');
     });
 
     it('should fail when commit has wrong namespace', () => {
@@ -135,7 +147,9 @@ describe('NamespaceResolver', () => {
 
       const result = resolver.validateNamespaceAlignment('otherapp', files);
       expect(result.valid).to.be.false;
-      expect(result.errors).to.include('Files in apps/myapp require namespace "myapp", got "otherapp"');
+      expect(result.errors).to.include(
+        'Changes to files under apps/myapp/** require namespace "[myapp]", but "[otherapp]" was found instead',
+      );
     });
   });
 });
