@@ -71,7 +71,7 @@ docs: update README
 Add namespace rules to your commitlint config:
 
 ```yaml
-# commitlint.config.yaml
+# .commitlintrc.yaml
 rules:
   namespace-enum: [2, 'always', ['apps/*', 'libs/*']]
   namespace-empty: [2, 'never']

@@ -1,5 +1,5 @@
 # Example commitlint configuration for monorepo with namespace support
-# Save as: commitlint.config.yaml
+# Save as: .commitlintrc.yaml (or .commitlintrc.yml)
 
 extends:
   - '@commitlint/config-conventional'
