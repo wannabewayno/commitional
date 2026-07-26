@@ -57,8 +57,8 @@ export const Provider = ({ git, readFile, writeFile, exit, logError }: Dependenc
     if (isInteger(commitMsgArgs[0]))
       return { type: 'log', commits: await git.log(Number.parseInt(commitMsgArgs[0])).catch(() => []) };
     // Otherwise assume a filepath - create staged commit
-    const message = await readFile(commitMsgArgs[0]).catch(() => '');
-    if (!message) return { type: 'file', commits: [] };
+    const message = await readFile(commitMsgArgs[0]).catch(() => undefined);
+    if (message === undefined) return { type: 'file', commits: [] };
 
     const stagedCommit = await git.stagedCommit();
     stagedCommit.message = message;
