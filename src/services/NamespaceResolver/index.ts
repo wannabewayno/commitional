@@ -39,6 +39,15 @@ export class NamespaceResolver {
   }
 
   /**
+   * Return the single namespace shared by every file, or null when the files
+   * resolve to zero namespaces or span more than one namespace.
+   */
+  resolveSharedNamespace(files: string[]): string | null {
+    const namespaces = this.resolveFileNamespaces(files);
+    return namespaces.length === 1 && namespaces[0] ? namespaces[0] : null;
+  }
+
+  /**
    * Get the required namespace for a specific file
    */
   getFileNamespace(filePath: string): string | null {

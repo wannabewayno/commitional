@@ -258,3 +258,85 @@ describe('Interactive Commit Flow', () => {
     await I.spot(lastCommit);
   });
 });
+
+describe('CLI - Namespaces', () => {
+  let repo: TestGitRepo;
+
+  before(() => {
+    repo = new TestGitRepo();
+    new CommitlintConfigBuilder(repo)
+      .typeEnum(['feat', 'fix', 'docs'])
+      .typeEmpty('never')
+      .subjectCase('sentence-case')
+      .subjectEmpty('never')
+      .subjectFullStop('never')
+      .namespaceEnum(['api', 'web'], 'always')
+      .namespaceEmpty('never')
+      .commitAsYaml();
+
+    Cliete.setDefaults({
+      width: 100,
+      height: 30,
+      cwd: repo.tempDir,
+    });
+  });
+
+  after(() => {
+    repo.teardown();
+  });
+
+  it('should populate namespace automatically when staged files are all under a shared namespace', async () => {
+    repo.addJsFile('api/test', `console.log("Random number today is: ${Math.random()}");`, { stage: true });
+
+    const I = await Cliete.openTerminal('commitional --type feat');
+
+    await I.wait.until.I.spot('If applied, this commit will...');
+    // Subject commit rules will enforce Sentence case and no trailing full stop
+    await I.type('Test namespace population').and.wait.until.I.spot('Test namespace population');
+
+    await I.press.enter.and.wait.until.I.spot('Does this change introduce any breaking changes? (Y/n)');
+
+    await I.type('n').and.press.enter.and.wait.until.I.spot('[api] feat: Test namespace population');
+    await I.spot('❯ Commit');
+
+    await I.press.enter.and.wait.until.I.spot(/[a-f0-9]{40}$/m); // A commit hash
+    await I.wait.for.the.process.to.exit.with.exit.code.zero;
+  });
+
+  it('should NOT populate namespace automatically when staged files have mixed namespaces', async () => {
+    repo.addJsFile('api/test', `console.log("Random number today is: ${Math.random()}");`, { stage: true });
+    repo.addJsFile('web/test', `console.log("Random number in web today is: ${Math.random()}");`, { stage: true });
+
+    const I = await Cliete.openTerminal('commitional --type feat');
+
+    await I.wait.until.I.spot('If applied, this commit will...');
+    // Subject commit rules will enforce Sentence case and no trailing full stop
+    await I.type('Test namespace population').and.wait.until.I.spot('Test namespace population');
+
+    await I.press.enter.and.wait.until.I.spot('Does this change introduce any breaking changes? (Y/n)');
+
+    await I.type('n').and.press.enter.and.wait.until.I.spot('feat: Test namespace population');
+    await I.spot('❯ Commit');
+
+    await I.press.enter.and.wait.until.I.spot(/[a-f0-9]{40}$/m); // A commit hash
+    await I.wait.for.the.process.to.exit.with.exit.code.zero;
+  });
+
+  it('should NOT populate namespace automatically when staged files are not apart of any namespaces', async () => {
+    repo.addJsFile('root', `console.log("Random number at project root is: ${Math.random()}");`, { stage: true });
+
+    const I = await Cliete.openTerminal('commitional --type feat');
+
+    await I.wait.until.I.spot('If applied, this commit will...');
+    // Subject commit rules will enforce Sentence case and no trailing full stop
+    await I.type('Test namespace population').and.wait.until.I.spot('Test namespace population');
+
+    await I.press.enter.and.wait.until.I.spot('Does this change introduce any breaking changes? (Y/n)');
+
+    await I.type('n').and.press.enter.and.wait.until.I.spot('feat: Test namespace population');
+    await I.spot('❯ Commit');
+
+    await I.press.enter.and.wait.until.I.spot(/[a-f0-9]{40}$/m); // A commit hash
+    await I.wait.for.the.process.to.exit.with.exit.code.zero;
+  });
+});

@@ -1,5 +1,6 @@
 import CommitMessage, { type CommitPart, type CommitJSON } from '../CommitMessage/index.js';
 import Git from '../services/Git/index.js';
+import { NamespaceResolver } from '../services/NamespaceResolver/index.js';
 import RulesEngine from '../RulesEngine/index.js';
 import { CommitPartFactory, PromptFactory } from '../prompts/index.js';
 import { confirm, input } from '@inquirer/prompts';
@@ -50,6 +51,12 @@ export const Provider = ({ git, rulesEngine, log }: Dependencies) => {
     const { auto, breaking, ...partialCommit } = opts;
 
     const commit = CommitMessage.fromJSON(partialCommit);
+
+    if (!commit.namespace) {
+      const namespaceResolver = NamespaceResolver.fromRulesEngine(rulesEngine);
+      const sharedNamespace = namespaceResolver.resolveSharedNamespace(diff.files);
+      if (sharedNamespace) commit.namespace = sharedNamespace;
+    }
 
     const commitFactory = CommitPartFactory(rulesEngine, diff, commit, auto);
 

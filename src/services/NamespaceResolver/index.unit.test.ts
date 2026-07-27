@@ -1,5 +1,5 @@
-import { NamespaceResolver } from './index.js';
 import { expect } from 'chai';
+import { NamespaceResolver } from './index.js';
 
 describe('NamespaceResolver', () => {
   describe('constructor', () => {
@@ -78,6 +78,38 @@ describe('NamespaceResolver', () => {
 
       const namespaces = resolver.resolveFileNamespaces(files);
       expect(namespaces).to.deep.equal(['myapp']);
+    });
+  });
+
+  describe('resolveSharedNamespace', () => {
+    it('should return the namespace shared by all files', () => {
+      const resolver = new NamespaceResolver(['api', 'web']);
+
+      expect(resolver.resolveSharedNamespace(['api/a.js', 'api/b.js'])).to.equal('api');
+    });
+
+    it('should return null when files span multiple namespaces', () => {
+      const resolver = new NamespaceResolver(['api', 'web']);
+
+      expect(resolver.resolveSharedNamespace(['api/a.js', 'web/b.js'])).to.be.null;
+    });
+
+    it('should return null for root-level files', () => {
+      const resolver = new NamespaceResolver(['api', 'web']);
+
+      expect(resolver.resolveSharedNamespace(['root.js'])).to.be.null;
+    });
+
+    it('should return null for an empty file list', () => {
+      const resolver = new NamespaceResolver(['api', 'web']);
+
+      expect(resolver.resolveSharedNamespace([])).to.be.null;
+    });
+
+    it('should return null when no namespace patterns are configured', () => {
+      const resolver = new NamespaceResolver();
+
+      expect(resolver.resolveSharedNamespace(['api/a.js'])).to.be.null;
     });
   });
 
