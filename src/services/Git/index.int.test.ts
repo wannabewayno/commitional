@@ -1,11 +1,12 @@
-import { describe, it } from 'mocha';
 import { strict as assert } from 'node:assert';
-import Git from './index.js';
-import { type SimpleGit, simpleGit } from 'simple-git';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { expect } from 'chai';
+import { describe, it } from 'mocha';
+import { type SimpleGit, simpleGit } from 'simple-git';
 import Diff from './Diff.js';
+import Git from './index.js';
 
 describe('Git Utilities', () => {
   let git: Git;
@@ -137,4 +138,88 @@ describe('GitCommit Integration Tests', () => {
   });
 
   afterEach(() => cleanup());
+});
+
+describe('Git Push Integration Tests', () => {
+  const originalCwd = process.cwd();
+  let gitService: Git;
+  let git: SimpleGit;
+  let testDir: string;
+  let remoteDir: string | undefined;
+
+  beforeEach(async () => {
+    testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'commitional-git-push-'));
+    process.chdir(testDir);
+
+    git = simpleGit();
+    await git.init();
+    await git.addConfig('user.name', 'Test User', false, 'local');
+    await git.addConfig('user.email', 'test@example.com', false, 'local');
+    gitService = new Git();
+  });
+
+  async function createCommit(fileName: string, message: string): Promise<string> {
+    fs.writeFileSync(path.join(testDir, fileName), message);
+    await git.add(fileName);
+
+    const result = await gitService.commit(message);
+    assert.strictEqual(result.success, true);
+    assert.ok(result.commitHash);
+    return result.commitHash;
+  }
+
+  afterEach(() => {
+    process.chdir(originalCwd);
+    fs.rmSync(testDir, { recursive: true, force: true });
+    if (remoteDir) fs.rmSync(remoteDir, { recursive: true, force: true });
+    remoteDir = undefined;
+  });
+
+  it('should push the current branch to its configured bare remote', async () => {
+    await createCommit('initial.txt', 'initial commit');
+
+    remoteDir = fs.mkdtempSync(path.join(os.tmpdir(), 'commitional-git-remote-'));
+    const remoteGit = simpleGit(remoteDir);
+    await remoteGit.init(true);
+    await git.addRemote('origin', remoteDir);
+
+    const branch = (await git.status()).current;
+    assert.ok(branch);
+    await git.push(['--set-upstream', 'origin', branch]);
+
+    const commitHash = await createCommit('change.txt', 'test: push commit');
+    const result = await gitService.push();
+
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.branch, branch);
+    assert.strictEqual(result.remote, 'origin');
+
+    const remoteLog = await remoteGit.log({ maxCount: 1 });
+    assert.strictEqual(remoteLog.latest?.hash, commitHash);
+  });
+
+  it('should return a structured no-remote failure while retaining the local commit', async () => {
+    const commitHash = await createCommit('change.txt', 'test: no remote');
+
+    const result = await gitService.push();
+    assert.strictEqual(result.success, false);
+    assert.match(result.error?.message ?? '', /no remote is configured/i);
+
+    const localLog = await git.log({ maxCount: 1 });
+    assert.strictEqual(localLog.latest?.hash, commitHash);
+  });
+
+  it('should return a structured push failure while retaining the local commit', async () => {
+    const unreachableRemote = path.join(testDir, 'missing-remote.git');
+    await git.addRemote('origin', unreachableRemote);
+    const commitHash = await createCommit('change.txt', 'test: unreachable remote');
+
+    const result = await gitService.push();
+    assert.strictEqual(result.success, false);
+    assert.ok(result.error);
+    assert.match(result.error.message, /remote|repository|connect|push/i);
+
+    const localLog = await git.log({ maxCount: 1 });
+    assert.strictEqual(localLog.latest?.hash, commitHash);
+  });
 });

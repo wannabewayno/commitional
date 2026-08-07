@@ -1,17 +1,19 @@
+import { confirm, input } from '@inquirer/prompts';
+import ora from 'ora';
+import { blue, green, red, yellow } from 'yoctocolors';
 import CommitMessage, { type CommitPart, type CommitJSON } from '../CommitMessage/index.js';
+import PromptFlow from '../PromptFlow/index.js';
+import RulesEngine from '../RulesEngine/index.js';
+import { resolveAutoPush } from '../lib/autoPush.js';
+import Highlighter from '../lib/highlighter.js';
+import { CommitPartFactory, PromptFactory } from '../prompts/index.js';
 import Git from '../services/Git/index.js';
 import { NamespaceResolver } from '../services/NamespaceResolver/index.js';
-import RulesEngine from '../RulesEngine/index.js';
-import { CommitPartFactory, PromptFactory } from '../prompts/index.js';
-import { confirm, input } from '@inquirer/prompts';
-import { blue, green, red } from 'yoctocolors';
-import ora from 'ora';
-import PromptFlow from '../PromptFlow/index.js';
-import Highlighter from '../lib/highlighter.js';
 
 interface DefaultOpts extends Partial<CommitJSON> {
   breaking?: boolean;
   auto: boolean;
+  push?: boolean;
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: required for generic type
@@ -48,7 +50,7 @@ export const Provider = ({ git, rulesEngine, log }: Dependencies) => {
     if (!diff.files.length) return log(red('No files staged to commit'));
 
     // Extract any cli options passed down from the user
-    const { auto, breaking, ...partialCommit } = opts;
+    const { auto, breaking, push, ...partialCommit } = opts;
 
     const commit = CommitMessage.fromJSON(partialCommit);
 
@@ -184,8 +186,27 @@ export const Provider = ({ git, rulesEngine, log }: Dependencies) => {
 
     const res = await git.commit(commit.toString());
 
-    if (res.success) spinner.succeed(res.commitHash);
-    else spinner.fail(res.error?.message);
+    if (res.success) {
+      spinner.succeed(res.commitHash);
+
+      const { enabled, warning } = resolveAutoPush({
+        push: push === true,
+        noPush: push === false,
+        env: process.env.COMMITIONAL_AUTO_PUSH,
+      });
+
+      if (warning) log(yellow(warning));
+      if (!enabled) return;
+
+      const pushSpinner = ora('Pushing...').start();
+      const pushResult = await git.push();
+
+      if (pushResult.success) {
+        pushSpinner.succeed(`Pushed ${pushResult.branch} to ${pushResult.remote}`);
+      } else {
+        pushSpinner.fail(pushResult.error?.message);
+      }
+    } else spinner.fail(res.error?.message);
   };
 };
 

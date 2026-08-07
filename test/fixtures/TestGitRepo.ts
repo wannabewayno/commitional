@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, rmSync, mkdtempSync, unlinkSync, readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -9,6 +9,7 @@ interface AddFileOpts {
 
 export default class TestGitRepo {
   public readonly tempDir: string;
+  public remoteDir?: string;
   private commitHashes: string[] = [];
 
   constructor() {
@@ -21,8 +22,34 @@ export default class TestGitRepo {
     execSync('git config user.email "test@example.com"', { cwd: this.tempDir });
   }
 
+  addBareRemote(name = 'origin') {
+    this.remoteDir = mkdtempSync(path.join(tmpdir(), 'test-git-remote-'));
+
+    execSync('git init --bare --quiet', { cwd: this.remoteDir });
+    execSync(`git remote add "${name}" "${this.remoteDir}"`, { cwd: this.tempDir });
+
+    return this;
+  }
+
+  setUpstream(remote = 'origin') {
+    const branch = execSync('git branch --show-current', { cwd: this.tempDir }).toString().trim();
+    execSync(`git push -u "${remote}" "${branch}"`, { cwd: this.tempDir });
+
+    return this;
+  }
+
   get commits() {
     return execSync('git rev-list --all', { cwd: this.tempDir }).toString().trim().split('\n').filter(Boolean);
+  }
+
+  get remoteCommits() {
+    if (!this.remoteDir) return [];
+
+    return execSync(`git --git-dir="${this.remoteDir}" rev-list --all`, { cwd: this.tempDir })
+      .toString()
+      .trim()
+      .split('\n')
+      .filter(Boolean);
   }
 
   get lastCommit() {
@@ -137,5 +164,6 @@ export default class TestGitRepo {
 
   teardown(): void {
     rmSync(this.tempDir, { recursive: true, force: true });
+    if (this.remoteDir) rmSync(this.remoteDir, { recursive: true, force: true });
   }
 }

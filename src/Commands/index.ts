@@ -31,5 +31,7 @@ export const createCmd = new Command('create')
   .option('-f, --footer [footer...]', 'Commit footer(s)')
   .option('-B, --breaking', 'Mark the commit as a breaking change')
   .option('-P, --no-breaking', 'Mark the commit as a non breaking change')
+  .option('-p, --push', 'Push the new commit to the remote after committing')
+  .option('--no-push', 'Do not push the new commit, even if COMMITIONAL_AUTO_PUSH is set')
   .option('-A, --auto', 'Use Generative AI to pre-fill your commit message', false)
   .action(create());

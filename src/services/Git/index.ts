@@ -11,6 +11,16 @@ export interface GitCommitResult {
   error?: Error;
 }
 
+/**
+ * Interface for git push result
+ */
+export interface GitPushResult {
+  success: boolean;
+  branch?: string;
+  remote?: string;
+  error?: Error;
+}
+
 export default class Git {
   private git: SimpleGit;
 
@@ -57,6 +67,42 @@ export default class Git {
       return {
         success: false,
         error: error instanceof Error ? error : new Error('Unknown error during commit'),
+      };
+    }
+  }
+
+  /**
+   * Push the current branch to its configured remote.
+   *
+   * The push operation returns a structured failure rather than throwing so a
+   * commit that has already been created is retained locally.
+   */
+  async push(): Promise<GitPushResult> {
+    try {
+      const status = await this.git.status();
+      const branch = status.current ?? undefined;
+      const remotes = await this.git.getRemotes(false);
+
+      if (remotes.length === 0) {
+        return {
+          success: false,
+          branch,
+          error: new Error('No remote is configured for this repository'),
+        };
+      }
+
+      const remote = status.tracking?.split('/')[0] ?? remotes[0]?.name;
+      await this.git.push(remote, branch);
+
+      return {
+        success: true,
+        branch,
+        remote,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error : new Error('Unknown error during push'),
       };
     }
   }
