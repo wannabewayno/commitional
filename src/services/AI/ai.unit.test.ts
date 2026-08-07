@@ -7,7 +7,9 @@ describe('AI Service Tests', () => {
 
   beforeEach(() => {
     // Reset environment variables before each test
-    process.env = { ...originalEnv };
+    for (const key in originalEnv) {
+      if (key.startsWith('COMMITIONAL')) Reflect.deleteProperty(process.env, key);
+    }
   });
 
   afterEach(() => {
