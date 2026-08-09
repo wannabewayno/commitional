@@ -11,8 +11,8 @@ import Git from './index.js';
 describe('Git Utilities', () => {
   let git: Git;
 
-  before(() => {
-    git = new Git();
+  before(async () => {
+    git = await Git.create();
   });
 
   describe('isGitRepository', () => {
@@ -50,14 +50,14 @@ describe('Git Commit Tests', () => {
     fs.mkdirSync(testDir, { recursive: true });
     process.chdir(testDir);
 
-    gitService = new Git();
-
     git = simpleGit();
     await git.init();
 
     // Configure git for tests
     await git.addConfig('user.name', 'Test User', false, 'local');
     await git.addConfig('user.email', 'test@example.com', false, 'local');
+
+    gitService = await Git.create();
 
     // Create initial commit to establish HEAD
     fs.writeFileSync(path.join(testDir, 'init.txt'), 'initial commit');
@@ -104,11 +104,12 @@ describe('GitCommit Integration Tests', () => {
     fs.mkdirSync(testDir, { recursive: true });
     process.chdir(testDir);
 
-    gitService = new Git();
     git = simpleGit();
     await git.init();
     await git.addConfig('user.name', 'Test User', false, 'local');
     await git.addConfig('user.email', 'test@example.com', false, 'local');
+
+    gitService = await Git.create();
 
     cleanup = () => {
       process.chdir(process.cwd());
@@ -155,7 +156,7 @@ describe('Git Push Integration Tests', () => {
     await git.init();
     await git.addConfig('user.name', 'Test User', false, 'local');
     await git.addConfig('user.email', 'test@example.com', false, 'local');
-    gitService = new Git();
+    gitService = await Git.create();
   });
 
   async function createCommit(fileName: string, message: string): Promise<string> {

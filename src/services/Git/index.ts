@@ -24,13 +24,31 @@ export interface GitPushResult {
 export default class Git {
   private git: SimpleGit;
 
-  constructor() {
+  private constructor(baseDir: string) {
+    this.git = simpleGit({ baseDir });
+  }
+
+  /**
+   * Create a Git service anchored to the repository root.
+   *
+   * Resolves the repository top-level directory once, eagerly, via
+   * `git rev-parse --show-toplevel` so that `git status` paths and
+   * `git diff -- <path>` pathspecs always resolve from the same root
+   * regardless of the invocation directory. When resolution fails (not
+   * inside a repository) the instance is anchored at `process.cwd()`,
+   * preserving the non-repository contract.
+   */
+  static async create(): Promise<Git> {
+    const cwd = process.cwd();
+    let baseDir = cwd;
     try {
-      this.git = simpleGit({ baseDir: process.cwd() });
-    } catch (error) {
-      // Fallback to default behavior if cwd fails
-      this.git = simpleGit();
+      const root = (await simpleGit({ baseDir: cwd }).revparse(['--show-toplevel'])).trim();
+      if (root) baseDir = root;
+    } catch {
+      // Not inside a repository: anchor at cwd so isRepository() returns
+      // false and staged* return empty results without throwing.
     }
+    return new Git(baseDir);
   }
 
   /**

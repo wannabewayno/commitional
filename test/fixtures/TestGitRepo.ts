@@ -12,9 +12,34 @@ export default class TestGitRepo {
   public remoteDir?: string;
   private commitHashes: string[] = [];
 
+  // Registry of every temp dir created across all instances, so a single
+  // process-level exit handler can guarantee cleanup even when a test forgets
+  // to call teardown().
+  private static tempDirRegistry = new Set<string>();
+  private static exitHandlerRegistered = false;
+
+  private static registerExitHandler(): void {
+    if (TestGitRepo.exitHandlerRegistered) return;
+    TestGitRepo.exitHandlerRegistered = true;
+
+    process.once('exit', () => {
+      for (const dir of TestGitRepo.tempDirRegistry) {
+        try {
+          // rmSync is synchronous, which is required inside an 'exit' handler.
+          rmSync(dir, { recursive: true, force: true });
+        } catch {
+          // Never throw during cleanup.
+        }
+      }
+      TestGitRepo.tempDirRegistry.clear();
+    });
+  }
+
   constructor() {
     // Create temp directory
     this.tempDir = mkdtempSync(path.join(tmpdir(), 'test-git-repo-'));
+    TestGitRepo.tempDirRegistry.add(this.tempDir);
+    TestGitRepo.registerExitHandler();
 
     // Initialize git repo
     execSync('git init --quiet', { cwd: this.tempDir });
@@ -24,6 +49,7 @@ export default class TestGitRepo {
 
   addBareRemote(name = 'origin') {
     this.remoteDir = mkdtempSync(path.join(tmpdir(), 'test-git-remote-'));
+    TestGitRepo.tempDirRegistry.add(this.remoteDir);
 
     execSync('git init --bare --quiet', { cwd: this.remoteDir });
     execSync(`git remote add "${name}" "${this.remoteDir}"`, { cwd: this.tempDir });
@@ -121,11 +147,15 @@ export default class TestGitRepo {
   // Hash retrieval methods
   getCommitHash(index = -1): string {
     const actualIndex = index < 0 ? this.commitHashes.length + index : index;
-    return this.commitHashes[actualIndex];
+    const hash = this.commitHashes[actualIndex];
+    if (hash === undefined) {
+      throw new Error(`TestGitRepo: no commit hash at index ${index} (have ${this.commitHashes.length} commits)`);
+    }
+    return hash;
   }
 
   getShortHash(index = -1): string {
-    return this.getCommitHash(index)?.substring(0, 7);
+    return this.getCommitHash(index).substring(0, 7);
   }
 
   getAllHashes(): string[] {
@@ -164,6 +194,11 @@ export default class TestGitRepo {
 
   teardown(): void {
     rmSync(this.tempDir, { recursive: true, force: true });
-    if (this.remoteDir) rmSync(this.remoteDir, { recursive: true, force: true });
+    TestGitRepo.tempDirRegistry.delete(this.tempDir);
+
+    if (this.remoteDir) {
+      rmSync(this.remoteDir, { recursive: true, force: true });
+      TestGitRepo.tempDirRegistry.delete(this.remoteDir);
+    }
   }
 }

@@ -147,6 +147,11 @@ export const Provider = ({ git, readFile, writeFile, exit, logError }: Dependenc
 };
 
 export default (): LintCmd => {
-  const git = new Git();
-  return Provider({ git, exit, readFile: (path: string) => readFile(path, 'utf-8'), writeFile, logError: console.error });
+  return async (commitMsgArg: string, opts: LintOpts) => {
+    const git = await Git.create();
+    return Provider({ git, exit, readFile: (path: string) => readFile(path, 'utf-8'), writeFile, logError: console.error })(
+      commitMsgArg,
+      opts,
+    );
+  };
 };

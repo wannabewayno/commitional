@@ -211,8 +211,8 @@ export const Provider = ({ git, rulesEngine, log }: Dependencies) => {
 };
 
 export default (): DefaultCmd => {
-  const git = new Git();
   return async (opts: DefaultOpts) => {
+    const git = await Git.create();
     const rulesEngine = await RulesEngine.fromConfig();
     return Provider({ git, rulesEngine, log: console.log })(opts);
   };
